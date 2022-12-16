@@ -1,6 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>video玩出新花样当background</title>
+    <url>/2018/05/20/video/</url>
+    <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
+<p>因为前几天我们要进行网页设计大赛，所以我们小组又焦头烂额的坐在了一起：“又做东西啊，烦死了”！最终我们还是做出来了。也得了个第一名，虽然不怎么好。但也是对自己努力的一个肯定。</p>
+<p>学习中遇见了一些问题就不说了，我们做的页面是支付宝全站，但是支付宝个人中心有一个拿video当做视频背景的元素，我们一直没搞懂。但是恍然大悟，我们可以使用<strong>z-index</strong>属性来定义啊。好那么我们详细欣赏下面的教程！</p>
+<p>下面先给大家截图一下这个效果吧，大神勿喷~ 但是截图的又不能动~~<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b24585f4e279.png"
+                      alt="支付宝video首页"
+                ></p>
+<p>多了话不多说我们先来分析一波，首先我们这个东西用视频当做背景，所以背景一定在下面的，所以设置他的层级代码肯定为负的最多的，因为上面要放内容。那么我们既然弄肯定要全屏还有把他固定在哪里，即使我们不设置数值。然后设置他的显示亮度。多了不说了css代码上了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b2457feccb34.png"
+                      alt="css代码样式"
+                ><br>那么看到这里就有疑问了，有人问 <strong>-webkit-filter:grayscale(100%)</strong> 这段代码是干嘛的，显示的亮度。但是需要支付浏览器，webkit是兼容谷歌的，如果展示在用户面前需要兼容多个浏览器，具体的自行百度下。</p>
+<p>好那么我们css设置完成了，好我们展示下我们html的代码吧。<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b245a9666c58.png"
+                      alt="中心展示代码"
+                ><br>这个代码其实就是正常的插入一段视频。无需多的理解。</p>
+<p>好一个视频已经展现在我们的面前，总是感觉视频的速度可能播放太快或者太慢没有视觉感觉。好我们定义一下他的视频背景，首先这个 id&#x3D;v1 v1是自己取得名字，这个根据开发者自己来定。<strong>其中的0.5自行改数值。</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b245b49bda2c.png"
+                      alt="js代码"
+                ></p>
+<p>就这么简单我们的一个页面已经制作完成啦。现在我们看下效果吧！有什么不懂得可以QQ问我哦~</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>免费CDN jsDelivr使用</title>
+    <url>/2022/11/14/%E5%85%8D%E8%B4%B9CDN-jsDelivr%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<h1 id="jsDelivr是什么？"><a href="#jsDelivr是什么？" class="headerlink" title="jsDelivr是什么？"></a>jsDelivr是什么？</h1><p>jsDelivr是一种特殊的CDN。 它旨在让用户下载npm和Github上托管JavaScript库。 (如果它们托管在Wordpress.org上，则还可以加载Wordpress插件)。也就是说它可以镜像以下服务</p>
+<ol>
+<li>wordpress的插件、模板</li>
+<li>GitHub开放仓库</li>
+<li>NPM公共镜像仓库加速</li>
+</ol>
+<p>也就是说，我们可以不再自建或自维护CDN！你是NPM的包，它可以同步后为你分发到全球的各个CDN高速节点。你是Github仓库同样也可以使用全球的CDN静态加速。即使你是wordpress的站长，你还可以用它来同步你所使用的模板、插件等。不再需要维护CDN，我们只需要在以上平台上发布，jsDelivr会自动镜像并且分发。</p>
+<h2 id="简单demo"><a href="#简单demo" class="headerlink" title="简单demo"></a>简单demo</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js</span><br></pre></td></tr></table></figure>
+
+<p>我在GitHub上发布了一个仓库<code>jsdelivr-cdn</code>，并且创建了一个版本为<code>1.0</code>，我只需要根据路径取出我所需要的文件即可</p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>应用中暂时不演示其他，只演示GitHub镜像CDN的使用，别的均是换汤不换药，使用官方规定的网络路径访问即可</p>
+<h2 id="Github"><a href="#Github" class="headerlink" title="Github"></a>Github</h2><h3 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/github用户名/仓库名@版本号/文件路径</span><br></pre></td></tr></table></figure>
+
+<h3 id="0-准备工作"><a href="#0-准备工作" class="headerlink" title="0.准备工作"></a>0.准备工作</h3><blockquote>
+<p>分支不限，核心原理就是创建一个仓库的release版本，然后jsDriver会同步你的创建的release版本</p>
+</blockquote>
+<ol>
+<li>先在Github上创建一个公开的仓库</li>
+<li>使用Git推送至相关分支仓库的代码,也就是你要使用CDN加速的代码</li>
+</ol>
+<h3 id="1-创建仓库的Release"><a href="#1-创建仓库的Release" class="headerlink" title="1.创建仓库的Release"></a>1.创建仓库的Release</h3><ol>
+<li>点击<code>Create new release</code></li>
+</ol>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2022/11/14/PdxrSsXgiovFRAz.png"
+                      alt="去创建版本"
+                ></p>
+<h3 id="2-填写版本号"><a href="#2-填写版本号" class="headerlink" title="2.填写版本号"></a>2.填写版本号</h3><ul>
+<li><code>tag</code>如果不理解在这里可以理解为版本号</li>
+<li><code>target</code>是你这个<code>tag</code>需要引用的分支，选择你需要引用的分支，我这里直接选择了<code>main</code></li>
+<li>点击 <code>new create tag</code>即可</li>
+<li>确认都没问题了，我们选择最下面的<code>Publish release</code>，创建完成版本即可</li>
+</ul>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2022/11/14/bikrYUVQn2ma73K.png"
+                      alt="创建版本"
+                ></p>
+<h3 id="3-测试和应用"><a href="#3-测试和应用" class="headerlink" title="3.测试和应用"></a>3.测试和应用</h3><ul>
+<li>原版本    <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js<i class="fas fa-external-link-alt"></i></a></li>
+<li>压缩版本 <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js<i class="fas fa-external-link-alt"></i></a></li>
+</ul>
+<h2 id="WordPress"><a href="#WordPress" class="headerlink" title="WordPress"></a>WordPress</h2><p>从 WordPress.org 插件 SVN 存储库加载任何插件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/project/tags/version/file</span><br></pre></td></tr></table></figure>
+
+<p>加载文件的确切版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/tags/4.6.5/wp-slimstat.js</span><br></pre></td></tr></table></figure>
+
+<p>加载最新版本（不推荐用于生产用途）：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/trunk/wp-slimstat.js</span><br></pre></td></tr></table></figure>
+
+<p>请求最新版本是危险的，因为新版本可能会带来重大更改。</p>
+<p>从 WordPress.org 主题 SVN 存储库加载任何主题：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/project/version/file</span><br></pre></td></tr></table></figure>
+
+<p>加载文件的确切版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.js</span><br></pre></td></tr></table></figure>
+
+<p>将“.min”添加到任何 JS&#x2F;CSS 文件以获得缩小版本 - 如果不存在，我们将为您生成它。所有生成的文件都带有源映射，可以在开发过程中轻松使用：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.min.js</span><br></pre></td></tr></table></figure>
+
+<h2 id="NPM"><a href="#NPM" class="headerlink" title="NPM"></a>NPM</h2><p>发布至官方NPM仓库即可</p>
+<p>官方提供的访问路径格式为: <code>https://cdn.jsdelivr.net/npm/包名@版本号/目录</code></p>
+]]></content>
+      <tags>
+        <tag>cdn</tag>
+        <tag>jsDelivr</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>2019给自己的年终总结</title>
     <url>/2019/12/31/2019%E7%BB%99%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</url>
     <content><![CDATA[<h2 id="开头"><a href="#开头" class="headerlink" title="开头:"></a>开头:</h2><p>新的一年新的气象，我看各个博主都已经开始给自己立了一个新年的总结，下午前脚把代码Push上，我就过来给自己一个总结，毕竟觉得自己是挺重要的一年！</p>
@@ -76,6 +189,39 @@
       <tags>
         <tag>总结</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>关于停止使用 957xx.cc域名</title>
+    <url>/2022/11/29/%E5%85%B3%E4%BA%8E%E5%81%9C%E6%AD%A2%E4%BD%BF%E7%94%A8%20957xx.cc%E5%9F%9F%E5%90%8D/</url>
+    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
+<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
+<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
+<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
+<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
+]]></content>
+      <tags>
+        <tag>通知</tag>
+        <tag>暂停</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>半年了，你的梦想又去了哪里?</title>
+    <url>/2018/08/10/%E5%8D%8A%E5%B9%B4%E4%BA%86%EF%BC%8C%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3%E5%8F%88%E5%8E%BB%E4%BA%86%E5%93%AA%E9%87%8C/</url>
+    <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b268f2843120335.jpg"
+                     
+                ></p>
+<p>​     昨天无意间，无意间看到了以前的小米手机(红  红 红..红米)手机还是以前上高中上面的照片，看到了以前跟同学们的一些合照，想到了上一年同学聚会的场面，谁谁谁都变了许多呀。哎呀，你看看我，想到了这些就又开始怀旧了起来，不知不觉的，时间总是不等人。总是感觉还有时间，可是回头才发现，真的是不珍惜 什么都没有了。</p>
+<p>​    正当还犯牢骚的时候，忽然想看看春节还有多长时间，似乎出来这么长时间总是感觉时间过的很快。结果一百度，瞬间吓蒙了。自己似乎都不知道过年实在几月，还有多长时间。还得自己百度。</p>
+<p>​    回忆半年前的那些在一块玩耍，放炮的照片，再看看外面北京这个大城市的蓝天白云，楼下的车辆一辆又一辆的过。光阴似箭，离开村子也半年了。</p>
+<p>​    然而，我思想还是我刚刚走进社会。还是一个吚吖学语的幼儿，还是一个不谙人世的少年，还是一个刚刚立志的青年。我就应学习东西的才刚刚尝到一滴甘露，应对知识的海洋，我才初涉小溪，刚刚湿脚；应对社会这个大学校，我才刚刚进门，刚刚看到科学的殿堂，才刚刚听到最基础的ABC、AOE；应对人生这道考题，我才刚刚思考，刚刚有了一点初浅的认识，刚刚看到前进的方向，刚刚看到一丝追求目标的亮光…… </p>
+<p>​    但是，这一切容不得你思考，容不得你学习，容不得你偿试，容不得你练习、演习，岁月却已经催人老了，你的人生却已走过少年、青年,转眼间已经走过五分之一了。</p>
+<p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
+<p>​    </p>
+]]></content>
   </entry>
   <entry>
     <title>29.22分钟学会正则表达式</title>
@@ -374,245 +520,6 @@
 ]]></content>
   </entry>
   <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
-                ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
-                ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>video玩出新花样当background</title>
-    <url>/2018/05/20/video/</url>
-    <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
-<p>因为前几天我们要进行网页设计大赛，所以我们小组又焦头烂额的坐在了一起：“又做东西啊，烦死了”！最终我们还是做出来了。也得了个第一名，虽然不怎么好。但也是对自己努力的一个肯定。</p>
-<p>学习中遇见了一些问题就不说了，我们做的页面是支付宝全站，但是支付宝个人中心有一个拿video当做视频背景的元素，我们一直没搞懂。但是恍然大悟，我们可以使用<strong>z-index</strong>属性来定义啊。好那么我们详细欣赏下面的教程！</p>
-<p>下面先给大家截图一下这个效果吧，大神勿喷~ 但是截图的又不能动~~<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b24585f4e279.png"
-                      alt="支付宝video首页"
-                ></p>
-<p>多了话不多说我们先来分析一波，首先我们这个东西用视频当做背景，所以背景一定在下面的，所以设置他的层级代码肯定为负的最多的，因为上面要放内容。那么我们既然弄肯定要全屏还有把他固定在哪里，即使我们不设置数值。然后设置他的显示亮度。多了不说了css代码上了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b2457feccb34.png"
-                      alt="css代码样式"
-                ><br>那么看到这里就有疑问了，有人问 <strong>-webkit-filter:grayscale(100%)</strong> 这段代码是干嘛的，显示的亮度。但是需要支付浏览器，webkit是兼容谷歌的，如果展示在用户面前需要兼容多个浏览器，具体的自行百度下。</p>
-<p>好那么我们css设置完成了，好我们展示下我们html的代码吧。<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b245a9666c58.png"
-                      alt="中心展示代码"
-                ><br>这个代码其实就是正常的插入一段视频。无需多的理解。</p>
-<p>好一个视频已经展现在我们的面前，总是感觉视频的速度可能播放太快或者太慢没有视觉感觉。好我们定义一下他的视频背景，首先这个 id&#x3D;v1 v1是自己取得名字，这个根据开发者自己来定。<strong>其中的0.5自行改数值。</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b245b49bda2c.png"
-                      alt="js代码"
-                ></p>
-<p>就这么简单我们的一个页面已经制作完成啦。现在我们看下效果吧！有什么不懂得可以QQ问我哦~</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>个人主页折腾记</title>
-    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
-    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
-<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
-<p>话不多说,先上图！</p>
-<p>(开局一张图,故事全靠编)</p>
-<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
-                      alt="首页图"
-                ></p>
-<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
-                      alt="关于我"
-                ></p>
-<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
-<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
-<p>3：更简洁大气的页面</p>
-<p>4：增加邮件联系的方式</p>
-<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
-<p>———————–中场抱怨一手————————-</p>
-<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
-<p>———————–中场抱怨结束————————-</p>
-<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
-<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
-<p>全球最大的同性交友网站链接奉上:</p>
-<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
-<p>嗯！ 最后祝各位老朋友:</p>
-<p>天天快乐，幸福安康。</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>免费CDN jsDelivr使用</title>
-    <url>/2022/11/14/%E5%85%8D%E8%B4%B9CDN-jsDelivr%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<h1 id="jsDelivr是什么？"><a href="#jsDelivr是什么？" class="headerlink" title="jsDelivr是什么？"></a>jsDelivr是什么？</h1><p>jsDelivr是一种特殊的CDN。 它旨在让用户下载npm和Github上托管JavaScript库。 (如果它们托管在Wordpress.org上，则还可以加载Wordpress插件)。也就是说它可以镜像以下服务</p>
-<ol>
-<li>wordpress的插件、模板</li>
-<li>GitHub开放仓库</li>
-<li>NPM公共镜像仓库加速</li>
-</ol>
-<p>也就是说，我们可以不再自建或自维护CDN！你是NPM的包，它可以同步后为你分发到全球的各个CDN高速节点。你是Github仓库同样也可以使用全球的CDN静态加速。即使你是wordpress的站长，你还可以用它来同步你所使用的模板、插件等。不再需要维护CDN，我们只需要在以上平台上发布，jsDelivr会自动镜像并且分发。</p>
-<h2 id="简单demo"><a href="#简单demo" class="headerlink" title="简单demo"></a>简单demo</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js</span><br></pre></td></tr></table></figure>
-
-<p>我在GitHub上发布了一个仓库<code>jsdelivr-cdn</code>，并且创建了一个版本为<code>1.0</code>，我只需要根据路径取出我所需要的文件即可</p>
-<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>应用中暂时不演示其他，只演示GitHub镜像CDN的使用，别的均是换汤不换药，使用官方规定的网络路径访问即可</p>
-<h2 id="Github"><a href="#Github" class="headerlink" title="Github"></a>Github</h2><h3 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/github用户名/仓库名@版本号/文件路径</span><br></pre></td></tr></table></figure>
-
-<h3 id="0-准备工作"><a href="#0-准备工作" class="headerlink" title="0.准备工作"></a>0.准备工作</h3><blockquote>
-<p>分支不限，核心原理就是创建一个仓库的release版本，然后jsDriver会同步你的创建的release版本</p>
-</blockquote>
-<ol>
-<li>先在Github上创建一个公开的仓库</li>
-<li>使用Git推送至相关分支仓库的代码,也就是你要使用CDN加速的代码</li>
-</ol>
-<h3 id="1-创建仓库的Release"><a href="#1-创建仓库的Release" class="headerlink" title="1.创建仓库的Release"></a>1.创建仓库的Release</h3><ol>
-<li>点击<code>Create new release</code></li>
-</ol>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2022/11/14/PdxrSsXgiovFRAz.png"
-                      alt="去创建版本"
-                ></p>
-<h3 id="2-填写版本号"><a href="#2-填写版本号" class="headerlink" title="2.填写版本号"></a>2.填写版本号</h3><ul>
-<li><code>tag</code>如果不理解在这里可以理解为版本号</li>
-<li><code>target</code>是你这个<code>tag</code>需要引用的分支，选择你需要引用的分支，我这里直接选择了<code>main</code></li>
-<li>点击 <code>new create tag</code>即可</li>
-<li>确认都没问题了，我们选择最下面的<code>Publish release</code>，创建完成版本即可</li>
-</ul>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2022/11/14/bikrYUVQn2ma73K.png"
-                      alt="创建版本"
-                ></p>
-<h3 id="3-测试和应用"><a href="#3-测试和应用" class="headerlink" title="3.测试和应用"></a>3.测试和应用</h3><ul>
-<li>原版本    <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js<i class="fas fa-external-link-alt"></i></a></li>
-<li>压缩版本 <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js<i class="fas fa-external-link-alt"></i></a></li>
-</ul>
-<h2 id="WordPress"><a href="#WordPress" class="headerlink" title="WordPress"></a>WordPress</h2><p>从 WordPress.org 插件 SVN 存储库加载任何插件：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/project/tags/version/file</span><br></pre></td></tr></table></figure>
-
-<p>加载文件的确切版本：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/tags/4.6.5/wp-slimstat.js</span><br></pre></td></tr></table></figure>
-
-<p>加载最新版本（不推荐用于生产用途）：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/trunk/wp-slimstat.js</span><br></pre></td></tr></table></figure>
-
-<p>请求最新版本是危险的，因为新版本可能会带来重大更改。</p>
-<p>从 WordPress.org 主题 SVN 存储库加载任何主题：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/project/version/file</span><br></pre></td></tr></table></figure>
-
-<p>加载文件的确切版本：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.js</span><br></pre></td></tr></table></figure>
-
-<p>将“.min”添加到任何 JS&#x2F;CSS 文件以获得缩小版本 - 如果不存在，我们将为您生成它。所有生成的文件都带有源映射，可以在开发过程中轻松使用：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.min.js</span><br></pre></td></tr></table></figure>
-
-<h2 id="NPM"><a href="#NPM" class="headerlink" title="NPM"></a>NPM</h2><p>发布至官方NPM仓库即可</p>
-<p>官方提供的访问路径格式为: <code>https://cdn.jsdelivr.net/npm/包名@版本号/目录</code></p>
-]]></content>
-      <tags>
-        <tag>cdn</tag>
-        <tag>jsDelivr</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>半年了，你的梦想又去了哪里?</title>
-    <url>/2018/08/10/%E5%8D%8A%E5%B9%B4%E4%BA%86%EF%BC%8C%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3%E5%8F%88%E5%8E%BB%E4%BA%86%E5%93%AA%E9%87%8C/</url>
-    <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b268f2843120335.jpg"
-                     
-                ></p>
-<p>​     昨天无意间，无意间看到了以前的小米手机(红  红 红..红米)手机还是以前上高中上面的照片，看到了以前跟同学们的一些合照，想到了上一年同学聚会的场面，谁谁谁都变了许多呀。哎呀，你看看我，想到了这些就又开始怀旧了起来，不知不觉的，时间总是不等人。总是感觉还有时间，可是回头才发现，真的是不珍惜 什么都没有了。</p>
-<p>​    正当还犯牢骚的时候，忽然想看看春节还有多长时间，似乎出来这么长时间总是感觉时间过的很快。结果一百度，瞬间吓蒙了。自己似乎都不知道过年实在几月，还有多长时间。还得自己百度。</p>
-<p>​    回忆半年前的那些在一块玩耍，放炮的照片，再看看外面北京这个大城市的蓝天白云，楼下的车辆一辆又一辆的过。光阴似箭，离开村子也半年了。</p>
-<p>​    然而，我思想还是我刚刚走进社会。还是一个吚吖学语的幼儿，还是一个不谙人世的少年，还是一个刚刚立志的青年。我就应学习东西的才刚刚尝到一滴甘露，应对知识的海洋，我才初涉小溪，刚刚湿脚；应对社会这个大学校，我才刚刚进门，刚刚看到科学的殿堂，才刚刚听到最基础的ABC、AOE；应对人生这道考题，我才刚刚思考，刚刚有了一点初浅的认识，刚刚看到前进的方向，刚刚看到一丝追求目标的亮光…… </p>
-<p>​    但是，这一切容不得你思考，容不得你学习，容不得你偿试，容不得你练习、演习，岁月却已经催人老了，你的人生却已走过少年、青年,转眼间已经走过五分之一了。</p>
-<p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
-<p>​    </p>
-]]></content>
-  </entry>
-  <entry>
     <title>我的一个道姑朋友-背景</title>
     <url>/2018/07/03/%E6%88%91%E7%9A%84%E4%B8%80%E4%B8%AA%E9%81%93%E5%A7%91%E6%9C%8B%E5%8F%8B-%E8%83%8C%E6%99%AF/</url>
     <content><![CDATA[<p>陌生人，你好。欢迎来到这里！</p>
@@ -681,20 +588,6 @@
       </tags>
   </entry>
   <entry>
-    <title>关于停止使用 957xx.cc域名</title>
-    <url>/2022/11/29/%E5%85%B3%E4%BA%8E%E5%81%9C%E6%AD%A2%E4%BD%BF%E7%94%A8%20957xx.cc%E5%9F%9F%E5%90%8D/</url>
-    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
-<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
-<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
-<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
-<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
-]]></content>
-      <tags>
-        <tag>通知</tag>
-        <tag>暂停</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>新的一年,HI!</title>
     <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
     <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
@@ -727,22 +620,6 @@
 ]]></content>
       <tags>
         <tag>谈心</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>老朋友，别来无恙啊。</title>
-    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
-    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
-<p>没错，你又看到了，我好像又折腾了一波。</p>
-<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
-<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
-<p>反正最后磕磕绊绊的还是过来了~  </p>
-<hr>
-<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>hello</tag>
       </tags>
   </entry>
   <entry>
@@ -793,6 +670,60 @@
       </tags>
   </entry>
   <entry>
+    <title>老朋友，别来无恙啊。</title>
+    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
+    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
+<p>没错，你又看到了，我好像又折腾了一波。</p>
+<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
+<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
+<p>反正最后磕磕绊绊的还是过来了~  </p>
+<hr>
+<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人主页折腾记</title>
+    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
+    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
+<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
+<p>话不多说,先上图！</p>
+<p>(开局一张图,故事全靠编)</p>
+<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
+                      alt="首页图"
+                ></p>
+<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
+                      alt="关于我"
+                ></p>
+<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
+<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
+<p>3：更简洁大气的页面</p>
+<p>4：增加邮件联系的方式</p>
+<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
+<p>———————–中场抱怨一手————————-</p>
+<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
+<p>———————–中场抱怨结束————————-</p>
+<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
+<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
+<p>全球最大的同性交友网站链接奉上:</p>
+<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
+<p>嗯！ 最后祝各位老朋友:</p>
+<p>天天快乐，幸福安康。</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>那些年我们在北京租过的房子</title>
     <url>/2018/07/13/%E9%82%A3%E4%BA%9B%E5%B9%B4%E6%88%91%E4%BB%AC%E5%9C%A8%E5%8C%97%E4%BA%AC%E7%A7%9F%E8%BF%87%E7%9A%84%E6%88%BF%E5%AD%90/</url>
     <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
@@ -838,6 +769,75 @@
 ]]></content>
       <tags>
         <tag>鸡汤</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
       </tags>
   </entry>
 </search>
