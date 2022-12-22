@@ -185,7 +185,7 @@
     
         <span class="article-update-date article-meta-item">
         <i class="fas fa-file-pen"></i>&nbsp;
-        <span class="pc">2022-12-22 15:01:36</span>
+        <span class="pc">2022-12-22 15:05:14</span>
     </span>
     
     
@@ -222,11 +222,11 @@
 <p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
 
-<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;config.json 。</p>
-<p>执行改命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
+<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
+<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
 <p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
 <blockquote>
-<p>本文章转载于OsChina用户红薯：<a class="link"   target="_blank" rel="noopener" href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
+<p>本文章转载于OSCHINA用户红薯：<a class="link"   target="_blank" rel="noopener" href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
 </blockquote>
 
             </div>
