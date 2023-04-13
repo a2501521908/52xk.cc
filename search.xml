@@ -78,37 +78,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Arthas获取Spring Context,直接执行Spring Context中的函数</title>
-    <url>/2023/04/13/Arthas%E8%8E%B7%E5%8F%96Spring%20Context,%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
-<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>spring mvc应用，请求会经过一系列的spring bean处理，那么我们可以在spring mvc的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行tt命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到spring context了就</p>
-<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
-<ol>
-<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
-<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
-<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
-</ol>
-<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
-<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
-<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
-<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
-<ol>
-<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
-<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
-<li>Arthas快速开始：<a class="link"   href="https://alibaba.github.io/arthas/quick-start.html" >https://alibaba.github.io/arthas/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
-]]></content>
-      <tags>
-        <tag>arthas</tag>
-        <tag>springboot</tag>
-        <tag>spring</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>29.22分钟学会正则表达式</title>
     <url>/2018/11/22/29-22%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/</url>
     <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
@@ -405,6 +374,178 @@
 ]]></content>
   </entry>
   <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Arthas获取Spring Context,直接执行Spring Context中的函数</title>
+    <url>/2023/04/13/Arthas%E8%8E%B7%E5%8F%96Spring%20Context,%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
+<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
+<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
+<ol>
+<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
+<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
+<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
+</ol>
+<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
+<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
+<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
+<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
+<ol>
+<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
+<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
+<li>Arthas快速开始：<a class="link"   href="https://alibaba.github.io/arthas/quick-start.html" >https://alibaba.github.io/arthas/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
+]]></content>
+      <tags>
+        <tag>arthas</tag>
+        <tag>springboot</tag>
+        <tag>spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringMVC源码的分析</title>
+    <url>/2023/03/18/Spring%20MVC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="SpringMVC执行过程"><a href="#SpringMVC执行过程" class="headerlink" title="SpringMVC执行过程"></a>SpringMVC执行过程</h1><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p>Spring MVC 的四大组件:<strong>前端控制器（DispatcherServlet）、处理器映射器（HandlerMapping）、处理器适配器（HandlerAdapter）以及视图解析器（ViewResolver）</strong> 的角度来看一下 Spring MVC 对用户请求的处理过程，过程如下图所示:<br>其中，DispatcherServlet是前端控制器，它负责接收用户的请求，并调用其他组件来处理。HandlerMapping是处理器映射器，它负责根据请求的URL找到对应的Controller对象，并返回给DispatcherServlet。HandlerAdapter是处理器适配器，它负责根据Controller对象的类型，找到合适的适配器对象，并调用Controller对象的方法，返回ModelAndView对象。ModelAndView对象包含了模型数据和视图名称。ViewResolver是视图解析器，它负责根据视图名称找到对应的视图对象，并返回给DispatcherServlet。View是视图对象，它负责渲染模型数据，并返回响应给用户。<br>这样一来，springmvc就实现了一个基于MVC模式的web框架，将请求处理分成了不同的步骤和组件，<strong>提高了可扩展性和灵活性。</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/03/18/muzNRPc5a4tKOrv.png"
+                      alt="image.png"
+                ></p>
+<h2 id="执行过程和组件介绍"><a href="#执行过程和组件介绍" class="headerlink" title="执行过程和组件介绍"></a>执行过程和组件介绍</h2><ol>
+<li>用户向服务器发送请求，请求会先达到 SpringMVC 前端控制器 DispatcherServlet ;</li>
+<li>DispatcherServlet 根据该 URI，调用 HandlerMapping 获得该 Handler 配置的所有相关的对象（包括 Handler 对象以及 Handler 对象对应的拦截器），最后以 HandlerExecutionChain 执行链对象的形式返回</li>
+<li>DispatcherServlet 根据获得的 Handler，获取对应的 HandlerAdapter;</li>
+<li>获取到 HandlerAdapter，将开始执行拦截器的 preHandler(…)方法;</li>
+<li>提取 Request 中的模型数据，填充 Handler 入参，开始执行 Handler（Controller)方法，处理请求，在填充 Handler 的入参过程中，根据你的配置，Spring 将帮你做一些额外的工作：<ul>
+<li>HttpMessageConveter：将请求消息（如 Json、xml 等数据）转换成一个对象，将对象转换为指定的类型信息</li>
+<li>数据转换：对请求消息进行数据转换。如 String 转换成 Integer、Double 等</li>
+<li>数据格式化：对请求消息进行数据格式化。如将字符串转换成格式化数字或格式化日期等</li>
+<li>数据验证：验证数据的有效性（长度、格式等），验证结果存储到 BindingResult 或 Error 中</li>
+</ul>
+</li>
+<li>Handler 方法执行完成后，向 DispatcherServlet 返回一个 ModelAndView 对象。</li>
+<li>开始执行拦截器的 postHandle(…)方</li>
+<li>根据返回的 ModelAndView（此时会判断是否存在异常：如果存在异常，则执行 HandlerExceptionResolver 进行异常处理）选择一个适合的 ViewResolver 进行视图解析，根据 Model 和 View，来渲染视图</li>
+<li>渲染视图完毕执行拦截器的 afterCompletion(…)方法</li>
+<li>将渲染结果返回给客户端，本次http请求完成</li>
+</ol>
+<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="1-创建Filter"><a href="#1-创建Filter" class="headerlink" title="1. 创建Filter"></a>1. 创建Filter</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseFilter</span> <span class="keyword">implements</span> <span class="title class_">Filter</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:1&quot;</span>);</span><br><span class="line">        filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-创建HandlerInterceptor拦截器"><a href="#2-创建HandlerInterceptor拦截器" class="headerlink" title="2. 创建HandlerInterceptor  拦截器"></a>2. 创建HandlerInterceptor  拦截器</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseInterceptor</span> <span class="keyword">implements</span> <span class="title class_">HandlerInterceptor</span>, WebMvcConfigurer &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:2&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> HandlerInterceptor.<span class="built_in">super</span>.preHandle(request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:4&quot;</span>);</span><br><span class="line">        HandlerInterceptor.<span class="built_in">super</span>.afterCompletion(request, response, handler, ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addInterceptors</span><span class="params">(InterceptorRegistry registry)</span> &#123;</span><br><span class="line">        registry.addInterceptor(<span class="keyword">new</span> <span class="title class_">BaseInterceptor</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-编写Controller的代码"><a href="#3-编写Controller的代码" class="headerlink" title="3. 编写Controller的代码"></a>3. 编写Controller的代码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;index/&#123;message&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">get</span><span class="params">(<span class="meta">@PathVariable</span> String message)</span> &#123;</span><br><span class="line">    System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:3&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;hello&quot;</span> + <span class="string">&quot;&lt;br/&gt;&quot;</span> + message + <span class="string">&quot;&lt;br&gt;&quot;</span> + LocalDateTime.now();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="开始分析"><a href="#开始分析" class="headerlink" title="开始分析"></a>开始分析</h2><p>首先当我们访问页面的时候，将会把请求发送到<strong>前端控制器 DispatcherServlet</strong>，DispatcherServlet 是一个 Servlet，我们知道在 Servlet 在处理一个请求的时候会交给 service 方法进行处理，这里也不例外，DispatcherServlet 继承了 FrameworkServlet，并且在收到请求后会调用我们的doService()函数</p>
+<h3 id="1-进入doService-request-response"><a href="#1-进入doService-request-response" class="headerlink" title="1. 进入doService(request, response)"></a>1. 进入doService(request, response)</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doService</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	logRequest(request);</span><br><span class="line">       <span class="comment">// 给 request 中的属性做一份快照，以便能够恢复原始属性</span></span><br><span class="line">	Map&lt;String, Object&gt; attributesSnapshot = <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">if</span> (WebUtils.isIncludeRequest(request)) &#123;</span><br><span class="line">		attributesSnapshot = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">		Enumeration&lt;?&gt; attrNames = request.getAttributeNames();</span><br><span class="line">		<span class="keyword">while</span> (attrNames.hasMoreElements()) &#123;</span><br><span class="line">			<span class="type">String</span> <span class="variable">attrName</span> <span class="operator">=</span> (String) attrNames.nextElement();</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">this</span>.cleanupAfterInclude || attrName.startsWith(DEFAULT_STRATEGIES_PREFIX)) &#123;</span><br><span class="line">				attributesSnapshot.put(attrName, request.getAttribute(attrName));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果没有配置本地化或者主题的处理器之类的，SpringMVC 会使用默认的配置文件，即 DispatcherServlet.properties</span></span><br><span class="line">	request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());</span><br><span class="line">	request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.localeResolver);</span><br><span class="line">	request.setAttribute(THEME_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.themeResolver);</span><br><span class="line">	request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.flashMapManager != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="type">FlashMap</span> <span class="variable">inputFlashMap</span> <span class="operator">=</span> <span class="built_in">this</span>.flashMapManager.retrieveAndUpdate(request, response);</span><br><span class="line">		<span class="keyword">if</span> (inputFlashMap != <span class="literal">null</span>) &#123;</span><br><span class="line">			request.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Collections.unmodifiableMap(inputFlashMap));</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(OUTPUT_FLASH_MAP_ATTRIBUTE, <span class="keyword">new</span> <span class="title class_">FlashMap</span>());</span><br><span class="line">		request.setAttribute(FLASH_MAP_MANAGER_ATTRIBUTE, <span class="built_in">this</span>.flashMapManager);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">//真正的开始处理请求</span></span><br><span class="line">		doDispatch(request, response);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Restore the original attribute snapshot, in case of an include.</span></span><br><span class="line">			<span class="keyword">if</span> (attributesSnapshot != <span class="literal">null</span>) &#123;</span><br><span class="line">				restoreAttributesAfterInclude(request, attributesSnapshot);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-doDispatch-request-response-真正开始处理请求"><a href="#2-doDispatch-request-response-真正开始处理请求" class="headerlink" title="2. doDispatch(request, response)真正开始处理请求"></a>2. doDispatch(request, response)真正开始处理请求</h3><p>接下来 DispatcherServlet 开始真正的处理，让我们来看下 <strong>doDispatch</strong> 方法，首先会获取当前请求的 <strong>Handler 执行链</strong>，然后找到合适的 <strong>HandlerAdapter</strong>（此处为 RequestMappingHandlerAdapter），接着调用 RequestMappingHandlerAdapter 的 <strong>handle</strong> 方法，如下为 doDispatch 方法：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doDispatch</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">		<span class="type">HttpServletRequest</span> <span class="variable">processedRequest</span> <span class="operator">=</span> request;</span><br><span class="line">		<span class="type">HandlerExecutionChain</span> <span class="variable">mappedHandler</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">boolean</span> <span class="variable">multipartRequestParsed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="type">WebAsyncManager</span> <span class="variable">asyncManager</span> <span class="operator">=</span> WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="type">ModelAndView</span> <span class="variable">mv</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">			<span class="type">Exception</span> <span class="variable">dispatchException</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//先检查是不是 Multipart 类型的，比如上传等；如果是 Multipart 类型的，则转换为 MultipartHttpServletRequest 类型</span></span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 获取当前请求的 Handler 执行链，这一部分就是处理器映射器</span></span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				<span class="keyword">if</span> (mappedHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">//获取当前的处理器适配器</span></span><br><span class="line">				<span class="type">HandlerAdapter</span> <span class="variable">ha</span> <span class="operator">=</span> getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 对于 header 中 last-modified 的处理</span></span><br><span class="line">				<span class="type">String</span> <span class="variable">method</span> <span class="operator">=</span> request.getMethod();</span><br><span class="line">				<span class="type">boolean</span> <span class="variable">isGet</span> <span class="operator">=</span> <span class="string">&quot;GET&quot;</span>.equals(method);</span><br><span class="line">				<span class="keyword">if</span> (isGet || <span class="string">&quot;HEAD&quot;</span>.equals(method)) &#123;</span><br><span class="line">					<span class="type">long</span> <span class="variable">lastModified</span> <span class="operator">=</span> ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line">					<span class="keyword">if</span> (<span class="keyword">new</span> <span class="title class_">ServletWebRequest</span>(request, response).checkNotModified(lastModified) &amp;&amp; isGet) &#123;</span><br><span class="line">						<span class="keyword">return</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 遍历所有定义的 interceptor，执行 preHandle 方法，如果它们返回了false,</span></span><br><span class="line">                <span class="comment">// 那么就不再往下执行了</span></span><br><span class="line">				<span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 实际调用Handler的地方，其实就是Controller的对象了</span></span><br><span class="line">				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">                <span class="comment">//处理成默认视图名，也就是添加前缀和后缀等</span></span><br><span class="line">				applyDefaultViewName(processedRequest, mv);</span><br><span class="line">                <span class="comment">// 拦截器postHandle方法进行处理</span></span><br><span class="line">				mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">				dispatchException = ex;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">				dispatchException = <span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler dispatch failed&quot;</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">//处理最后的结果，渲染之类的都在这里</span></span><br><span class="line">			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler,</span><br><span class="line">					<span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler processing failed&quot;</span>, err));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">				<span class="comment">// Instead of postHandle and afterCompletion</span></span><br><span class="line">				<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Clean up any resources used by a multipart request.</span></span><br><span class="line">				<span class="keyword">if</span> (multipartRequestParsed) &#123;</span><br><span class="line">					cleanupMultipart(processedRequest);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-查找对应的-Handler-对象-getHandler-processedRequest"><a href="#3-查找对应的-Handler-对象-getHandler-processedRequest" class="headerlink" title="3. 查找对应的 Handler 对象 getHandler(processedRequest)"></a>3. 查找对应的 Handler 对象 getHandler(processedRequest)</h3><p>让我们去探索下是如何获取当前请求的 Handler 执行链，对应着这句代码 mappedHandler &#x3D; getHandler(processedRequest);，看下 <strong>DispatcherServlet 具体的 getHandler</strong> 方法，该方法主要是遍历所有的 handlerMappings 进行处理，handlerMappings 是在启动的时候预先注册好的，handlerMappings 包含 RequestMappingHandlerMapping、BeanNameUrlHandlerMapping、RouterFunctionMapping、SimpleUrlHandlerMapping 以及 WelcomePageHandlerMapping，在循环中会调用 <strong>AbstractHandlerMapping 类中的 getHandler 方法</strong>来获取 Handler 执行链，若获取的 Handler 执行链不为 null，则返回当前请求的 Handler 执行链，DispatcherServlet 类的 getHandler 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.handlerMappings != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">//遍历所有的handlerMappings进行处理，handlerMappings是在启动的时候注册好的</span></span><br><span class="line">		<span class="keyword">for</span> (HandlerMapping mapping : <span class="built_in">this</span>.handlerMappings) &#123;</span><br><span class="line">			<span class="type">HandlerExecutionChain</span> <span class="variable">handler</span> <span class="operator">=</span> mapping.getHandler(request);</span><br><span class="line">			<span class="keyword">if</span> (handler != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> handler;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法："><a href="#3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法：" class="headerlink" title="3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法："></a>3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">//根据request获取handler</span></span><br><span class="line">	<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> getHandlerInternal(request);</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		handler = getDefaultHandler();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果Handler时String，表明时一个bean名称，需要寻找对应bean</span></span><br><span class="line">	<span class="keyword">if</span> (handler <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">		<span class="type">String</span> <span class="variable">handlerName</span> <span class="operator">=</span> (String) handler;</span><br><span class="line">		handler = obtainApplicationContext().getBean(handlerName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 封装 Handler 执行链返回</span></span><br><span class="line">	<span class="type">HandlerExecutionChain</span> <span class="variable">executionChain</span> <span class="operator">=</span> getHandlerExecutionChain(handler, request);</span><br><span class="line">	<span class="keyword">return</span> executionChain;</span><br></pre></td></tr></table></figure>
+<h4 id="3-2-getHandlerInternal-request"><a href="#3-2-getHandlerInternal-request" class="headerlink" title="3.2 getHandlerInternal(request)"></a>3.2 getHandlerInternal(request)</h4><p>AbstractHandlerMapping 类中的 getHandler 方法中首先<strong>根据 requrst 获取 handler</strong>，主要是调用了 AbstractHandlerMethodMapping 类中的 <strong>getHandlerInternal</strong> 方法，该方法首先获取 request 中的 url，即 &#x2F;hello&#x2F;{message}，用来匹配 handler 并封装成 HandlerMethod，然后根据 handlerMethod 中的 bean 来实例化 Handler 并返回。<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/03/18/JkE3SYplDrH8GUg.png"
+                      alt="image.png"
+                ></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">getHandlerInternal</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 获取 request 中的 url，用来匹配 handler ： index/‘haha’</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> getUrlPathHelper().getLookupPathForRequest(request);</span><br><span class="line">	<span class="built_in">this</span>.mappingRegistry.acquireReadLock();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">// 根据路径寻找 Handler，并封装成 HandlerMethod</span></span><br><span class="line">		<span class="type">HandlerMethod</span> <span class="variable">handlerMethod</span> <span class="operator">=</span> lookupHandlerMethod(lookupPath, request);         <span class="comment">// 根据 handlerMethod 中的 bean 来实例化 Handler，并添加进 HandlerMethod</span></span><br><span class="line">		<span class="keyword">return</span> (handlerMethod != <span class="literal">null</span> ? handlerMethod.createWithResolvedBean() : <span class="literal">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="built_in">this</span>.mappingRegistry.releaseReadLock();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来，我们看 <strong>lookupHandlerMethod</strong> 的逻辑，主要逻辑委托给了 <strong>mappingRegistry</strong> 这个成员变量来处理：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">lookupHandlerMethod</span><span class="params">(String lookupPath, HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	List&lt;Match&gt; matches = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">       <span class="comment">//通过 lookupPath属性中查找。如果找到了，就返回对应的RequestMappingInfo</span></span><br><span class="line">	List&lt;T&gt; directPathMatches = <span class="built_in">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">	<span class="keyword">if</span> (directPathMatches != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">// 如果匹配到了，检查其他属性是否符合要求，如请求方法，参数，header 等</span></span><br><span class="line">		addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (matches.isEmpty()) &#123;</span><br><span class="line">		<span class="comment">// 没有直接匹配到，则遍历所有的处理方法进行通配符匹配，这里大部分处理path类的</span></span><br><span class="line">           <span class="comment">// 请求，例如: /user/&#123;userId&#125;等请求</span></span><br><span class="line">		addMatchingMappings(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), matches, request);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!matches.isEmpty()) &#123;</span><br><span class="line">           <span class="comment">// 如果方法有多个匹配，不同的通配符等，则排序选择出最合适的一个</span></span><br><span class="line">		Comparator&lt;Match&gt; comparator = <span class="keyword">new</span> <span class="title class_">MatchComparator</span>(getMappingComparator(request));</span><br><span class="line">		matches.sort(comparator);</span><br><span class="line">		<span class="type">Match</span> <span class="variable">bestMatch</span> <span class="operator">=</span> matches.get(<span class="number">0</span>);</span><br><span class="line">           <span class="comment">// 如果有多个匹配的，会找到第二个最合适的进行比较</span></span><br><span class="line">		<span class="keyword">if</span> (matches.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(matches.size() + <span class="string">&quot; matching mappings: &quot;</span> + matches);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">				<span class="keyword">return</span> PREFLIGHT_AMBIGUOUS_MATCH;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="type">Match</span> <span class="variable">secondBestMatch</span> <span class="operator">=</span> matches.get(<span class="number">1</span>);</span><br><span class="line">			<span class="keyword">if</span> (comparator.compare(bestMatch, secondBestMatch) == <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m1</span> <span class="operator">=</span> bestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m2</span> <span class="operator">=</span> secondBestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">String</span> <span class="variable">uri</span> <span class="operator">=</span> request.getRequestURI();</span><br><span class="line">                   <span class="comment">// 不能有相同的最优 Match</span></span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">						<span class="string">&quot;Ambiguous handler methods mapped for &#x27;&quot;</span> + uri + <span class="string">&quot;&#x27;: &#123;&quot;</span> + m1 + <span class="string">&quot;, &quot;</span> + m2 + <span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE, bestMatch.handlerMethod);</span><br><span class="line">           <span class="comment">// 设置 request 参数（RequestMappingHandlerMapping 对其进行了覆写）</span></span><br><span class="line">		handleMatch(bestMatch.mapping, lookupPath, request);</span><br><span class="line">		<span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="comment">// 调用 RequestMappingHandlerMapping 类的 handleNoMatch 方法再匹配一次</span></span><br><span class="line">		<span class="keyword">return</span> handleNoMatch(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), lookupPath, request);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过上面的过程，我们就获取到了 Handler，就开始<strong>封装执行链</strong>了，就是将我们配置的拦截器加入到执行链中去，<strong>getHandlerExecutionChain</strong> 方法如下：</p>
+<h4 id="3-3-封装执行链、重要-getHandlerExecutionChain"><a href="#3-3-封装执行链、重要-getHandlerExecutionChain" class="headerlink" title="3.3 (封装执行链、重要) getHandlerExecutionChain ()"></a>3.3 (封装执行链、重要) getHandlerExecutionChain ()</h4><p><strong>这里会传入业务的handler，也就是我们的业务controller。或者是以beanName生成的Handlermappings，反正就是具体的业务方法，然后把拦截器放在执行链的前面就可以</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandlerExecutionChain</span><span class="params">(Object handler, HttpServletRequest request)</span> &#123;</span><br><span class="line">	<span class="comment">// 如果当前 Handler 不是执行链类型，就使用一个新的执行链实例封装起来</span></span><br><span class="line">       <span class="type">HandlerExecutionChain</span> <span class="variable">chain</span> <span class="operator">=</span> (handler <span class="keyword">instanceof</span> HandlerExecutionChain ?</span><br><span class="line">			(HandlerExecutionChain) handler : <span class="keyword">new</span> <span class="title class_">HandlerExecutionChain</span>(handler));</span><br><span class="line"></span><br><span class="line">       <span class="comment">//获取请求的path</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> <span class="built_in">this</span>.urlPathHelper.getLookupPathForRequest(request);</span><br><span class="line">	<span class="comment">// 遍历拦截器，找到跟当前 url 对应的，添加进执行链中去</span></span><br><span class="line">       <span class="keyword">for</span> (HandlerInterceptor interceptor : <span class="built_in">this</span>.adaptedInterceptors) &#123;</span><br><span class="line">		<span class="keyword">if</span> (interceptor <span class="keyword">instanceof</span> MappedInterceptor) &#123;</span><br><span class="line">			<span class="type">MappedInterceptor</span> <span class="variable">mappedInterceptor</span> <span class="operator">=</span> (MappedInterceptor) interceptor;</span><br><span class="line">			<span class="keyword">if</span> (mappedInterceptor.matches(lookupPath, <span class="built_in">this</span>.pathMatcher)) &#123;</span><br><span class="line">				chain.addInterceptor(mappedInterceptor.getInterceptor());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			chain.addInterceptor(interceptor);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> chain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到此为止，我们就获取了当前请求的 Handler 执行链，接下来看下是如何获取请求的 <strong>Handler 适配器</strong>，主要依靠 <strong>DispatcherServlet 类的 getHandlerAdapter 方法</strong>，该方法就是遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回，在这里匹配到的为 RequestMappingHandlerAdapter。DispatcherServlet 类的 getHandlerAdapter 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerAdapter <span class="title function_">getHandlerAdapter</span><span class="params">(Object handler)</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.handlerAdapters != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回</span></span><br><span class="line">        <span class="keyword">for</span> (HandlerAdapter adapter : <span class="built_in">this</span>.handlerAdapters) &#123;</span><br><span class="line">            <span class="keyword">if</span> (adapter.supports(handler)) &#123;</span><br><span class="line">                <span class="keyword">return</span> adapter;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;No adapter for handler [&quot;</span> + handler +</span><br><span class="line">            <span class="string">&quot;]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="4-（调用业务）HandlerAdapter-执行当前的-Handler"><a href="#4-（调用业务）HandlerAdapter-执行当前的-Handler" class="headerlink" title="4. （调用业务）HandlerAdapter 执行当前的 Handler"></a>4. （调用业务）HandlerAdapter 执行当前的 Handler</h3><p>再获取完当前请求的 Handler 适配器后，接着进行<strong>缓存处理</strong>，也就是对 last-modified 的处理，然后调用 applyPreHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，即遍历所有定义的 interceptor，执行 postHandle 方法，然后就到了实际执行 handle 的地方，doDispatch 方法中 handle 方法是执行当前 Handler，我们这里使用的是 RequestMappingHandlerAdapter，首先会进入 <strong>AbstractHandlerMethodAdapter 的 handle 方法</strong>：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> ModelAndView <span class="title function_">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span></span><br><span class="line">		<span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> handleInternal(request, response, (HandlerMethod) handler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法："><a href="#4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法：" class="headerlink" title="4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法："></a>4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">protected</span> ModelAndView <span class="title function_">handleInternal</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		ModelAndView mav;</span><br><span class="line">		checkRequest(request);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">			<span class="type">HttpSession</span> <span class="variable">session</span> <span class="operator">=</span> request.getSession(<span class="literal">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (session != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">mutex</span> <span class="operator">=</span> WebUtils.getSessionMutex(session);</span><br><span class="line">				<span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">					mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">				mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 执行方法，封装 ModelAndView</span></span><br><span class="line">			mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">				applyCacheSeconds(response, <span class="built_in">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				prepareResponse(response);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> mav;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>在执行完 handle 方法后，然后调用 applyDefaultViewName 方法<strong>组装默认视图名称</strong>，将前缀和后缀名都加上，接着调用 applyPostHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，也就是遍历所有定义的 interceptor，执行 postHandle 方法。</p>
+<h3 id="5-处理最终结果以及渲染"><a href="#5-处理最终结果以及渲染" class="headerlink" title="5. 处理最终结果以及渲染"></a>5. 处理最终结果以及渲染</h3><p>最后调用 <strong>DispatcherServlet 类中的 processDispatchResult 方法</strong>，此方法是<strong>处理最终结果的，包括异常处理、渲染页面和发出完成通知触发拦截器的 afterCompletion() 方法执行等</strong>，processDispatchResult()方法代码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processDispatchResult</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> HandlerExecutionChain mappedHandler, <span class="meta">@Nullable</span> ModelAndView mv,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> Exception exception)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		<span class="type">boolean</span> <span class="variable">errorView</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (exception != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (exception <span class="keyword">instanceof</span> ModelAndViewDefiningException) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;ModelAndViewDefiningException encountered&quot;</span>, exception);</span><br><span class="line">				mv = ((ModelAndViewDefiningException) exception).getModelAndView();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> (mappedHandler != <span class="literal">null</span> ? mappedHandler.getHandler() : <span class="literal">null</span>);</span><br><span class="line">				mv = processHandlerException(request, response, handler, exception);</span><br><span class="line">				errorView = (mv != <span class="literal">null</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 渲染</span></span><br><span class="line">		<span class="keyword">if</span> (mv != <span class="literal">null</span> &amp;&amp; !mv.wasCleared()) &#123;</span><br><span class="line">			render(mv, request, response);</span><br><span class="line">			<span class="keyword">if</span> (errorView) &#123;</span><br><span class="line">				WebUtils.clearErrorRequestAttributes(request);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(<span class="string">&quot;No view rendering, null ModelAndView returned.&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Concurrent handling started during a forward</span></span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">			mappedHandler.triggerAfterCompletion(request, response, <span class="literal">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来让我们看下 <strong>DispatcherServlet 类的 render 方法</strong>是如何完成渲染的，DispatcherServlet 类的 render 方法渲染过程如下：</p>
+<ol>
+<li>判断 ModelAndView 中 view 是否为 view name，没有获取其实例对象：如果是根据 name，如果是则需要调用 resolveViewName 从视图解析器获取对应的视图(View)对象；否则 ModelAndView 中使用 getview 方法获取 view 对象。</li>
+<li>然后调用 View 类的 render 方法。</li>
+</ol>
+<p>DispatcherServlet 类的 render 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">render</span><span class="params">(ModelAndView mv, HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 设置本地化</span></span><br><span class="line">    <span class="type">Locale</span> <span class="variable">locale</span> <span class="operator">=</span> (<span class="built_in">this</span>.localeResolver != <span class="literal">null</span> ? <span class="built_in">this</span>.localeResolver.resolveLocale(request) : request.getLocale());</span><br><span class="line">    response.setLocale(locale);</span><br><span class="line">    View view;</span><br><span class="line">    <span class="type">String</span> <span class="variable">viewName</span> <span class="operator">=</span> mv.getViewName();</span><br><span class="line">    <span class="keyword">if</span> (viewName != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 解析视图名，得到视图</span></span><br><span class="line">        view = resolveViewName(viewName, mv.getModelInternal(), locale, request);</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;Could not resolve view with name &#x27;&quot;</span> + mv.getViewName() +</span><br><span class="line">                    <span class="string">&quot;&#x27; in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        view = mv.getView();</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;ModelAndView [&quot;</span> + mv + <span class="string">&quot;] neither contains a view name nor a &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;View object in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Rendering view [&quot;</span> + view + <span class="string">&quot;] &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mv.getStatus() != <span class="literal">null</span>) &#123;</span><br><span class="line">            response.setStatus(mv.getStatus().value());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 委托给视图进行渲染</span></span><br><span class="line">        view.render(mv.getModelInternal(), request, response);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(<span class="string">&quot;Error rendering view [&quot;</span> + view + <span class="string">&quot;]&quot;</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>Spring</tag>
+        <tag>SpringMVC</tag>
+        <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>video玩出新花样当background</title>
     <url>/2018/05/20/video/</url>
     <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
@@ -481,78 +622,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SpringMVC源码的分析</title>
-    <url>/2023/03/18/Spring%20MVC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<h1 id="SpringMVC执行过程"><a href="#SpringMVC执行过程" class="headerlink" title="SpringMVC执行过程"></a>SpringMVC执行过程</h1><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p>Spring MVC 的四大组件:<strong>前端控制器（DispatcherServlet）、处理器映射器（HandlerMapping）、处理器适配器（HandlerAdapter）以及视图解析器（ViewResolver）</strong> 的角度来看一下 Spring MVC 对用户请求的处理过程，过程如下图所示:<br>其中，DispatcherServlet是前端控制器，它负责接收用户的请求，并调用其他组件来处理。HandlerMapping是处理器映射器，它负责根据请求的URL找到对应的Controller对象，并返回给DispatcherServlet。HandlerAdapter是处理器适配器，它负责根据Controller对象的类型，找到合适的适配器对象，并调用Controller对象的方法，返回ModelAndView对象。ModelAndView对象包含了模型数据和视图名称。ViewResolver是视图解析器，它负责根据视图名称找到对应的视图对象，并返回给DispatcherServlet。View是视图对象，它负责渲染模型数据，并返回响应给用户。<br>这样一来，springmvc就实现了一个基于MVC模式的web框架，将请求处理分成了不同的步骤和组件，<strong>提高了可扩展性和灵活性。</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2023/03/18/muzNRPc5a4tKOrv.png"
-                      alt="image.png"
-                ></p>
-<h2 id="执行过程和组件介绍"><a href="#执行过程和组件介绍" class="headerlink" title="执行过程和组件介绍"></a>执行过程和组件介绍</h2><ol>
-<li>用户向服务器发送请求，请求会先达到 SpringMVC 前端控制器 DispatcherServlet ;</li>
-<li>DispatcherServlet 根据该 URI，调用 HandlerMapping 获得该 Handler 配置的所有相关的对象（包括 Handler 对象以及 Handler 对象对应的拦截器），最后以 HandlerExecutionChain 执行链对象的形式返回</li>
-<li>DispatcherServlet 根据获得的 Handler，获取对应的 HandlerAdapter;</li>
-<li>获取到 HandlerAdapter，将开始执行拦截器的 preHandler(…)方法;</li>
-<li>提取 Request 中的模型数据，填充 Handler 入参，开始执行 Handler（Controller)方法，处理请求，在填充 Handler 的入参过程中，根据你的配置，Spring 将帮你做一些额外的工作：<ul>
-<li>HttpMessageConveter：将请求消息（如 Json、xml 等数据）转换成一个对象，将对象转换为指定的类型信息</li>
-<li>数据转换：对请求消息进行数据转换。如 String 转换成 Integer、Double 等</li>
-<li>数据格式化：对请求消息进行数据格式化。如将字符串转换成格式化数字或格式化日期等</li>
-<li>数据验证：验证数据的有效性（长度、格式等），验证结果存储到 BindingResult 或 Error 中</li>
-</ul>
-</li>
-<li>Handler 方法执行完成后，向 DispatcherServlet 返回一个 ModelAndView 对象。</li>
-<li>开始执行拦截器的 postHandle(…)方</li>
-<li>根据返回的 ModelAndView（此时会判断是否存在异常：如果存在异常，则执行 HandlerExceptionResolver 进行异常处理）选择一个适合的 ViewResolver 进行视图解析，根据 Model 和 View，来渲染视图</li>
-<li>渲染视图完毕执行拦截器的 afterCompletion(…)方法</li>
-<li>将渲染结果返回给客户端，本次http请求完成</li>
-</ol>
-<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="1-创建Filter"><a href="#1-创建Filter" class="headerlink" title="1. 创建Filter"></a>1. 创建Filter</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseFilter</span> <span class="keyword">implements</span> <span class="title class_">Filter</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:1&quot;</span>);</span><br><span class="line">        filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-创建HandlerInterceptor拦截器"><a href="#2-创建HandlerInterceptor拦截器" class="headerlink" title="2. 创建HandlerInterceptor  拦截器"></a>2. 创建HandlerInterceptor  拦截器</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseInterceptor</span> <span class="keyword">implements</span> <span class="title class_">HandlerInterceptor</span>, WebMvcConfigurer &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:2&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> HandlerInterceptor.<span class="built_in">super</span>.preHandle(request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:4&quot;</span>);</span><br><span class="line">        HandlerInterceptor.<span class="built_in">super</span>.afterCompletion(request, response, handler, ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addInterceptors</span><span class="params">(InterceptorRegistry registry)</span> &#123;</span><br><span class="line">        registry.addInterceptor(<span class="keyword">new</span> <span class="title class_">BaseInterceptor</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-编写Controller的代码"><a href="#3-编写Controller的代码" class="headerlink" title="3. 编写Controller的代码"></a>3. 编写Controller的代码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;index/&#123;message&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">get</span><span class="params">(<span class="meta">@PathVariable</span> String message)</span> &#123;</span><br><span class="line">    System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:3&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;hello&quot;</span> + <span class="string">&quot;&lt;br/&gt;&quot;</span> + message + <span class="string">&quot;&lt;br&gt;&quot;</span> + LocalDateTime.now();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="开始分析"><a href="#开始分析" class="headerlink" title="开始分析"></a>开始分析</h2><p>首先当我们访问页面的时候，将会把请求发送到<strong>前端控制器 DispatcherServlet</strong>，DispatcherServlet 是一个 Servlet，我们知道在 Servlet 在处理一个请求的时候会交给 service 方法进行处理，这里也不例外，DispatcherServlet 继承了 FrameworkServlet，并且在收到请求后会调用我们的doService()函数</p>
-<h3 id="1-进入doService-request-response"><a href="#1-进入doService-request-response" class="headerlink" title="1. 进入doService(request, response)"></a>1. 进入doService(request, response)</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doService</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	logRequest(request);</span><br><span class="line">       <span class="comment">// 给 request 中的属性做一份快照，以便能够恢复原始属性</span></span><br><span class="line">	Map&lt;String, Object&gt; attributesSnapshot = <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">if</span> (WebUtils.isIncludeRequest(request)) &#123;</span><br><span class="line">		attributesSnapshot = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">		Enumeration&lt;?&gt; attrNames = request.getAttributeNames();</span><br><span class="line">		<span class="keyword">while</span> (attrNames.hasMoreElements()) &#123;</span><br><span class="line">			<span class="type">String</span> <span class="variable">attrName</span> <span class="operator">=</span> (String) attrNames.nextElement();</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">this</span>.cleanupAfterInclude || attrName.startsWith(DEFAULT_STRATEGIES_PREFIX)) &#123;</span><br><span class="line">				attributesSnapshot.put(attrName, request.getAttribute(attrName));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果没有配置本地化或者主题的处理器之类的，SpringMVC 会使用默认的配置文件，即 DispatcherServlet.properties</span></span><br><span class="line">	request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());</span><br><span class="line">	request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.localeResolver);</span><br><span class="line">	request.setAttribute(THEME_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.themeResolver);</span><br><span class="line">	request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.flashMapManager != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="type">FlashMap</span> <span class="variable">inputFlashMap</span> <span class="operator">=</span> <span class="built_in">this</span>.flashMapManager.retrieveAndUpdate(request, response);</span><br><span class="line">		<span class="keyword">if</span> (inputFlashMap != <span class="literal">null</span>) &#123;</span><br><span class="line">			request.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Collections.unmodifiableMap(inputFlashMap));</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(OUTPUT_FLASH_MAP_ATTRIBUTE, <span class="keyword">new</span> <span class="title class_">FlashMap</span>());</span><br><span class="line">		request.setAttribute(FLASH_MAP_MANAGER_ATTRIBUTE, <span class="built_in">this</span>.flashMapManager);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">//真正的开始处理请求</span></span><br><span class="line">		doDispatch(request, response);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Restore the original attribute snapshot, in case of an include.</span></span><br><span class="line">			<span class="keyword">if</span> (attributesSnapshot != <span class="literal">null</span>) &#123;</span><br><span class="line">				restoreAttributesAfterInclude(request, attributesSnapshot);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-doDispatch-request-response-真正开始处理请求"><a href="#2-doDispatch-request-response-真正开始处理请求" class="headerlink" title="2. doDispatch(request, response)真正开始处理请求"></a>2. doDispatch(request, response)真正开始处理请求</h3><p>接下来 DispatcherServlet 开始真正的处理，让我们来看下 <strong>doDispatch</strong> 方法，首先会获取当前请求的 <strong>Handler 执行链</strong>，然后找到合适的 <strong>HandlerAdapter</strong>（此处为 RequestMappingHandlerAdapter），接着调用 RequestMappingHandlerAdapter 的 <strong>handle</strong> 方法，如下为 doDispatch 方法：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doDispatch</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">		<span class="type">HttpServletRequest</span> <span class="variable">processedRequest</span> <span class="operator">=</span> request;</span><br><span class="line">		<span class="type">HandlerExecutionChain</span> <span class="variable">mappedHandler</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">boolean</span> <span class="variable">multipartRequestParsed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="type">WebAsyncManager</span> <span class="variable">asyncManager</span> <span class="operator">=</span> WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="type">ModelAndView</span> <span class="variable">mv</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">			<span class="type">Exception</span> <span class="variable">dispatchException</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//先检查是不是 Multipart 类型的，比如上传等；如果是 Multipart 类型的，则转换为 MultipartHttpServletRequest 类型</span></span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 获取当前请求的 Handler 执行链，这一部分就是处理器映射器</span></span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				<span class="keyword">if</span> (mappedHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">//获取当前的处理器适配器</span></span><br><span class="line">				<span class="type">HandlerAdapter</span> <span class="variable">ha</span> <span class="operator">=</span> getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 对于 header 中 last-modified 的处理</span></span><br><span class="line">				<span class="type">String</span> <span class="variable">method</span> <span class="operator">=</span> request.getMethod();</span><br><span class="line">				<span class="type">boolean</span> <span class="variable">isGet</span> <span class="operator">=</span> <span class="string">&quot;GET&quot;</span>.equals(method);</span><br><span class="line">				<span class="keyword">if</span> (isGet || <span class="string">&quot;HEAD&quot;</span>.equals(method)) &#123;</span><br><span class="line">					<span class="type">long</span> <span class="variable">lastModified</span> <span class="operator">=</span> ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line">					<span class="keyword">if</span> (<span class="keyword">new</span> <span class="title class_">ServletWebRequest</span>(request, response).checkNotModified(lastModified) &amp;&amp; isGet) &#123;</span><br><span class="line">						<span class="keyword">return</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 遍历所有定义的 interceptor，执行 preHandle 方法，如果它们返回了false,</span></span><br><span class="line">                <span class="comment">// 那么就不再往下执行了</span></span><br><span class="line">				<span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 实际调用Handler的地方，其实就是Controller的对象了</span></span><br><span class="line">				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">                <span class="comment">//处理成默认视图名，也就是添加前缀和后缀等</span></span><br><span class="line">				applyDefaultViewName(processedRequest, mv);</span><br><span class="line">                <span class="comment">// 拦截器postHandle方法进行处理</span></span><br><span class="line">				mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">				dispatchException = ex;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">				dispatchException = <span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler dispatch failed&quot;</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">//处理最后的结果，渲染之类的都在这里</span></span><br><span class="line">			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler,</span><br><span class="line">					<span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler processing failed&quot;</span>, err));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">				<span class="comment">// Instead of postHandle and afterCompletion</span></span><br><span class="line">				<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Clean up any resources used by a multipart request.</span></span><br><span class="line">				<span class="keyword">if</span> (multipartRequestParsed) &#123;</span><br><span class="line">					cleanupMultipart(processedRequest);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-查找对应的-Handler-对象-getHandler-processedRequest"><a href="#3-查找对应的-Handler-对象-getHandler-processedRequest" class="headerlink" title="3. 查找对应的 Handler 对象 getHandler(processedRequest)"></a>3. 查找对应的 Handler 对象 getHandler(processedRequest)</h3><p>让我们去探索下是如何获取当前请求的 Handler 执行链，对应着这句代码 mappedHandler &#x3D; getHandler(processedRequest);，看下 <strong>DispatcherServlet 具体的 getHandler</strong> 方法，该方法主要是遍历所有的 handlerMappings 进行处理，handlerMappings 是在启动的时候预先注册好的，handlerMappings 包含 RequestMappingHandlerMapping、BeanNameUrlHandlerMapping、RouterFunctionMapping、SimpleUrlHandlerMapping 以及 WelcomePageHandlerMapping，在循环中会调用 <strong>AbstractHandlerMapping 类中的 getHandler 方法</strong>来获取 Handler 执行链，若获取的 Handler 执行链不为 null，则返回当前请求的 Handler 执行链，DispatcherServlet 类的 getHandler 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.handlerMappings != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">//遍历所有的handlerMappings进行处理，handlerMappings是在启动的时候注册好的</span></span><br><span class="line">		<span class="keyword">for</span> (HandlerMapping mapping : <span class="built_in">this</span>.handlerMappings) &#123;</span><br><span class="line">			<span class="type">HandlerExecutionChain</span> <span class="variable">handler</span> <span class="operator">=</span> mapping.getHandler(request);</span><br><span class="line">			<span class="keyword">if</span> (handler != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> handler;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法："><a href="#3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法：" class="headerlink" title="3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法："></a>3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">//根据request获取handler</span></span><br><span class="line">	<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> getHandlerInternal(request);</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		handler = getDefaultHandler();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果Handler时String，表明时一个bean名称，需要寻找对应bean</span></span><br><span class="line">	<span class="keyword">if</span> (handler <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">		<span class="type">String</span> <span class="variable">handlerName</span> <span class="operator">=</span> (String) handler;</span><br><span class="line">		handler = obtainApplicationContext().getBean(handlerName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 封装 Handler 执行链返回</span></span><br><span class="line">	<span class="type">HandlerExecutionChain</span> <span class="variable">executionChain</span> <span class="operator">=</span> getHandlerExecutionChain(handler, request);</span><br><span class="line">	<span class="keyword">return</span> executionChain;</span><br></pre></td></tr></table></figure>
-<h4 id="3-2-getHandlerInternal-request"><a href="#3-2-getHandlerInternal-request" class="headerlink" title="3.2 getHandlerInternal(request)"></a>3.2 getHandlerInternal(request)</h4><p>AbstractHandlerMapping 类中的 getHandler 方法中首先<strong>根据 requrst 获取 handler</strong>，主要是调用了 AbstractHandlerMethodMapping 类中的 <strong>getHandlerInternal</strong> 方法，该方法首先获取 request 中的 url，即 &#x2F;hello&#x2F;{message}，用来匹配 handler 并封装成 HandlerMethod，然后根据 handlerMethod 中的 bean 来实例化 Handler 并返回。<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2023/03/18/JkE3SYplDrH8GUg.png"
-                      alt="image.png"
-                ></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">getHandlerInternal</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 获取 request 中的 url，用来匹配 handler ： index/‘haha’</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> getUrlPathHelper().getLookupPathForRequest(request);</span><br><span class="line">	<span class="built_in">this</span>.mappingRegistry.acquireReadLock();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">// 根据路径寻找 Handler，并封装成 HandlerMethod</span></span><br><span class="line">		<span class="type">HandlerMethod</span> <span class="variable">handlerMethod</span> <span class="operator">=</span> lookupHandlerMethod(lookupPath, request);         <span class="comment">// 根据 handlerMethod 中的 bean 来实例化 Handler，并添加进 HandlerMethod</span></span><br><span class="line">		<span class="keyword">return</span> (handlerMethod != <span class="literal">null</span> ? handlerMethod.createWithResolvedBean() : <span class="literal">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="built_in">this</span>.mappingRegistry.releaseReadLock();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>接下来，我们看 <strong>lookupHandlerMethod</strong> 的逻辑，主要逻辑委托给了 <strong>mappingRegistry</strong> 这个成员变量来处理：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">lookupHandlerMethod</span><span class="params">(String lookupPath, HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	List&lt;Match&gt; matches = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">       <span class="comment">//通过 lookupPath属性中查找。如果找到了，就返回对应的RequestMappingInfo</span></span><br><span class="line">	List&lt;T&gt; directPathMatches = <span class="built_in">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">	<span class="keyword">if</span> (directPathMatches != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">// 如果匹配到了，检查其他属性是否符合要求，如请求方法，参数，header 等</span></span><br><span class="line">		addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (matches.isEmpty()) &#123;</span><br><span class="line">		<span class="comment">// 没有直接匹配到，则遍历所有的处理方法进行通配符匹配，这里大部分处理path类的</span></span><br><span class="line">           <span class="comment">// 请求，例如: /user/&#123;userId&#125;等请求</span></span><br><span class="line">		addMatchingMappings(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), matches, request);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!matches.isEmpty()) &#123;</span><br><span class="line">           <span class="comment">// 如果方法有多个匹配，不同的通配符等，则排序选择出最合适的一个</span></span><br><span class="line">		Comparator&lt;Match&gt; comparator = <span class="keyword">new</span> <span class="title class_">MatchComparator</span>(getMappingComparator(request));</span><br><span class="line">		matches.sort(comparator);</span><br><span class="line">		<span class="type">Match</span> <span class="variable">bestMatch</span> <span class="operator">=</span> matches.get(<span class="number">0</span>);</span><br><span class="line">           <span class="comment">// 如果有多个匹配的，会找到第二个最合适的进行比较</span></span><br><span class="line">		<span class="keyword">if</span> (matches.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(matches.size() + <span class="string">&quot; matching mappings: &quot;</span> + matches);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">				<span class="keyword">return</span> PREFLIGHT_AMBIGUOUS_MATCH;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="type">Match</span> <span class="variable">secondBestMatch</span> <span class="operator">=</span> matches.get(<span class="number">1</span>);</span><br><span class="line">			<span class="keyword">if</span> (comparator.compare(bestMatch, secondBestMatch) == <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m1</span> <span class="operator">=</span> bestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m2</span> <span class="operator">=</span> secondBestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">String</span> <span class="variable">uri</span> <span class="operator">=</span> request.getRequestURI();</span><br><span class="line">                   <span class="comment">// 不能有相同的最优 Match</span></span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">						<span class="string">&quot;Ambiguous handler methods mapped for &#x27;&quot;</span> + uri + <span class="string">&quot;&#x27;: &#123;&quot;</span> + m1 + <span class="string">&quot;, &quot;</span> + m2 + <span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE, bestMatch.handlerMethod);</span><br><span class="line">           <span class="comment">// 设置 request 参数（RequestMappingHandlerMapping 对其进行了覆写）</span></span><br><span class="line">		handleMatch(bestMatch.mapping, lookupPath, request);</span><br><span class="line">		<span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="comment">// 调用 RequestMappingHandlerMapping 类的 handleNoMatch 方法再匹配一次</span></span><br><span class="line">		<span class="keyword">return</span> handleNoMatch(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), lookupPath, request);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>通过上面的过程，我们就获取到了 Handler，就开始<strong>封装执行链</strong>了，就是将我们配置的拦截器加入到执行链中去，<strong>getHandlerExecutionChain</strong> 方法如下：</p>
-<h4 id="3-3-封装执行链、重要-getHandlerExecutionChain"><a href="#3-3-封装执行链、重要-getHandlerExecutionChain" class="headerlink" title="3.3 (封装执行链、重要) getHandlerExecutionChain ()"></a>3.3 (封装执行链、重要) getHandlerExecutionChain ()</h4><p><strong>这里会传入业务的handler，也就是我们的业务controller。或者是以beanName生成的Handlermappings，反正就是具体的业务方法，然后把拦截器放在执行链的前面就可以</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandlerExecutionChain</span><span class="params">(Object handler, HttpServletRequest request)</span> &#123;</span><br><span class="line">	<span class="comment">// 如果当前 Handler 不是执行链类型，就使用一个新的执行链实例封装起来</span></span><br><span class="line">       <span class="type">HandlerExecutionChain</span> <span class="variable">chain</span> <span class="operator">=</span> (handler <span class="keyword">instanceof</span> HandlerExecutionChain ?</span><br><span class="line">			(HandlerExecutionChain) handler : <span class="keyword">new</span> <span class="title class_">HandlerExecutionChain</span>(handler));</span><br><span class="line"></span><br><span class="line">       <span class="comment">//获取请求的path</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> <span class="built_in">this</span>.urlPathHelper.getLookupPathForRequest(request);</span><br><span class="line">	<span class="comment">// 遍历拦截器，找到跟当前 url 对应的，添加进执行链中去</span></span><br><span class="line">       <span class="keyword">for</span> (HandlerInterceptor interceptor : <span class="built_in">this</span>.adaptedInterceptors) &#123;</span><br><span class="line">		<span class="keyword">if</span> (interceptor <span class="keyword">instanceof</span> MappedInterceptor) &#123;</span><br><span class="line">			<span class="type">MappedInterceptor</span> <span class="variable">mappedInterceptor</span> <span class="operator">=</span> (MappedInterceptor) interceptor;</span><br><span class="line">			<span class="keyword">if</span> (mappedInterceptor.matches(lookupPath, <span class="built_in">this</span>.pathMatcher)) &#123;</span><br><span class="line">				chain.addInterceptor(mappedInterceptor.getInterceptor());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			chain.addInterceptor(interceptor);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> chain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>到此为止，我们就获取了当前请求的 Handler 执行链，接下来看下是如何获取请求的 <strong>Handler 适配器</strong>，主要依靠 <strong>DispatcherServlet 类的 getHandlerAdapter 方法</strong>，该方法就是遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回，在这里匹配到的为 RequestMappingHandlerAdapter。DispatcherServlet 类的 getHandlerAdapter 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerAdapter <span class="title function_">getHandlerAdapter</span><span class="params">(Object handler)</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.handlerAdapters != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回</span></span><br><span class="line">        <span class="keyword">for</span> (HandlerAdapter adapter : <span class="built_in">this</span>.handlerAdapters) &#123;</span><br><span class="line">            <span class="keyword">if</span> (adapter.supports(handler)) &#123;</span><br><span class="line">                <span class="keyword">return</span> adapter;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;No adapter for handler [&quot;</span> + handler +</span><br><span class="line">            <span class="string">&quot;]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="4-（调用业务）HandlerAdapter-执行当前的-Handler"><a href="#4-（调用业务）HandlerAdapter-执行当前的-Handler" class="headerlink" title="4. （调用业务）HandlerAdapter 执行当前的 Handler"></a>4. （调用业务）HandlerAdapter 执行当前的 Handler</h3><p>再获取完当前请求的 Handler 适配器后，接着进行<strong>缓存处理</strong>，也就是对 last-modified 的处理，然后调用 applyPreHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，即遍历所有定义的 interceptor，执行 postHandle 方法，然后就到了实际执行 handle 的地方，doDispatch 方法中 handle 方法是执行当前 Handler，我们这里使用的是 RequestMappingHandlerAdapter，首先会进入 <strong>AbstractHandlerMethodAdapter 的 handle 方法</strong>：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> ModelAndView <span class="title function_">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span></span><br><span class="line">		<span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> handleInternal(request, response, (HandlerMethod) handler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h4 id="4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法："><a href="#4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法：" class="headerlink" title="4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法："></a>4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">protected</span> ModelAndView <span class="title function_">handleInternal</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		ModelAndView mav;</span><br><span class="line">		checkRequest(request);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">			<span class="type">HttpSession</span> <span class="variable">session</span> <span class="operator">=</span> request.getSession(<span class="literal">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (session != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">mutex</span> <span class="operator">=</span> WebUtils.getSessionMutex(session);</span><br><span class="line">				<span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">					mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">				mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 执行方法，封装 ModelAndView</span></span><br><span class="line">			mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">				applyCacheSeconds(response, <span class="built_in">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				prepareResponse(response);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> mav;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>在执行完 handle 方法后，然后调用 applyDefaultViewName 方法<strong>组装默认视图名称</strong>，将前缀和后缀名都加上，接着调用 applyPostHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，也就是遍历所有定义的 interceptor，执行 postHandle 方法。</p>
-<h3 id="5-处理最终结果以及渲染"><a href="#5-处理最终结果以及渲染" class="headerlink" title="5. 处理最终结果以及渲染"></a>5. 处理最终结果以及渲染</h3><p>最后调用 <strong>DispatcherServlet 类中的 processDispatchResult 方法</strong>，此方法是<strong>处理最终结果的，包括异常处理、渲染页面和发出完成通知触发拦截器的 afterCompletion() 方法执行等</strong>，processDispatchResult()方法代码如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processDispatchResult</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> HandlerExecutionChain mappedHandler, <span class="meta">@Nullable</span> ModelAndView mv,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> Exception exception)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		<span class="type">boolean</span> <span class="variable">errorView</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (exception != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (exception <span class="keyword">instanceof</span> ModelAndViewDefiningException) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;ModelAndViewDefiningException encountered&quot;</span>, exception);</span><br><span class="line">				mv = ((ModelAndViewDefiningException) exception).getModelAndView();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> (mappedHandler != <span class="literal">null</span> ? mappedHandler.getHandler() : <span class="literal">null</span>);</span><br><span class="line">				mv = processHandlerException(request, response, handler, exception);</span><br><span class="line">				errorView = (mv != <span class="literal">null</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 渲染</span></span><br><span class="line">		<span class="keyword">if</span> (mv != <span class="literal">null</span> &amp;&amp; !mv.wasCleared()) &#123;</span><br><span class="line">			render(mv, request, response);</span><br><span class="line">			<span class="keyword">if</span> (errorView) &#123;</span><br><span class="line">				WebUtils.clearErrorRequestAttributes(request);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(<span class="string">&quot;No view rendering, null ModelAndView returned.&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Concurrent handling started during a forward</span></span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">			mappedHandler.triggerAfterCompletion(request, response, <span class="literal">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>接下来让我们看下 <strong>DispatcherServlet 类的 render 方法</strong>是如何完成渲染的，DispatcherServlet 类的 render 方法渲染过程如下：</p>
-<ol>
-<li>判断 ModelAndView 中 view 是否为 view name，没有获取其实例对象：如果是根据 name，如果是则需要调用 resolveViewName 从视图解析器获取对应的视图(View)对象；否则 ModelAndView 中使用 getview 方法获取 view 对象。</li>
-<li>然后调用 View 类的 render 方法。</li>
-</ol>
-<p>DispatcherServlet 类的 render 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">render</span><span class="params">(ModelAndView mv, HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 设置本地化</span></span><br><span class="line">    <span class="type">Locale</span> <span class="variable">locale</span> <span class="operator">=</span> (<span class="built_in">this</span>.localeResolver != <span class="literal">null</span> ? <span class="built_in">this</span>.localeResolver.resolveLocale(request) : request.getLocale());</span><br><span class="line">    response.setLocale(locale);</span><br><span class="line">    View view;</span><br><span class="line">    <span class="type">String</span> <span class="variable">viewName</span> <span class="operator">=</span> mv.getViewName();</span><br><span class="line">    <span class="keyword">if</span> (viewName != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 解析视图名，得到视图</span></span><br><span class="line">        view = resolveViewName(viewName, mv.getModelInternal(), locale, request);</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;Could not resolve view with name &#x27;&quot;</span> + mv.getViewName() +</span><br><span class="line">                    <span class="string">&quot;&#x27; in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        view = mv.getView();</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;ModelAndView [&quot;</span> + mv + <span class="string">&quot;] neither contains a view name nor a &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;View object in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Rendering view [&quot;</span> + view + <span class="string">&quot;] &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mv.getStatus() != <span class="literal">null</span>) &#123;</span><br><span class="line">            response.setStatus(mv.getStatus().value());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 委托给视图进行渲染</span></span><br><span class="line">        view.render(mv.getModelInternal(), request, response);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(<span class="string">&quot;Error rendering view [&quot;</span> + view + <span class="string">&quot;]&quot;</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <tags>
-        <tag>Spring</tag>
-        <tag>SpringMVC</tag>
-        <tag>源码分析</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
     <url>/2022/12/22/%E4%B8%8D%E5%B0%8F%E5%BF%83%E6%8F%90%E4%BA%A4%E5%88%B0%20Git%20%E7%9A%84%E6%96%87%E4%BB%B6%EF%BC%8C%E6%80%8E%E4%B9%88%E5%AE%8C%E5%85%A8%E4%BB%8E%E4%BB%93%E5%BA%93%E4%B8%AD%E6%B8%85%E9%99%A4/</url>
     <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
@@ -569,81 +638,6 @@
       <tags>
         <tag>Git</tag>
         <tag>远程仓库</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>免费CDN jsDelivr使用</title>
-    <url>/2022/11/14/%E5%85%8D%E8%B4%B9CDN-jsDelivr%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<h1 id="jsDelivr是什么？"><a href="#jsDelivr是什么？" class="headerlink" title="jsDelivr是什么？"></a>jsDelivr是什么？</h1><p>jsDelivr是一种特殊的CDN。 它旨在让用户下载npm和Github上托管JavaScript库。 (如果它们托管在Wordpress.org上，则还可以加载Wordpress插件)。也就是说它可以镜像以下服务</p>
-<ol>
-<li>wordpress的插件、模板</li>
-<li>GitHub开放仓库</li>
-<li>NPM公共镜像仓库加速</li>
-</ol>
-<p>也就是说，我们可以不再自建或自维护CDN！你是NPM的包，它可以同步后为你分发到全球的各个CDN高速节点。你是Github仓库同样也可以使用全球的CDN静态加速。即使你是wordpress的站长，你还可以用它来同步你所使用的模板、插件等。不再需要维护CDN，我们只需要在以上平台上发布，jsDelivr会自动镜像并且分发。</p>
-<h2 id="简单demo"><a href="#简单demo" class="headerlink" title="简单demo"></a>简单demo</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js</span><br></pre></td></tr></table></figure>
-
-<p>我在GitHub上发布了一个仓库<code>jsdelivr-cdn</code>，并且创建了一个版本为<code>1.0</code>，我只需要根据路径取出我所需要的文件即可</p>
-<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>应用中暂时不演示其他，只演示GitHub镜像CDN的使用，别的均是换汤不换药，使用官方规定的网络路径访问即可</p>
-<h2 id="Github"><a href="#Github" class="headerlink" title="Github"></a>Github</h2><h3 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/github用户名/仓库名@版本号/文件路径</span><br></pre></td></tr></table></figure>
-
-<h3 id="0-准备工作"><a href="#0-准备工作" class="headerlink" title="0.准备工作"></a>0.准备工作</h3><blockquote>
-<p>分支不限，核心原理就是创建一个仓库的release版本，然后jsDriver会同步你的创建的release版本</p>
-</blockquote>
-<ol>
-<li>先在Github上创建一个公开的仓库</li>
-<li>使用Git推送至相关分支仓库的代码,也就是你要使用CDN加速的代码</li>
-</ol>
-<h3 id="1-创建仓库的Release"><a href="#1-创建仓库的Release" class="headerlink" title="1.创建仓库的Release"></a>1.创建仓库的Release</h3><ol>
-<li>点击<code>Create new release</code></li>
-</ol>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2022/11/14/PdxrSsXgiovFRAz.png"
-                      alt="去创建版本"
-                ></p>
-<h3 id="2-填写版本号"><a href="#2-填写版本号" class="headerlink" title="2.填写版本号"></a>2.填写版本号</h3><ul>
-<li><code>tag</code>如果不理解在这里可以理解为版本号</li>
-<li><code>target</code>是你这个<code>tag</code>需要引用的分支，选择你需要引用的分支，我这里直接选择了<code>main</code></li>
-<li>点击 <code>new create tag</code>即可</li>
-<li>确认都没问题了，我们选择最下面的<code>Publish release</code>，创建完成版本即可</li>
-</ul>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2022/11/14/bikrYUVQn2ma73K.png"
-                      alt="创建版本"
-                ></p>
-<h3 id="3-测试和应用"><a href="#3-测试和应用" class="headerlink" title="3.测试和应用"></a>3.测试和应用</h3><ul>
-<li>原版本    <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js<i class="fas fa-external-link-alt"></i></a></li>
-<li>压缩版本 <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js<i class="fas fa-external-link-alt"></i></a></li>
-</ul>
-<h2 id="WordPress"><a href="#WordPress" class="headerlink" title="WordPress"></a>WordPress</h2><p>从 WordPress.org 插件 SVN 存储库加载任何插件：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/project/tags/version/file</span><br></pre></td></tr></table></figure>
-
-<p>加载文件的确切版本：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/tags/4.6.5/wp-slimstat.js</span><br></pre></td></tr></table></figure>
-
-<p>加载最新版本（不推荐用于生产用途）：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/trunk/wp-slimstat.js</span><br></pre></td></tr></table></figure>
-
-<p>请求最新版本是危险的，因为新版本可能会带来重大更改。</p>
-<p>从 WordPress.org 主题 SVN 存储库加载任何主题：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/project/version/file</span><br></pre></td></tr></table></figure>
-
-<p>加载文件的确切版本：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.js</span><br></pre></td></tr></table></figure>
-
-<p>将“.min”添加到任何 JS&#x2F;CSS 文件以获得缩小版本 - 如果不存在，我们将为您生成它。所有生成的文件都带有源映射，可以在开发过程中轻松使用：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.min.js</span><br></pre></td></tr></table></figure>
-
-<h2 id="NPM"><a href="#NPM" class="headerlink" title="NPM"></a>NPM</h2><p>发布至官方NPM仓库即可</p>
-<p>官方提供的访问路径格式为: <code>https://cdn.jsdelivr.net/npm/包名@版本号/目录</code></p>
-]]></content>
-      <tags>
-        <tag>cdn</tag>
-        <tag>jsDelivr</tag>
       </tags>
   </entry>
   <entry>
@@ -1043,72 +1037,78 @@
       </tags>
   </entry>
   <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+    <title>免费CDN jsDelivr使用</title>
+    <url>/2022/11/14/%E5%85%8D%E8%B4%B9CDN-jsDelivr%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<h1 id="jsDelivr是什么？"><a href="#jsDelivr是什么？" class="headerlink" title="jsDelivr是什么？"></a>jsDelivr是什么？</h1><p>jsDelivr是一种特殊的CDN。 它旨在让用户下载npm和Github上托管JavaScript库。 (如果它们托管在Wordpress.org上，则还可以加载Wordpress插件)。也就是说它可以镜像以下服务</p>
+<ol>
+<li>wordpress的插件、模板</li>
+<li>GitHub开放仓库</li>
+<li>NPM公共镜像仓库加速</li>
+</ol>
+<p>也就是说，我们可以不再自建或自维护CDN！你是NPM的包，它可以同步后为你分发到全球的各个CDN高速节点。你是Github仓库同样也可以使用全球的CDN静态加速。即使你是wordpress的站长，你还可以用它来同步你所使用的模板、插件等。不再需要维护CDN，我们只需要在以上平台上发布，jsDelivr会自动镜像并且分发。</p>
+<h2 id="简单demo"><a href="#简单demo" class="headerlink" title="简单demo"></a>简单demo</h2><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js</span><br></pre></td></tr></table></figure>
+
+<p>我在GitHub上发布了一个仓库<code>jsdelivr-cdn</code>，并且创建了一个版本为<code>1.0</code>，我只需要根据路径取出我所需要的文件即可</p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>应用中暂时不演示其他，只演示GitHub镜像CDN的使用，别的均是换汤不换药，使用官方规定的网络路径访问即可</p>
+<h2 id="Github"><a href="#Github" class="headerlink" title="Github"></a>Github</h2><h3 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/gh/github用户名/仓库名@版本号/文件路径</span><br></pre></td></tr></table></figure>
+
+<h3 id="0-准备工作"><a href="#0-准备工作" class="headerlink" title="0.准备工作"></a>0.准备工作</h3><blockquote>
+<p>分支不限，核心原理就是创建一个仓库的release版本，然后jsDriver会同步你的创建的release版本</p>
+</blockquote>
+<ol>
+<li>先在Github上创建一个公开的仓库</li>
+<li>使用Git推送至相关分支仓库的代码,也就是你要使用CDN加速的代码</li>
+</ol>
+<h3 id="1-创建仓库的Release"><a href="#1-创建仓库的Release" class="headerlink" title="1.创建仓库的Release"></a>1.创建仓库的Release</h3><ol>
+<li>点击<code>Create new release</code></li>
+</ol>
 <p><img  
                      lazyload
                      alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
+                     data-src="https://s2.loli.net/2022/11/14/PdxrSsXgiovFRAz.png"
+                      alt="去创建版本"
                 ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<h3 id="2-填写版本号"><a href="#2-填写版本号" class="headerlink" title="2.填写版本号"></a>2.填写版本号</h3><ul>
+<li><code>tag</code>如果不理解在这里可以理解为版本号</li>
+<li><code>target</code>是你这个<code>tag</code>需要引用的分支，选择你需要引用的分支，我这里直接选择了<code>main</code></li>
+<li>点击 <code>new create tag</code>即可</li>
+<li>确认都没问题了，我们选择最下面的<code>Publish release</code>，创建完成版本即可</li>
+</ul>
 <p><img  
                      lazyload
                      alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
+                     data-src="https://s2.loli.net/2022/11/14/bikrYUVQn2ma73K.png"
+                      alt="创建版本"
                 ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
+<h3 id="3-测试和应用"><a href="#3-测试和应用" class="headerlink" title="3.测试和应用"></a>3.测试和应用</h3><ul>
+<li>原版本    <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.js<i class="fas fa-external-link-alt"></i></a></li>
+<li>压缩版本 <a class="link"   href="https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js" >https://cdn.jsdelivr.net/gh/a2501521908/jsdelivr-cdn@1.0/getlanguage.min.js<i class="fas fa-external-link-alt"></i></a></li>
+</ul>
+<h2 id="WordPress"><a href="#WordPress" class="headerlink" title="WordPress"></a>WordPress</h2><p>从 WordPress.org 插件 SVN 存储库加载任何插件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/project/tags/version/file</span><br></pre></td></tr></table></figure>
+
+<p>加载文件的确切版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/tags/4.6.5/wp-slimstat.js</span><br></pre></td></tr></table></figure>
+
+<p>加载最新版本（不推荐用于生产用途）：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/plugins/wp-slimstat/trunk/wp-slimstat.js</span><br></pre></td></tr></table></figure>
+
+<p>请求最新版本是危险的，因为新版本可能会带来重大更改。</p>
+<p>从 WordPress.org 主题 SVN 存储库加载任何主题：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/project/version/file</span><br></pre></td></tr></table></figure>
+
+<p>加载文件的确切版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.js</span><br></pre></td></tr></table></figure>
+
+<p>将“.min”添加到任何 JS&#x2F;CSS 文件以获得缩小版本 - 如果不存在，我们将为您生成它。所有生成的文件都带有源映射，可以在开发过程中轻松使用：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://cdn.jsdelivr.net/wp/themes/twenty-eightteen/1.7/assets/js/html5.min.js</span><br></pre></td></tr></table></figure>
+
+<h2 id="NPM"><a href="#NPM" class="headerlink" title="NPM"></a>NPM</h2><p>发布至官方NPM仓库即可</p>
+<p>官方提供的访问路径格式为: <code>https://cdn.jsdelivr.net/npm/包名@版本号/目录</code></p>
 ]]></content>
       <tags>
-        <tag>技术</tag>
+        <tag>cdn</tag>
+        <tag>jsDelivr</tag>
       </tags>
   </entry>
   <entry>
@@ -1129,6 +1129,152 @@
 <p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
 <p>​    </p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>老朋友，别来无恙啊。</title>
+    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
+    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
+<p>没错，你又看到了，我好像又折腾了一波。</p>
+<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
+<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
+<p>反正最后磕磕绊绊的还是过来了~  </p>
+<hr>
+<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>来聊(水)下最近hexo备份的思路</title>
+    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
+<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
+<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
+<li>把hexo文件夹备份至自己的本地的文件</li>
+<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
+<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
+</ol>
+<p>重点说一下同步盘的思想</p>
+<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
+<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
+<ol>
+<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
+<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
+</ol>
+<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
+<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
+<ol>
+<li>跨平台性，针对多设备的兼容</li>
+<li>不限速</li>
+<li>bugfix的数量以及修复的速度</li>
+<li>易用性</li>
+</ol>
+<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
+<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
+<li>拷贝文件夹到oneDrive</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
+</ol>
+<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
+<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>OneDrive</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>新的一年,HI!</title>
+    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
+    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
+<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
+<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
+<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
+<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
+<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
+<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
+<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
+<p>​     2:学习一些框架,自学一些语言等</p>
+<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
+<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
+<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
+<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
+                     
+                ></p>
+<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
+<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
+<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
+<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
+<p>2.去一次旅游(见一个人)  不知道能不能</p>
+<p>3.希望在年底学会开车 哈哈~~</p>
+<p>嘿嘿,给大家一声晚来的新年快乐！</p>
+<p>​     </p>
+]]></content>
+      <tags>
+        <tag>谈心</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>那些年我们在北京租过的房子</title>
+    <url>/2018/07/13/%E9%82%A3%E4%BA%9B%E5%B9%B4%E6%88%91%E4%BB%AC%E5%9C%A8%E5%8C%97%E4%BA%AC%E7%A7%9F%E8%BF%87%E7%9A%84%E6%88%BF%E5%AD%90/</url>
+    <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
+<p> <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b259a7712389665.jpg"
+                      alt="img"
+                > </p>
+<p>后来我搬家到学校门口一个房子里的床位，一个三居室，住着14个人，我的小房间有四个女生，另外一个大房间有八个男生，还有一对小情侣在小屋里住着，每人300元每月。我在这里住了大约两年，舍友换了无数无数，中国的外国的，打工的考研的，精神正常的精神不正常的。有个姐姐的老公在对面的学校里读博士，她在门口租一个床位陪读，后来他们毕业后一起去了美国。有个女生在那个屋子里考了三年北大光华MBA，终于梦想成真，考上的那一年她哭的坐不起来。有人在那个屋子里恋爱又失恋，有人在那个屋子里每天摔摔打打。每天晚上排队洗澡洗衣服像一个风景，着急的时候头冲着水龙头随便洗一下就湿漉漉的去上课了。那时候似乎谁都没有想起来还有吹风机，也不觉得人多。14个人一起在客厅看电视的时候，拥挤的场面简直像世界杯直播一样热闹。</p>
+<p>大学最后一学期，我因为实习在CBD区，天天上班要2个小时实在要吐血了，于是在北京大望路地铁站旁边与人合租了一间房。这间房子总共6平米，一人一张床占4平米，还有半平米放衣柜，1.5平米的地面。这间房子价格800元，我和另一个女生一人400元，那时候实习工资是每月1200，后来变成1760。我们两个都是一个行业，因此相处还比较容易。我实习时候经常加班到深夜，每次回来的时候，她已经睡了，只有灯亮着电脑开着收音机在被子里也开着。每次回家都要翻开她被子找收音机关掉，再关灯关电脑。她的电脑是台式机，总是轰轰的声音，我叫她的电脑是拖拉机。我们一起住了半年，彼此毕业开始正式工作，但低廉的工资让我们依旧只能还住在这个楼里，因为这里是还算黄金位置的大望路地铁边上唯一的年代久远的筒子楼，价格比同小区的高层住宅要便宜很多。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
+                      alt="img"
+                > </p>
+<p>她换到另外一个20平米的大房间里与人合租，我继续一人租这个小房间租了半年。这期间，我很好的大学朋友去了法国读MBA，临走和我坐在小房子里聊天，房子太小了，我有点不好意思让她来。我妈来北京看奥运会也住在这里，因为太热没有空调，我妈睡在地上，我睡在床上。我妈后来说，看见我住的这么小，心里很难受。这期间我还买了我第一个笔记本，是一个二手的笔记本，1200元钱，我就是用这个笔记本开始了我的写作道路，一直到三年后这个本光荣就义。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25ce8c1c275032.jpg"
+                      alt="img"
+                >  </p>
+<p>再过半年，隔壁的姑娘要换房子，我就去了隔壁20平米的大房间，每月1000元，水电网另计，怎么也要每月1200吧。网络我从一楼的一户人家牵线上来，上来后还分给三家用，因此每月大约20块钱就够了。到现在每次交很贵的网费的时候总是想起这事儿，还总想总隔壁分一根线，可惜没人跟我分了。要说这个房子大而光明，还挺不错的，但唯一的问题是厕所。因为四家合用，隔壁是三个男生，一对夫妻，门口那家是八个洗脚妹，人多到厕所巨堵，到后期天天屎飘在马桶里，你还不得不继续上。更惨烈的是有时候你在旁边洗澡，旁边就是飘着屎的马桶。找人来通了很多很多次，但终究不知道为什么还总是要赌。门口的打工妹用洗衣机总是把水流到楼道里，楼上和楼下的邻居就会来破口大骂，好几次打110报警，每次我都要连哄带骗的安慰邻居，再收拾楼道，因为洗脚妹们开着洗衣机就不知道去哪儿玩儿去了。在这个房子里，我开始每天1500字写博客，雷打不动的坚持，就是从这个房子里开始的。开始用电饭锅给自己做饭，买了一个二手洗衣机200块钱，都是从这里开始。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
+                      alt="img"
+                >  </p>
+<p>房子到期后，我决定离开这个屎太多的地方。于是在网上找到了蒲黄榆的一个房子。这是个大约有20年历史的老房子，是个高层，还是个银行的宿舍，因此邻居都是老人家，且鲜有租客。房子陈旧，但能看得出当年是新房的时候，房东还是花了大力气装成当年最时髦的样子，家具虽然过时，都都是上好的实打实的实木家具。在这里，我结交了非常好的朋友。他们知道我是个半夜写作白天上班的人，因此主动承担起三年倒垃圾打扫卫生的工作，从来不用我动手，也不用操心。可能我做饭比较烂，他们每次都做好饭给我送来吃，从来不让我进厨房，还说我进厨房一次她们要收拾半宿还是她们来吧。起初我在这里租住最小的房间6平米，600元，小小的热热的但很温馨，我就在这个小房间里写了我人生的第一本书《从北京到台湾这么近那么远》。那时候记者来我家采访，三个人根本站不进来，只能我和记者坐在床上，摄影大哥站门口，还一位站走廊里。现在每次看到这本书，都忍不住想到那些小日子，只有梦想，能让人克服一切的困难，让每天的日子，都闪闪发亮！</p>
+<p> <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b26516fc3c82430.jpg"
+                      alt="img"
+                > </p>
+<p>后来我转到隔壁20平米1000元每月的房间里，到我走的时候房间的价格差不多1500一个月，因为是房东直租，依旧算是很便宜的价格吧。只是唯一重大的问题是，这个房间楼下正对着一个神经衰弱还有心脏病的老太太，只要我在楼上小心翼翼的走一步路，老太太都会认为是之天大的声音而找上门来，甚至为此心脏病发急救过。后来，房东把新买的地毯都放在了我的房间里，老太太依然能听到声音，甚至半夜一点把110叫来投诉我扰民，可是110来了看见什么都没有随便打发下就走了。无力承受老太太的生命，只能三五天去一趟老太太家，提着瓜果梨桃去看看她是在家好好的还是又去医院了。在这个房间里， 我写了我人生第三本书，并跳了槽，度过了两年半的时光，我毕业后重要的人生转变，职场转变，以及迅速的成熟长大都是在这里，包括遇到至好的朋友，以及终于过上了安全而安稳的生活。</p>
+<p>后来，因为租房的价格愈发昂贵，我买了房子；再后来我结婚，又换到了婚房里。尽管自己的房子干净又整洁，安静又安稳，但我总记得那些租房子的时光，那些铭刻在我青春里的每一天，那些心惊胆战又脏乱差的日子，或者被110训话或被邻居投诉的日子，像利剑挂在我心上，又像星星，回想起来会给自己点赞。直到现在，我依旧喜欢帮朋友找房子，喜欢没事儿看租房网站，总会回想起以前自己租房的日子，以及那些在下班后黑灯瞎火与中介去黑漆漆的小区看房子的场景。</p>
+<p>我一直相信，有一天每一个人都会有自己的房子，自己的家庭。这大千世界的一隅，总有一天会有一盏等着我们回家的灯。而年轻的时候所有的颠沛流离都将成为日后心中的慰藉，是青春的圣火，是跃动的生命。它们闪着光，透着亮，提醒着我们曾经那么年轻，曾经那么敢闯，曾经天不怕地不怕，曾经什么都可以接受和忍耐。</p>
+<p>所有的年轻，有一天都会长大与成熟，当回忆往事的时候，望着远方，怦然一笑，就是对青春时光里所有的所有，最好的诠释与珍藏。</p>
+]]></content>
+      <tags>
+        <tag>鸡汤</tag>
+      </tags>
   </entry>
   <entry>
     <title>关于停止使用 957xx.cc域名</title>
@@ -1207,152 +1353,6 @@
                       alt="img"
                 > </p>
 <h5 id="感谢总结："><a href="#感谢总结：" class="headerlink" title="感谢总结："></a>感谢总结：</h5><p> 首先给看完的棒棒的你一个掌声，由于文章的字数较多。可能分段本人分的也不太好，也感谢你，陌生人！能看完这篇文章。 也许我们的人生就是一段旅行，一声会看见很多人可是真正有感觉的人总是那么一两个。走到一起真的不容易，珍惜眼前情义。</p>
-]]></content>
-      <tags>
-        <tag>谈心</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>来聊(水)下最近hexo备份的思路</title>
-    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
-<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
-<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
-<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
-<li>把hexo文件夹备份至自己的本地的文件</li>
-<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
-<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
-</ol>
-<p>重点说一下同步盘的思想</p>
-<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
-<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
-<ol>
-<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
-<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
-</ol>
-<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
-<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
-<ol>
-<li>跨平台性，针对多设备的兼容</li>
-<li>不限速</li>
-<li>bugfix的数量以及修复的速度</li>
-<li>易用性</li>
-</ol>
-<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
-<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
-<li>拷贝文件夹到oneDrive</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
-</ol>
-<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
-<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>OneDrive</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>老朋友，别来无恙啊。</title>
-    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
-    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
-<p>没错，你又看到了，我好像又折腾了一波。</p>
-<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
-<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
-<p>反正最后磕磕绊绊的还是过来了~  </p>
-<hr>
-<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>hello</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>那些年我们在北京租过的房子</title>
-    <url>/2018/07/13/%E9%82%A3%E4%BA%9B%E5%B9%B4%E6%88%91%E4%BB%AC%E5%9C%A8%E5%8C%97%E4%BA%AC%E7%A7%9F%E8%BF%87%E7%9A%84%E6%88%BF%E5%AD%90/</url>
-    <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
-<p> <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b259a7712389665.jpg"
-                      alt="img"
-                > </p>
-<p>后来我搬家到学校门口一个房子里的床位，一个三居室，住着14个人，我的小房间有四个女生，另外一个大房间有八个男生，还有一对小情侣在小屋里住着，每人300元每月。我在这里住了大约两年，舍友换了无数无数，中国的外国的，打工的考研的，精神正常的精神不正常的。有个姐姐的老公在对面的学校里读博士，她在门口租一个床位陪读，后来他们毕业后一起去了美国。有个女生在那个屋子里考了三年北大光华MBA，终于梦想成真，考上的那一年她哭的坐不起来。有人在那个屋子里恋爱又失恋，有人在那个屋子里每天摔摔打打。每天晚上排队洗澡洗衣服像一个风景，着急的时候头冲着水龙头随便洗一下就湿漉漉的去上课了。那时候似乎谁都没有想起来还有吹风机，也不觉得人多。14个人一起在客厅看电视的时候，拥挤的场面简直像世界杯直播一样热闹。</p>
-<p>大学最后一学期，我因为实习在CBD区，天天上班要2个小时实在要吐血了，于是在北京大望路地铁站旁边与人合租了一间房。这间房子总共6平米，一人一张床占4平米，还有半平米放衣柜，1.5平米的地面。这间房子价格800元，我和另一个女生一人400元，那时候实习工资是每月1200，后来变成1760。我们两个都是一个行业，因此相处还比较容易。我实习时候经常加班到深夜，每次回来的时候，她已经睡了，只有灯亮着电脑开着收音机在被子里也开着。每次回家都要翻开她被子找收音机关掉，再关灯关电脑。她的电脑是台式机，总是轰轰的声音，我叫她的电脑是拖拉机。我们一起住了半年，彼此毕业开始正式工作，但低廉的工资让我们依旧只能还住在这个楼里，因为这里是还算黄金位置的大望路地铁边上唯一的年代久远的筒子楼，价格比同小区的高层住宅要便宜很多。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
-                      alt="img"
-                > </p>
-<p>她换到另外一个20平米的大房间里与人合租，我继续一人租这个小房间租了半年。这期间，我很好的大学朋友去了法国读MBA，临走和我坐在小房子里聊天，房子太小了，我有点不好意思让她来。我妈来北京看奥运会也住在这里，因为太热没有空调，我妈睡在地上，我睡在床上。我妈后来说，看见我住的这么小，心里很难受。这期间我还买了我第一个笔记本，是一个二手的笔记本，1200元钱，我就是用这个笔记本开始了我的写作道路，一直到三年后这个本光荣就义。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25ce8c1c275032.jpg"
-                      alt="img"
-                >  </p>
-<p>再过半年，隔壁的姑娘要换房子，我就去了隔壁20平米的大房间，每月1000元，水电网另计，怎么也要每月1200吧。网络我从一楼的一户人家牵线上来，上来后还分给三家用，因此每月大约20块钱就够了。到现在每次交很贵的网费的时候总是想起这事儿，还总想总隔壁分一根线，可惜没人跟我分了。要说这个房子大而光明，还挺不错的，但唯一的问题是厕所。因为四家合用，隔壁是三个男生，一对夫妻，门口那家是八个洗脚妹，人多到厕所巨堵，到后期天天屎飘在马桶里，你还不得不继续上。更惨烈的是有时候你在旁边洗澡，旁边就是飘着屎的马桶。找人来通了很多很多次，但终究不知道为什么还总是要赌。门口的打工妹用洗衣机总是把水流到楼道里，楼上和楼下的邻居就会来破口大骂，好几次打110报警，每次我都要连哄带骗的安慰邻居，再收拾楼道，因为洗脚妹们开着洗衣机就不知道去哪儿玩儿去了。在这个房子里，我开始每天1500字写博客，雷打不动的坚持，就是从这个房子里开始的。开始用电饭锅给自己做饭，买了一个二手洗衣机200块钱，都是从这里开始。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
-                      alt="img"
-                >  </p>
-<p>房子到期后，我决定离开这个屎太多的地方。于是在网上找到了蒲黄榆的一个房子。这是个大约有20年历史的老房子，是个高层，还是个银行的宿舍，因此邻居都是老人家，且鲜有租客。房子陈旧，但能看得出当年是新房的时候，房东还是花了大力气装成当年最时髦的样子，家具虽然过时，都都是上好的实打实的实木家具。在这里，我结交了非常好的朋友。他们知道我是个半夜写作白天上班的人，因此主动承担起三年倒垃圾打扫卫生的工作，从来不用我动手，也不用操心。可能我做饭比较烂，他们每次都做好饭给我送来吃，从来不让我进厨房，还说我进厨房一次她们要收拾半宿还是她们来吧。起初我在这里租住最小的房间6平米，600元，小小的热热的但很温馨，我就在这个小房间里写了我人生的第一本书《从北京到台湾这么近那么远》。那时候记者来我家采访，三个人根本站不进来，只能我和记者坐在床上，摄影大哥站门口，还一位站走廊里。现在每次看到这本书，都忍不住想到那些小日子，只有梦想，能让人克服一切的困难，让每天的日子，都闪闪发亮！</p>
-<p> <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b26516fc3c82430.jpg"
-                      alt="img"
-                > </p>
-<p>后来我转到隔壁20平米1000元每月的房间里，到我走的时候房间的价格差不多1500一个月，因为是房东直租，依旧算是很便宜的价格吧。只是唯一重大的问题是，这个房间楼下正对着一个神经衰弱还有心脏病的老太太，只要我在楼上小心翼翼的走一步路，老太太都会认为是之天大的声音而找上门来，甚至为此心脏病发急救过。后来，房东把新买的地毯都放在了我的房间里，老太太依然能听到声音，甚至半夜一点把110叫来投诉我扰民，可是110来了看见什么都没有随便打发下就走了。无力承受老太太的生命，只能三五天去一趟老太太家，提着瓜果梨桃去看看她是在家好好的还是又去医院了。在这个房间里， 我写了我人生第三本书，并跳了槽，度过了两年半的时光，我毕业后重要的人生转变，职场转变，以及迅速的成熟长大都是在这里，包括遇到至好的朋友，以及终于过上了安全而安稳的生活。</p>
-<p>后来，因为租房的价格愈发昂贵，我买了房子；再后来我结婚，又换到了婚房里。尽管自己的房子干净又整洁，安静又安稳，但我总记得那些租房子的时光，那些铭刻在我青春里的每一天，那些心惊胆战又脏乱差的日子，或者被110训话或被邻居投诉的日子，像利剑挂在我心上，又像星星，回想起来会给自己点赞。直到现在，我依旧喜欢帮朋友找房子，喜欢没事儿看租房网站，总会回想起以前自己租房的日子，以及那些在下班后黑灯瞎火与中介去黑漆漆的小区看房子的场景。</p>
-<p>我一直相信，有一天每一个人都会有自己的房子，自己的家庭。这大千世界的一隅，总有一天会有一盏等着我们回家的灯。而年轻的时候所有的颠沛流离都将成为日后心中的慰藉，是青春的圣火，是跃动的生命。它们闪着光，透着亮，提醒着我们曾经那么年轻，曾经那么敢闯，曾经天不怕地不怕，曾经什么都可以接受和忍耐。</p>
-<p>所有的年轻，有一天都会长大与成熟，当回忆往事的时候，望着远方，怦然一笑，就是对青春时光里所有的所有，最好的诠释与珍藏。</p>
-]]></content>
-      <tags>
-        <tag>鸡汤</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>新的一年,HI!</title>
-    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
-    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
-<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
-<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
-<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
-<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
-<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
-<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
-<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
-<p>​     2:学习一些框架,自学一些语言等</p>
-<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
-<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
-<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
-<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
-                     
-                ></p>
-<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
-<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
-<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
-<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
-<p>2.去一次旅游(见一个人)  不知道能不能</p>
-<p>3.希望在年底学会开车 哈哈~~</p>
-<p>嘿嘿,给大家一声晚来的新年快乐！</p>
-<p>​     </p>
 ]]></content>
       <tags>
         <tag>谈心</tag>

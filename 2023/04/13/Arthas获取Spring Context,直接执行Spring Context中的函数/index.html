@@ -198,7 +198,7 @@
     
         <span class="article-update-date article-meta-item">
         <i class="fas fa-file-pen"></i>&nbsp;
-        <span class="pc">2023-04-13 21:38:09</span>
+        <span class="pc">2023-04-13 21:40:54</span>
     </span>
     
     
@@ -236,7 +236,7 @@
 
             <div class="article-content keep-markdown-body">
                 <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
-<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>spring mvc应用，请求会经过一系列的spring bean处理，那么我们可以在spring mvc的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行tt命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到spring context了就</p>
+<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
 <h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
 <ol>
 <li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
