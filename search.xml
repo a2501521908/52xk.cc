@@ -78,443 +78,6 @@
       </tags>
   </entry>
   <entry>
-    <title>29.22分钟学会正则表达式</title>
-    <url>/2018/11/22/29-22%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
-<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
-<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
-
-<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
-<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
-<ul>
-<li>原义字符</li>
-<li>元字符</li>
-</ul>
-<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
-<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
-<ul>
-<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
-<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
-<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
-<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
-<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
-<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
-<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
-<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
-<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
-<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
-<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
-<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
-<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
-<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
-<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
-<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
-<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
-<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
-<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
-</ul>
-<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
-                      alt="clipboard.png"
-                ></p>
-<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
-
-<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
-<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要以A为结尾的正则，则是如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
-<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
-<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
-                      alt="clipboard.png"
-                ></p>
-<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
-<p><strong>那么有没有更简便更短的方法呢？</strong></p>
-<p>巧了，正则就是辣么强大</p>
-<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
-<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
-                      alt="clipboard.png"
-                ></p>
-<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
-
-<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p>让我们看看可视化工具的结果，方便理解</p>
-<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
-<p>如果按照上面这样写，则如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
-<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
-<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
-                      alt="clipboard.png"
-                ></p>
-<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
-
-<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
-<ul>
-<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
-<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
-</ul>
-<p>上表格！</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
-                      alt="clipboard.png"
-                ></p>
-<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
-                      alt="clipboard.png"
-                ></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
-
-<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
-<p>顺便把这个负向前瞻看看吧</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
-                      alt="clipboard.png"
-                ></p>
-<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
-<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后你打开可视化工具</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
-                      alt="clipboard.png"
-                ></p>
-<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
-<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
-                      alt="clipboard.png"
-                ></p>
-<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
-                      alt="clipboard.png"
-                ></p>
-<ul>
-<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
-<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
-<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
-<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
-</ul>
-<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
-<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>Arthas直接执行Spring Context中的函数</title>
-    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
-<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
-<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
-<ol>
-<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
-<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
-<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
-</ol>
-<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
-<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
-<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
-<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
-<ol>
-<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
-<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
-<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
-]]></content>
-      <tags>
-        <tag>arthas</tag>
-        <tag>springboot</tag>
-        <tag>spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>video玩出新花样当background</title>
-    <url>/2018/05/20/video/</url>
-    <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
-<p>因为前几天我们要进行网页设计大赛，所以我们小组又焦头烂额的坐在了一起：“又做东西啊，烦死了”！最终我们还是做出来了。也得了个第一名，虽然不怎么好。但也是对自己努力的一个肯定。</p>
-<p>学习中遇见了一些问题就不说了，我们做的页面是支付宝全站，但是支付宝个人中心有一个拿video当做视频背景的元素，我们一直没搞懂。但是恍然大悟，我们可以使用<strong>z-index</strong>属性来定义啊。好那么我们详细欣赏下面的教程！</p>
-<p>下面先给大家截图一下这个效果吧，大神勿喷~ 但是截图的又不能动~~<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b24585f4e279.png"
-                      alt="支付宝video首页"
-                ></p>
-<p>多了话不多说我们先来分析一波，首先我们这个东西用视频当做背景，所以背景一定在下面的，所以设置他的层级代码肯定为负的最多的，因为上面要放内容。那么我们既然弄肯定要全屏还有把他固定在哪里，即使我们不设置数值。然后设置他的显示亮度。多了不说了css代码上了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b2457feccb34.png"
-                      alt="css代码样式"
-                ><br>那么看到这里就有疑问了，有人问 <strong>-webkit-filter:grayscale(100%)</strong> 这段代码是干嘛的，显示的亮度。但是需要支付浏览器，webkit是兼容谷歌的，如果展示在用户面前需要兼容多个浏览器，具体的自行百度下。</p>
-<p>好那么我们css设置完成了，好我们展示下我们html的代码吧。<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b245a9666c58.png"
-                      alt="中心展示代码"
-                ><br>这个代码其实就是正常的插入一段视频。无需多的理解。</p>
-<p>好一个视频已经展现在我们的面前，总是感觉视频的速度可能播放太快或者太慢没有视觉感觉。好我们定义一下他的视频背景，首先这个 id&#x3D;v1 v1是自己取得名字，这个根据开发者自己来定。<strong>其中的0.5自行改数值。</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/06/16/5b245b49bda2c.png"
-                      alt="js代码"
-                ></p>
-<p>就这么简单我们的一个页面已经制作完成啦。现在我们看下效果吧！有什么不懂得可以QQ问我哦~</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SpringMVC源码的分析</title>
-    <url>/2023/03/18/Spring%20MVC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<h1 id="SpringMVC执行过程"><a href="#SpringMVC执行过程" class="headerlink" title="SpringMVC执行过程"></a>SpringMVC执行过程</h1><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p>Spring MVC 的四大组件:<strong>前端控制器（DispatcherServlet）、处理器映射器（HandlerMapping）、处理器适配器（HandlerAdapter）以及视图解析器（ViewResolver）</strong> 的角度来看一下 Spring MVC 对用户请求的处理过程，过程如下图所示:<br>其中，DispatcherServlet是前端控制器，它负责接收用户的请求，并调用其他组件来处理。HandlerMapping是处理器映射器，它负责根据请求的URL找到对应的Controller对象，并返回给DispatcherServlet。HandlerAdapter是处理器适配器，它负责根据Controller对象的类型，找到合适的适配器对象，并调用Controller对象的方法，返回ModelAndView对象。ModelAndView对象包含了模型数据和视图名称。ViewResolver是视图解析器，它负责根据视图名称找到对应的视图对象，并返回给DispatcherServlet。View是视图对象，它负责渲染模型数据，并返回响应给用户。<br>这样一来，springmvc就实现了一个基于MVC模式的web框架，将请求处理分成了不同的步骤和组件，<strong>提高了可扩展性和灵活性。</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2023/03/18/muzNRPc5a4tKOrv.png"
-                      alt="image.png"
-                ></p>
-<h2 id="执行过程和组件介绍"><a href="#执行过程和组件介绍" class="headerlink" title="执行过程和组件介绍"></a>执行过程和组件介绍</h2><ol>
-<li>用户向服务器发送请求，请求会先达到 SpringMVC 前端控制器 DispatcherServlet ;</li>
-<li>DispatcherServlet 根据该 URI，调用 HandlerMapping 获得该 Handler 配置的所有相关的对象（包括 Handler 对象以及 Handler 对象对应的拦截器），最后以 HandlerExecutionChain 执行链对象的形式返回</li>
-<li>DispatcherServlet 根据获得的 Handler，获取对应的 HandlerAdapter;</li>
-<li>获取到 HandlerAdapter，将开始执行拦截器的 preHandler(…)方法;</li>
-<li>提取 Request 中的模型数据，填充 Handler 入参，开始执行 Handler（Controller)方法，处理请求，在填充 Handler 的入参过程中，根据你的配置，Spring 将帮你做一些额外的工作：<ul>
-<li>HttpMessageConveter：将请求消息（如 Json、xml 等数据）转换成一个对象，将对象转换为指定的类型信息</li>
-<li>数据转换：对请求消息进行数据转换。如 String 转换成 Integer、Double 等</li>
-<li>数据格式化：对请求消息进行数据格式化。如将字符串转换成格式化数字或格式化日期等</li>
-<li>数据验证：验证数据的有效性（长度、格式等），验证结果存储到 BindingResult 或 Error 中</li>
-</ul>
-</li>
-<li>Handler 方法执行完成后，向 DispatcherServlet 返回一个 ModelAndView 对象。</li>
-<li>开始执行拦截器的 postHandle(…)方</li>
-<li>根据返回的 ModelAndView（此时会判断是否存在异常：如果存在异常，则执行 HandlerExceptionResolver 进行异常处理）选择一个适合的 ViewResolver 进行视图解析，根据 Model 和 View，来渲染视图</li>
-<li>渲染视图完毕执行拦截器的 afterCompletion(…)方法</li>
-<li>将渲染结果返回给客户端，本次http请求完成</li>
-</ol>
-<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="1-创建Filter"><a href="#1-创建Filter" class="headerlink" title="1. 创建Filter"></a>1. 创建Filter</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseFilter</span> <span class="keyword">implements</span> <span class="title class_">Filter</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:1&quot;</span>);</span><br><span class="line">        filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-创建HandlerInterceptor拦截器"><a href="#2-创建HandlerInterceptor拦截器" class="headerlink" title="2. 创建HandlerInterceptor  拦截器"></a>2. 创建HandlerInterceptor  拦截器</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseInterceptor</span> <span class="keyword">implements</span> <span class="title class_">HandlerInterceptor</span>, WebMvcConfigurer &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:2&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> HandlerInterceptor.<span class="built_in">super</span>.preHandle(request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:4&quot;</span>);</span><br><span class="line">        HandlerInterceptor.<span class="built_in">super</span>.afterCompletion(request, response, handler, ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addInterceptors</span><span class="params">(InterceptorRegistry registry)</span> &#123;</span><br><span class="line">        registry.addInterceptor(<span class="keyword">new</span> <span class="title class_">BaseInterceptor</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-编写Controller的代码"><a href="#3-编写Controller的代码" class="headerlink" title="3. 编写Controller的代码"></a>3. 编写Controller的代码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;index/&#123;message&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">get</span><span class="params">(<span class="meta">@PathVariable</span> String message)</span> &#123;</span><br><span class="line">    System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:3&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;hello&quot;</span> + <span class="string">&quot;&lt;br/&gt;&quot;</span> + message + <span class="string">&quot;&lt;br&gt;&quot;</span> + LocalDateTime.now();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="开始分析"><a href="#开始分析" class="headerlink" title="开始分析"></a>开始分析</h2><p>首先当我们访问页面的时候，将会把请求发送到<strong>前端控制器 DispatcherServlet</strong>，DispatcherServlet 是一个 Servlet，我们知道在 Servlet 在处理一个请求的时候会交给 service 方法进行处理，这里也不例外，DispatcherServlet 继承了 FrameworkServlet，并且在收到请求后会调用我们的doService()函数</p>
-<h3 id="1-进入doService-request-response"><a href="#1-进入doService-request-response" class="headerlink" title="1. 进入doService(request, response)"></a>1. 进入doService(request, response)</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doService</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	logRequest(request);</span><br><span class="line">       <span class="comment">// 给 request 中的属性做一份快照，以便能够恢复原始属性</span></span><br><span class="line">	Map&lt;String, Object&gt; attributesSnapshot = <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">if</span> (WebUtils.isIncludeRequest(request)) &#123;</span><br><span class="line">		attributesSnapshot = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">		Enumeration&lt;?&gt; attrNames = request.getAttributeNames();</span><br><span class="line">		<span class="keyword">while</span> (attrNames.hasMoreElements()) &#123;</span><br><span class="line">			<span class="type">String</span> <span class="variable">attrName</span> <span class="operator">=</span> (String) attrNames.nextElement();</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">this</span>.cleanupAfterInclude || attrName.startsWith(DEFAULT_STRATEGIES_PREFIX)) &#123;</span><br><span class="line">				attributesSnapshot.put(attrName, request.getAttribute(attrName));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果没有配置本地化或者主题的处理器之类的，SpringMVC 会使用默认的配置文件，即 DispatcherServlet.properties</span></span><br><span class="line">	request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());</span><br><span class="line">	request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.localeResolver);</span><br><span class="line">	request.setAttribute(THEME_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.themeResolver);</span><br><span class="line">	request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.flashMapManager != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="type">FlashMap</span> <span class="variable">inputFlashMap</span> <span class="operator">=</span> <span class="built_in">this</span>.flashMapManager.retrieveAndUpdate(request, response);</span><br><span class="line">		<span class="keyword">if</span> (inputFlashMap != <span class="literal">null</span>) &#123;</span><br><span class="line">			request.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Collections.unmodifiableMap(inputFlashMap));</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(OUTPUT_FLASH_MAP_ATTRIBUTE, <span class="keyword">new</span> <span class="title class_">FlashMap</span>());</span><br><span class="line">		request.setAttribute(FLASH_MAP_MANAGER_ATTRIBUTE, <span class="built_in">this</span>.flashMapManager);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">//真正的开始处理请求</span></span><br><span class="line">		doDispatch(request, response);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Restore the original attribute snapshot, in case of an include.</span></span><br><span class="line">			<span class="keyword">if</span> (attributesSnapshot != <span class="literal">null</span>) &#123;</span><br><span class="line">				restoreAttributesAfterInclude(request, attributesSnapshot);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-doDispatch-request-response-真正开始处理请求"><a href="#2-doDispatch-request-response-真正开始处理请求" class="headerlink" title="2. doDispatch(request, response)真正开始处理请求"></a>2. doDispatch(request, response)真正开始处理请求</h3><p>接下来 DispatcherServlet 开始真正的处理，让我们来看下 <strong>doDispatch</strong> 方法，首先会获取当前请求的 <strong>Handler 执行链</strong>，然后找到合适的 <strong>HandlerAdapter</strong>（此处为 RequestMappingHandlerAdapter），接着调用 RequestMappingHandlerAdapter 的 <strong>handle</strong> 方法，如下为 doDispatch 方法：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doDispatch</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">		<span class="type">HttpServletRequest</span> <span class="variable">processedRequest</span> <span class="operator">=</span> request;</span><br><span class="line">		<span class="type">HandlerExecutionChain</span> <span class="variable">mappedHandler</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">boolean</span> <span class="variable">multipartRequestParsed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="type">WebAsyncManager</span> <span class="variable">asyncManager</span> <span class="operator">=</span> WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="type">ModelAndView</span> <span class="variable">mv</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">			<span class="type">Exception</span> <span class="variable">dispatchException</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//先检查是不是 Multipart 类型的，比如上传等；如果是 Multipart 类型的，则转换为 MultipartHttpServletRequest 类型</span></span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 获取当前请求的 Handler 执行链，这一部分就是处理器映射器</span></span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				<span class="keyword">if</span> (mappedHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">//获取当前的处理器适配器</span></span><br><span class="line">				<span class="type">HandlerAdapter</span> <span class="variable">ha</span> <span class="operator">=</span> getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 对于 header 中 last-modified 的处理</span></span><br><span class="line">				<span class="type">String</span> <span class="variable">method</span> <span class="operator">=</span> request.getMethod();</span><br><span class="line">				<span class="type">boolean</span> <span class="variable">isGet</span> <span class="operator">=</span> <span class="string">&quot;GET&quot;</span>.equals(method);</span><br><span class="line">				<span class="keyword">if</span> (isGet || <span class="string">&quot;HEAD&quot;</span>.equals(method)) &#123;</span><br><span class="line">					<span class="type">long</span> <span class="variable">lastModified</span> <span class="operator">=</span> ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line">					<span class="keyword">if</span> (<span class="keyword">new</span> <span class="title class_">ServletWebRequest</span>(request, response).checkNotModified(lastModified) &amp;&amp; isGet) &#123;</span><br><span class="line">						<span class="keyword">return</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 遍历所有定义的 interceptor，执行 preHandle 方法，如果它们返回了false,</span></span><br><span class="line">                <span class="comment">// 那么就不再往下执行了</span></span><br><span class="line">				<span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 实际调用Handler的地方，其实就是Controller的对象了</span></span><br><span class="line">				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">                <span class="comment">//处理成默认视图名，也就是添加前缀和后缀等</span></span><br><span class="line">				applyDefaultViewName(processedRequest, mv);</span><br><span class="line">                <span class="comment">// 拦截器postHandle方法进行处理</span></span><br><span class="line">				mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">				dispatchException = ex;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">				dispatchException = <span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler dispatch failed&quot;</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">//处理最后的结果，渲染之类的都在这里</span></span><br><span class="line">			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler,</span><br><span class="line">					<span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler processing failed&quot;</span>, err));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">				<span class="comment">// Instead of postHandle and afterCompletion</span></span><br><span class="line">				<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Clean up any resources used by a multipart request.</span></span><br><span class="line">				<span class="keyword">if</span> (multipartRequestParsed) &#123;</span><br><span class="line">					cleanupMultipart(processedRequest);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-查找对应的-Handler-对象-getHandler-processedRequest"><a href="#3-查找对应的-Handler-对象-getHandler-processedRequest" class="headerlink" title="3. 查找对应的 Handler 对象 getHandler(processedRequest)"></a>3. 查找对应的 Handler 对象 getHandler(processedRequest)</h3><p>让我们去探索下是如何获取当前请求的 Handler 执行链，对应着这句代码 mappedHandler &#x3D; getHandler(processedRequest);，看下 <strong>DispatcherServlet 具体的 getHandler</strong> 方法，该方法主要是遍历所有的 handlerMappings 进行处理，handlerMappings 是在启动的时候预先注册好的，handlerMappings 包含 RequestMappingHandlerMapping、BeanNameUrlHandlerMapping、RouterFunctionMapping、SimpleUrlHandlerMapping 以及 WelcomePageHandlerMapping，在循环中会调用 <strong>AbstractHandlerMapping 类中的 getHandler 方法</strong>来获取 Handler 执行链，若获取的 Handler 执行链不为 null，则返回当前请求的 Handler 执行链，DispatcherServlet 类的 getHandler 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.handlerMappings != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">//遍历所有的handlerMappings进行处理，handlerMappings是在启动的时候注册好的</span></span><br><span class="line">		<span class="keyword">for</span> (HandlerMapping mapping : <span class="built_in">this</span>.handlerMappings) &#123;</span><br><span class="line">			<span class="type">HandlerExecutionChain</span> <span class="variable">handler</span> <span class="operator">=</span> mapping.getHandler(request);</span><br><span class="line">			<span class="keyword">if</span> (handler != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> handler;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法："><a href="#3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法：" class="headerlink" title="3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法："></a>3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">//根据request获取handler</span></span><br><span class="line">	<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> getHandlerInternal(request);</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		handler = getDefaultHandler();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果Handler时String，表明时一个bean名称，需要寻找对应bean</span></span><br><span class="line">	<span class="keyword">if</span> (handler <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">		<span class="type">String</span> <span class="variable">handlerName</span> <span class="operator">=</span> (String) handler;</span><br><span class="line">		handler = obtainApplicationContext().getBean(handlerName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 封装 Handler 执行链返回</span></span><br><span class="line">	<span class="type">HandlerExecutionChain</span> <span class="variable">executionChain</span> <span class="operator">=</span> getHandlerExecutionChain(handler, request);</span><br><span class="line">	<span class="keyword">return</span> executionChain;</span><br></pre></td></tr></table></figure>
-<h4 id="3-2-getHandlerInternal-request"><a href="#3-2-getHandlerInternal-request" class="headerlink" title="3.2 getHandlerInternal(request)"></a>3.2 getHandlerInternal(request)</h4><p>AbstractHandlerMapping 类中的 getHandler 方法中首先<strong>根据 requrst 获取 handler</strong>，主要是调用了 AbstractHandlerMethodMapping 类中的 <strong>getHandlerInternal</strong> 方法，该方法首先获取 request 中的 url，即 &#x2F;hello&#x2F;{message}，用来匹配 handler 并封装成 HandlerMethod，然后根据 handlerMethod 中的 bean 来实例化 Handler 并返回。<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2023/03/18/JkE3SYplDrH8GUg.png"
-                      alt="image.png"
-                ></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">getHandlerInternal</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 获取 request 中的 url，用来匹配 handler ： index/‘haha’</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> getUrlPathHelper().getLookupPathForRequest(request);</span><br><span class="line">	<span class="built_in">this</span>.mappingRegistry.acquireReadLock();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">// 根据路径寻找 Handler，并封装成 HandlerMethod</span></span><br><span class="line">		<span class="type">HandlerMethod</span> <span class="variable">handlerMethod</span> <span class="operator">=</span> lookupHandlerMethod(lookupPath, request);         <span class="comment">// 根据 handlerMethod 中的 bean 来实例化 Handler，并添加进 HandlerMethod</span></span><br><span class="line">		<span class="keyword">return</span> (handlerMethod != <span class="literal">null</span> ? handlerMethod.createWithResolvedBean() : <span class="literal">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="built_in">this</span>.mappingRegistry.releaseReadLock();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>接下来，我们看 <strong>lookupHandlerMethod</strong> 的逻辑，主要逻辑委托给了 <strong>mappingRegistry</strong> 这个成员变量来处理：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">lookupHandlerMethod</span><span class="params">(String lookupPath, HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	List&lt;Match&gt; matches = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">       <span class="comment">//通过 lookupPath属性中查找。如果找到了，就返回对应的RequestMappingInfo</span></span><br><span class="line">	List&lt;T&gt; directPathMatches = <span class="built_in">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">	<span class="keyword">if</span> (directPathMatches != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">// 如果匹配到了，检查其他属性是否符合要求，如请求方法，参数，header 等</span></span><br><span class="line">		addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (matches.isEmpty()) &#123;</span><br><span class="line">		<span class="comment">// 没有直接匹配到，则遍历所有的处理方法进行通配符匹配，这里大部分处理path类的</span></span><br><span class="line">           <span class="comment">// 请求，例如: /user/&#123;userId&#125;等请求</span></span><br><span class="line">		addMatchingMappings(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), matches, request);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!matches.isEmpty()) &#123;</span><br><span class="line">           <span class="comment">// 如果方法有多个匹配，不同的通配符等，则排序选择出最合适的一个</span></span><br><span class="line">		Comparator&lt;Match&gt; comparator = <span class="keyword">new</span> <span class="title class_">MatchComparator</span>(getMappingComparator(request));</span><br><span class="line">		matches.sort(comparator);</span><br><span class="line">		<span class="type">Match</span> <span class="variable">bestMatch</span> <span class="operator">=</span> matches.get(<span class="number">0</span>);</span><br><span class="line">           <span class="comment">// 如果有多个匹配的，会找到第二个最合适的进行比较</span></span><br><span class="line">		<span class="keyword">if</span> (matches.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(matches.size() + <span class="string">&quot; matching mappings: &quot;</span> + matches);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">				<span class="keyword">return</span> PREFLIGHT_AMBIGUOUS_MATCH;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="type">Match</span> <span class="variable">secondBestMatch</span> <span class="operator">=</span> matches.get(<span class="number">1</span>);</span><br><span class="line">			<span class="keyword">if</span> (comparator.compare(bestMatch, secondBestMatch) == <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m1</span> <span class="operator">=</span> bestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m2</span> <span class="operator">=</span> secondBestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">String</span> <span class="variable">uri</span> <span class="operator">=</span> request.getRequestURI();</span><br><span class="line">                   <span class="comment">// 不能有相同的最优 Match</span></span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">						<span class="string">&quot;Ambiguous handler methods mapped for &#x27;&quot;</span> + uri + <span class="string">&quot;&#x27;: &#123;&quot;</span> + m1 + <span class="string">&quot;, &quot;</span> + m2 + <span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE, bestMatch.handlerMethod);</span><br><span class="line">           <span class="comment">// 设置 request 参数（RequestMappingHandlerMapping 对其进行了覆写）</span></span><br><span class="line">		handleMatch(bestMatch.mapping, lookupPath, request);</span><br><span class="line">		<span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="comment">// 调用 RequestMappingHandlerMapping 类的 handleNoMatch 方法再匹配一次</span></span><br><span class="line">		<span class="keyword">return</span> handleNoMatch(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), lookupPath, request);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>通过上面的过程，我们就获取到了 Handler，就开始<strong>封装执行链</strong>了，就是将我们配置的拦截器加入到执行链中去，<strong>getHandlerExecutionChain</strong> 方法如下：</p>
-<h4 id="3-3-封装执行链、重要-getHandlerExecutionChain"><a href="#3-3-封装执行链、重要-getHandlerExecutionChain" class="headerlink" title="3.3 (封装执行链、重要) getHandlerExecutionChain ()"></a>3.3 (封装执行链、重要) getHandlerExecutionChain ()</h4><p><strong>这里会传入业务的handler，也就是我们的业务controller。或者是以beanName生成的Handlermappings，反正就是具体的业务方法，然后把拦截器放在执行链的前面就可以</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandlerExecutionChain</span><span class="params">(Object handler, HttpServletRequest request)</span> &#123;</span><br><span class="line">	<span class="comment">// 如果当前 Handler 不是执行链类型，就使用一个新的执行链实例封装起来</span></span><br><span class="line">       <span class="type">HandlerExecutionChain</span> <span class="variable">chain</span> <span class="operator">=</span> (handler <span class="keyword">instanceof</span> HandlerExecutionChain ?</span><br><span class="line">			(HandlerExecutionChain) handler : <span class="keyword">new</span> <span class="title class_">HandlerExecutionChain</span>(handler));</span><br><span class="line"></span><br><span class="line">       <span class="comment">//获取请求的path</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> <span class="built_in">this</span>.urlPathHelper.getLookupPathForRequest(request);</span><br><span class="line">	<span class="comment">// 遍历拦截器，找到跟当前 url 对应的，添加进执行链中去</span></span><br><span class="line">       <span class="keyword">for</span> (HandlerInterceptor interceptor : <span class="built_in">this</span>.adaptedInterceptors) &#123;</span><br><span class="line">		<span class="keyword">if</span> (interceptor <span class="keyword">instanceof</span> MappedInterceptor) &#123;</span><br><span class="line">			<span class="type">MappedInterceptor</span> <span class="variable">mappedInterceptor</span> <span class="operator">=</span> (MappedInterceptor) interceptor;</span><br><span class="line">			<span class="keyword">if</span> (mappedInterceptor.matches(lookupPath, <span class="built_in">this</span>.pathMatcher)) &#123;</span><br><span class="line">				chain.addInterceptor(mappedInterceptor.getInterceptor());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			chain.addInterceptor(interceptor);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> chain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>到此为止，我们就获取了当前请求的 Handler 执行链，接下来看下是如何获取请求的 <strong>Handler 适配器</strong>，主要依靠 <strong>DispatcherServlet 类的 getHandlerAdapter 方法</strong>，该方法就是遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回，在这里匹配到的为 RequestMappingHandlerAdapter。DispatcherServlet 类的 getHandlerAdapter 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerAdapter <span class="title function_">getHandlerAdapter</span><span class="params">(Object handler)</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.handlerAdapters != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回</span></span><br><span class="line">        <span class="keyword">for</span> (HandlerAdapter adapter : <span class="built_in">this</span>.handlerAdapters) &#123;</span><br><span class="line">            <span class="keyword">if</span> (adapter.supports(handler)) &#123;</span><br><span class="line">                <span class="keyword">return</span> adapter;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;No adapter for handler [&quot;</span> + handler +</span><br><span class="line">            <span class="string">&quot;]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="4-（调用业务）HandlerAdapter-执行当前的-Handler"><a href="#4-（调用业务）HandlerAdapter-执行当前的-Handler" class="headerlink" title="4. （调用业务）HandlerAdapter 执行当前的 Handler"></a>4. （调用业务）HandlerAdapter 执行当前的 Handler</h3><p>再获取完当前请求的 Handler 适配器后，接着进行<strong>缓存处理</strong>，也就是对 last-modified 的处理，然后调用 applyPreHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，即遍历所有定义的 interceptor，执行 postHandle 方法，然后就到了实际执行 handle 的地方，doDispatch 方法中 handle 方法是执行当前 Handler，我们这里使用的是 RequestMappingHandlerAdapter，首先会进入 <strong>AbstractHandlerMethodAdapter 的 handle 方法</strong>：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> ModelAndView <span class="title function_">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span></span><br><span class="line">		<span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> handleInternal(request, response, (HandlerMethod) handler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h4 id="4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法："><a href="#4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法：" class="headerlink" title="4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法："></a>4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">protected</span> ModelAndView <span class="title function_">handleInternal</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		ModelAndView mav;</span><br><span class="line">		checkRequest(request);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">			<span class="type">HttpSession</span> <span class="variable">session</span> <span class="operator">=</span> request.getSession(<span class="literal">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (session != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">mutex</span> <span class="operator">=</span> WebUtils.getSessionMutex(session);</span><br><span class="line">				<span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">					mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">				mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 执行方法，封装 ModelAndView</span></span><br><span class="line">			mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">				applyCacheSeconds(response, <span class="built_in">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				prepareResponse(response);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> mav;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>在执行完 handle 方法后，然后调用 applyDefaultViewName 方法<strong>组装默认视图名称</strong>，将前缀和后缀名都加上，接着调用 applyPostHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，也就是遍历所有定义的 interceptor，执行 postHandle 方法。</p>
-<h3 id="5-处理最终结果以及渲染"><a href="#5-处理最终结果以及渲染" class="headerlink" title="5. 处理最终结果以及渲染"></a>5. 处理最终结果以及渲染</h3><p>最后调用 <strong>DispatcherServlet 类中的 processDispatchResult 方法</strong>，此方法是<strong>处理最终结果的，包括异常处理、渲染页面和发出完成通知触发拦截器的 afterCompletion() 方法执行等</strong>，processDispatchResult()方法代码如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processDispatchResult</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> HandlerExecutionChain mappedHandler, <span class="meta">@Nullable</span> ModelAndView mv,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> Exception exception)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		<span class="type">boolean</span> <span class="variable">errorView</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (exception != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (exception <span class="keyword">instanceof</span> ModelAndViewDefiningException) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;ModelAndViewDefiningException encountered&quot;</span>, exception);</span><br><span class="line">				mv = ((ModelAndViewDefiningException) exception).getModelAndView();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> (mappedHandler != <span class="literal">null</span> ? mappedHandler.getHandler() : <span class="literal">null</span>);</span><br><span class="line">				mv = processHandlerException(request, response, handler, exception);</span><br><span class="line">				errorView = (mv != <span class="literal">null</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 渲染</span></span><br><span class="line">		<span class="keyword">if</span> (mv != <span class="literal">null</span> &amp;&amp; !mv.wasCleared()) &#123;</span><br><span class="line">			render(mv, request, response);</span><br><span class="line">			<span class="keyword">if</span> (errorView) &#123;</span><br><span class="line">				WebUtils.clearErrorRequestAttributes(request);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(<span class="string">&quot;No view rendering, null ModelAndView returned.&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Concurrent handling started during a forward</span></span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">			mappedHandler.triggerAfterCompletion(request, response, <span class="literal">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>接下来让我们看下 <strong>DispatcherServlet 类的 render 方法</strong>是如何完成渲染的，DispatcherServlet 类的 render 方法渲染过程如下：</p>
-<ol>
-<li>判断 ModelAndView 中 view 是否为 view name，没有获取其实例对象：如果是根据 name，如果是则需要调用 resolveViewName 从视图解析器获取对应的视图(View)对象；否则 ModelAndView 中使用 getview 方法获取 view 对象。</li>
-<li>然后调用 View 类的 render 方法。</li>
-</ol>
-<p>DispatcherServlet 类的 render 方法如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">render</span><span class="params">(ModelAndView mv, HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 设置本地化</span></span><br><span class="line">    <span class="type">Locale</span> <span class="variable">locale</span> <span class="operator">=</span> (<span class="built_in">this</span>.localeResolver != <span class="literal">null</span> ? <span class="built_in">this</span>.localeResolver.resolveLocale(request) : request.getLocale());</span><br><span class="line">    response.setLocale(locale);</span><br><span class="line">    View view;</span><br><span class="line">    <span class="type">String</span> <span class="variable">viewName</span> <span class="operator">=</span> mv.getViewName();</span><br><span class="line">    <span class="keyword">if</span> (viewName != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 解析视图名，得到视图</span></span><br><span class="line">        view = resolveViewName(viewName, mv.getModelInternal(), locale, request);</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;Could not resolve view with name &#x27;&quot;</span> + mv.getViewName() +</span><br><span class="line">                    <span class="string">&quot;&#x27; in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        view = mv.getView();</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;ModelAndView [&quot;</span> + mv + <span class="string">&quot;] neither contains a view name nor a &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;View object in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Rendering view [&quot;</span> + view + <span class="string">&quot;] &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mv.getStatus() != <span class="literal">null</span>) &#123;</span><br><span class="line">            response.setStatus(mv.getStatus().value());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 委托给视图进行渲染</span></span><br><span class="line">        view.render(mv.getModelInternal(), request, response);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(<span class="string">&quot;Error rendering view [&quot;</span> + view + <span class="string">&quot;]&quot;</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <tags>
-        <tag>Spring</tag>
-        <tag>SpringMVC</tag>
-        <tag>源码分析</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Kafka学习笔记</title>
     <url>/2022/12/25/Kafka%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
     <content><![CDATA[<h1 id="Kafka基本的概念"><a href="#Kafka基本的概念" class="headerlink" title="Kafka基本的概念"></a>Kafka基本的概念</h1><p>Kafka是最初由Linkedin公司开发，是一个分布式、分区的、多副本的、多订阅者，**基于zookeeper协调的分布式日志系统(也可以当做MQ系统)**，常见可以用于web&#x2F;nginx日志、访问日志，消息服务等等，Linkedin于2010年贡献给了Apache基金会并成为顶级开源项目。<br><img  
@@ -903,12 +466,339 @@
 <p><a class="link"   href="https://my.oschina.net/keking/blog/3056698" >spring boot集成kafka之spring-kafka深入探秘 - 凯京科技的个人空间 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
 ]]></content>
       <tags>
-        <tag>springboot</tag>
         <tag>kafka</tag>
+        <tag>springboot</tag>
         <tag>mq</tag>
         <tag>分布式</tag>
         <tag>Docker</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Arthas直接执行Spring Context中的函数</title>
+    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
+<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
+<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
+<ol>
+<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
+<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
+<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
+</ol>
+<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
+<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
+<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
+<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
+<ol>
+<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
+<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
+<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
+]]></content>
+      <tags>
+        <tag>springboot</tag>
+        <tag>arthas</tag>
+        <tag>spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>29.22分钟学会正则表达式</title>
+    <url>/2018/11/22/29-22%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
+<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
+<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
+
+<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
+<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
+<ul>
+<li>原义字符</li>
+<li>元字符</li>
+</ul>
+<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
+<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
+<ul>
+<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
+<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
+<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
+<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
+<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
+<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
+<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
+<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
+<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
+<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
+<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
+<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
+<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
+<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
+<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
+<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
+<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
+<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
+<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
+</ul>
+<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
+                      alt="clipboard.png"
+                ></p>
+<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
+
+<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
+<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要以A为结尾的正则，则是如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
+<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
+<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
+                      alt="clipboard.png"
+                ></p>
+<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
+<p><strong>那么有没有更简便更短的方法呢？</strong></p>
+<p>巧了，正则就是辣么强大</p>
+<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
+<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
+                      alt="clipboard.png"
+                ></p>
+<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
+
+<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p>让我们看看可视化工具的结果，方便理解</p>
+<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
+<p>如果按照上面这样写，则如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
+<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
+<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
+                      alt="clipboard.png"
+                ></p>
+<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
+<ul>
+<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
+<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
+</ul>
+<p>上表格！</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
+                      alt="clipboard.png"
+                ></p>
+<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
+                      alt="clipboard.png"
+                ></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
+<p>顺便把这个负向前瞻看看吧</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
+                      alt="clipboard.png"
+                ></p>
+<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
+<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后你打开可视化工具</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
+                      alt="clipboard.png"
+                ></p>
+<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
+<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
+                      alt="clipboard.png"
+                ></p>
+<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
+                      alt="clipboard.png"
+                ></p>
+<ul>
+<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
+<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
+<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
+<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
+</ul>
+<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
+<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
+]]></content>
   </entry>
   <entry>
     <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
@@ -980,6 +870,116 @@
       </tags>
   </entry>
   <entry>
+    <title>SpringMVC源码的分析</title>
+    <url>/2023/03/18/Spring%20MVC%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="SpringMVC执行过程"><a href="#SpringMVC执行过程" class="headerlink" title="SpringMVC执行过程"></a>SpringMVC执行过程</h1><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p>Spring MVC 的四大组件:<strong>前端控制器（DispatcherServlet）、处理器映射器（HandlerMapping）、处理器适配器（HandlerAdapter）以及视图解析器（ViewResolver）</strong> 的角度来看一下 Spring MVC 对用户请求的处理过程，过程如下图所示:<br>其中，DispatcherServlet是前端控制器，它负责接收用户的请求，并调用其他组件来处理。HandlerMapping是处理器映射器，它负责根据请求的URL找到对应的Controller对象，并返回给DispatcherServlet。HandlerAdapter是处理器适配器，它负责根据Controller对象的类型，找到合适的适配器对象，并调用Controller对象的方法，返回ModelAndView对象。ModelAndView对象包含了模型数据和视图名称。ViewResolver是视图解析器，它负责根据视图名称找到对应的视图对象，并返回给DispatcherServlet。View是视图对象，它负责渲染模型数据，并返回响应给用户。<br>这样一来，springmvc就实现了一个基于MVC模式的web框架，将请求处理分成了不同的步骤和组件，<strong>提高了可扩展性和灵活性。</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/03/18/muzNRPc5a4tKOrv.png"
+                      alt="image.png"
+                ></p>
+<h2 id="执行过程和组件介绍"><a href="#执行过程和组件介绍" class="headerlink" title="执行过程和组件介绍"></a>执行过程和组件介绍</h2><ol>
+<li>用户向服务器发送请求，请求会先达到 SpringMVC 前端控制器 DispatcherServlet ;</li>
+<li>DispatcherServlet 根据该 URI，调用 HandlerMapping 获得该 Handler 配置的所有相关的对象（包括 Handler 对象以及 Handler 对象对应的拦截器），最后以 HandlerExecutionChain 执行链对象的形式返回</li>
+<li>DispatcherServlet 根据获得的 Handler，获取对应的 HandlerAdapter;</li>
+<li>获取到 HandlerAdapter，将开始执行拦截器的 preHandler(…)方法;</li>
+<li>提取 Request 中的模型数据，填充 Handler 入参，开始执行 Handler（Controller)方法，处理请求，在填充 Handler 的入参过程中，根据你的配置，Spring 将帮你做一些额外的工作：<ul>
+<li>HttpMessageConveter：将请求消息（如 Json、xml 等数据）转换成一个对象，将对象转换为指定的类型信息</li>
+<li>数据转换：对请求消息进行数据转换。如 String 转换成 Integer、Double 等</li>
+<li>数据格式化：对请求消息进行数据格式化。如将字符串转换成格式化数字或格式化日期等</li>
+<li>数据验证：验证数据的有效性（长度、格式等），验证结果存储到 BindingResult 或 Error 中</li>
+</ul>
+</li>
+<li>Handler 方法执行完成后，向 DispatcherServlet 返回一个 ModelAndView 对象。</li>
+<li>开始执行拦截器的 postHandle(…)方</li>
+<li>根据返回的 ModelAndView（此时会判断是否存在异常：如果存在异常，则执行 HandlerExceptionResolver 进行异常处理）选择一个适合的 ViewResolver 进行视图解析，根据 Model 和 View，来渲染视图</li>
+<li>渲染视图完毕执行拦截器的 afterCompletion(…)方法</li>
+<li>将渲染结果返回给客户端，本次http请求完成</li>
+</ol>
+<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="1-创建Filter"><a href="#1-创建Filter" class="headerlink" title="1. 创建Filter"></a>1. 创建Filter</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseFilter</span> <span class="keyword">implements</span> <span class="title class_">Filter</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)</span> <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:1&quot;</span>);</span><br><span class="line">        filterChain.doFilter(servletRequest, servletResponse);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-创建HandlerInterceptor拦截器"><a href="#2-创建HandlerInterceptor拦截器" class="headerlink" title="2. 创建HandlerInterceptor  拦截器"></a>2. 创建HandlerInterceptor  拦截器</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseInterceptor</span> <span class="keyword">implements</span> <span class="title class_">HandlerInterceptor</span>, WebMvcConfigurer &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:2&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> HandlerInterceptor.<span class="built_in">super</span>.preHandle(request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:4&quot;</span>);</span><br><span class="line">        HandlerInterceptor.<span class="built_in">super</span>.afterCompletion(request, response, handler, ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addInterceptors</span><span class="params">(InterceptorRegistry registry)</span> &#123;</span><br><span class="line">        registry.addInterceptor(<span class="keyword">new</span> <span class="title class_">BaseInterceptor</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-编写Controller的代码"><a href="#3-编写Controller的代码" class="headerlink" title="3. 编写Controller的代码"></a>3. 编写Controller的代码</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;index/&#123;message&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">get</span><span class="params">(<span class="meta">@PathVariable</span> String message)</span> &#123;</span><br><span class="line">    System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:3&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;hello&quot;</span> + <span class="string">&quot;&lt;br/&gt;&quot;</span> + message + <span class="string">&quot;&lt;br&gt;&quot;</span> + LocalDateTime.now();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="开始分析"><a href="#开始分析" class="headerlink" title="开始分析"></a>开始分析</h2><p>首先当我们访问页面的时候，将会把请求发送到<strong>前端控制器 DispatcherServlet</strong>，DispatcherServlet 是一个 Servlet，我们知道在 Servlet 在处理一个请求的时候会交给 service 方法进行处理，这里也不例外，DispatcherServlet 继承了 FrameworkServlet，并且在收到请求后会调用我们的doService()函数</p>
+<h3 id="1-进入doService-request-response"><a href="#1-进入doService-request-response" class="headerlink" title="1. 进入doService(request, response)"></a>1. 进入doService(request, response)</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doService</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	logRequest(request);</span><br><span class="line">       <span class="comment">// 给 request 中的属性做一份快照，以便能够恢复原始属性</span></span><br><span class="line">	Map&lt;String, Object&gt; attributesSnapshot = <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">if</span> (WebUtils.isIncludeRequest(request)) &#123;</span><br><span class="line">		attributesSnapshot = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">		Enumeration&lt;?&gt; attrNames = request.getAttributeNames();</span><br><span class="line">		<span class="keyword">while</span> (attrNames.hasMoreElements()) &#123;</span><br><span class="line">			<span class="type">String</span> <span class="variable">attrName</span> <span class="operator">=</span> (String) attrNames.nextElement();</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">this</span>.cleanupAfterInclude || attrName.startsWith(DEFAULT_STRATEGIES_PREFIX)) &#123;</span><br><span class="line">				attributesSnapshot.put(attrName, request.getAttribute(attrName));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果没有配置本地化或者主题的处理器之类的，SpringMVC 会使用默认的配置文件，即 DispatcherServlet.properties</span></span><br><span class="line">	request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());</span><br><span class="line">	request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.localeResolver);</span><br><span class="line">	request.setAttribute(THEME_RESOLVER_ATTRIBUTE, <span class="built_in">this</span>.themeResolver);</span><br><span class="line">	request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.flashMapManager != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="type">FlashMap</span> <span class="variable">inputFlashMap</span> <span class="operator">=</span> <span class="built_in">this</span>.flashMapManager.retrieveAndUpdate(request, response);</span><br><span class="line">		<span class="keyword">if</span> (inputFlashMap != <span class="literal">null</span>) &#123;</span><br><span class="line">			request.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Collections.unmodifiableMap(inputFlashMap));</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(OUTPUT_FLASH_MAP_ATTRIBUTE, <span class="keyword">new</span> <span class="title class_">FlashMap</span>());</span><br><span class="line">		request.setAttribute(FLASH_MAP_MANAGER_ATTRIBUTE, <span class="built_in">this</span>.flashMapManager);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">//真正的开始处理请求</span></span><br><span class="line">		doDispatch(request, response);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Restore the original attribute snapshot, in case of an include.</span></span><br><span class="line">			<span class="keyword">if</span> (attributesSnapshot != <span class="literal">null</span>) &#123;</span><br><span class="line">				restoreAttributesAfterInclude(request, attributesSnapshot);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-doDispatch-request-response-真正开始处理请求"><a href="#2-doDispatch-request-response-真正开始处理请求" class="headerlink" title="2. doDispatch(request, response)真正开始处理请求"></a>2. doDispatch(request, response)真正开始处理请求</h3><p>接下来 DispatcherServlet 开始真正的处理，让我们来看下 <strong>doDispatch</strong> 方法，首先会获取当前请求的 <strong>Handler 执行链</strong>，然后找到合适的 <strong>HandlerAdapter</strong>（此处为 RequestMappingHandlerAdapter），接着调用 RequestMappingHandlerAdapter 的 <strong>handle</strong> 方法，如下为 doDispatch 方法：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doDispatch</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">		<span class="type">HttpServletRequest</span> <span class="variable">processedRequest</span> <span class="operator">=</span> request;</span><br><span class="line">		<span class="type">HandlerExecutionChain</span> <span class="variable">mappedHandler</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">boolean</span> <span class="variable">multipartRequestParsed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="type">WebAsyncManager</span> <span class="variable">asyncManager</span> <span class="operator">=</span> WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="type">ModelAndView</span> <span class="variable">mv</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">			<span class="type">Exception</span> <span class="variable">dispatchException</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//先检查是不是 Multipart 类型的，比如上传等；如果是 Multipart 类型的，则转换为 MultipartHttpServletRequest 类型</span></span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 获取当前请求的 Handler 执行链，这一部分就是处理器映射器</span></span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				<span class="keyword">if</span> (mappedHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">//获取当前的处理器适配器</span></span><br><span class="line">				<span class="type">HandlerAdapter</span> <span class="variable">ha</span> <span class="operator">=</span> getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 对于 header 中 last-modified 的处理</span></span><br><span class="line">				<span class="type">String</span> <span class="variable">method</span> <span class="operator">=</span> request.getMethod();</span><br><span class="line">				<span class="type">boolean</span> <span class="variable">isGet</span> <span class="operator">=</span> <span class="string">&quot;GET&quot;</span>.equals(method);</span><br><span class="line">				<span class="keyword">if</span> (isGet || <span class="string">&quot;HEAD&quot;</span>.equals(method)) &#123;</span><br><span class="line">					<span class="type">long</span> <span class="variable">lastModified</span> <span class="operator">=</span> ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line">					<span class="keyword">if</span> (<span class="keyword">new</span> <span class="title class_">ServletWebRequest</span>(request, response).checkNotModified(lastModified) &amp;&amp; isGet) &#123;</span><br><span class="line">						<span class="keyword">return</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 遍历所有定义的 interceptor，执行 preHandle 方法，如果它们返回了false,</span></span><br><span class="line">                <span class="comment">// 那么就不再往下执行了</span></span><br><span class="line">				<span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 实际调用Handler的地方，其实就是Controller的对象了</span></span><br><span class="line">				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">                <span class="comment">//处理成默认视图名，也就是添加前缀和后缀等</span></span><br><span class="line">				applyDefaultViewName(processedRequest, mv);</span><br><span class="line">                <span class="comment">// 拦截器postHandle方法进行处理</span></span><br><span class="line">				mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">				dispatchException = ex;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">				dispatchException = <span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler dispatch failed&quot;</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">//处理最后的结果，渲染之类的都在这里</span></span><br><span class="line">			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler,</span><br><span class="line">					<span class="keyword">new</span> <span class="title class_">NestedServletException</span>(<span class="string">&quot;Handler processing failed&quot;</span>, err));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">				<span class="comment">// Instead of postHandle and afterCompletion</span></span><br><span class="line">				<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Clean up any resources used by a multipart request.</span></span><br><span class="line">				<span class="keyword">if</span> (multipartRequestParsed) &#123;</span><br><span class="line">					cleanupMultipart(processedRequest);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-查找对应的-Handler-对象-getHandler-processedRequest"><a href="#3-查找对应的-Handler-对象-getHandler-processedRequest" class="headerlink" title="3. 查找对应的 Handler 对象 getHandler(processedRequest)"></a>3. 查找对应的 Handler 对象 getHandler(processedRequest)</h3><p>让我们去探索下是如何获取当前请求的 Handler 执行链，对应着这句代码 mappedHandler &#x3D; getHandler(processedRequest);，看下 <strong>DispatcherServlet 具体的 getHandler</strong> 方法，该方法主要是遍历所有的 handlerMappings 进行处理，handlerMappings 是在启动的时候预先注册好的，handlerMappings 包含 RequestMappingHandlerMapping、BeanNameUrlHandlerMapping、RouterFunctionMapping、SimpleUrlHandlerMapping 以及 WelcomePageHandlerMapping，在循环中会调用 <strong>AbstractHandlerMapping 类中的 getHandler 方法</strong>来获取 Handler 执行链，若获取的 Handler 执行链不为 null，则返回当前请求的 Handler 执行链，DispatcherServlet 类的 getHandler 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.handlerMappings != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">//遍历所有的handlerMappings进行处理，handlerMappings是在启动的时候注册好的</span></span><br><span class="line">		<span class="keyword">for</span> (HandlerMapping mapping : <span class="built_in">this</span>.handlerMappings) &#123;</span><br><span class="line">			<span class="type">HandlerExecutionChain</span> <span class="variable">handler</span> <span class="operator">=</span> mapping.getHandler(request);</span><br><span class="line">			<span class="keyword">if</span> (handler != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> handler;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法："><a href="#3-1-在循环中，根据-mapping-getHandler-request-，继续往下看-AbstractHandlerMapping-类中的-getHandler-方法：" class="headerlink" title="3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法："></a>3.1 在循环中，根据 mapping.getHandler(request);，继续往下看 AbstractHandlerMapping 类中的 getHandler 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">//根据request获取handler</span></span><br><span class="line">	<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> getHandlerInternal(request);</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		handler = getDefaultHandler();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果Handler时String，表明时一个bean名称，需要寻找对应bean</span></span><br><span class="line">	<span class="keyword">if</span> (handler <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">		<span class="type">String</span> <span class="variable">handlerName</span> <span class="operator">=</span> (String) handler;</span><br><span class="line">		handler = obtainApplicationContext().getBean(handlerName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 封装 Handler 执行链返回</span></span><br><span class="line">	<span class="type">HandlerExecutionChain</span> <span class="variable">executionChain</span> <span class="operator">=</span> getHandlerExecutionChain(handler, request);</span><br><span class="line">	<span class="keyword">return</span> executionChain;</span><br></pre></td></tr></table></figure>
+<h4 id="3-2-getHandlerInternal-request"><a href="#3-2-getHandlerInternal-request" class="headerlink" title="3.2 getHandlerInternal(request)"></a>3.2 getHandlerInternal(request)</h4><p>AbstractHandlerMapping 类中的 getHandler 方法中首先<strong>根据 requrst 获取 handler</strong>，主要是调用了 AbstractHandlerMethodMapping 类中的 <strong>getHandlerInternal</strong> 方法，该方法首先获取 request 中的 url，即 &#x2F;hello&#x2F;{message}，用来匹配 handler 并封装成 HandlerMethod，然后根据 handlerMethod 中的 bean 来实例化 Handler 并返回。<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/03/18/JkE3SYplDrH8GUg.png"
+                      alt="image.png"
+                ></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">getHandlerInternal</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 获取 request 中的 url，用来匹配 handler ： index/‘haha’</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> getUrlPathHelper().getLookupPathForRequest(request);</span><br><span class="line">	<span class="built_in">this</span>.mappingRegistry.acquireReadLock();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">// 根据路径寻找 Handler，并封装成 HandlerMethod</span></span><br><span class="line">		<span class="type">HandlerMethod</span> <span class="variable">handlerMethod</span> <span class="operator">=</span> lookupHandlerMethod(lookupPath, request);         <span class="comment">// 根据 handlerMethod 中的 bean 来实例化 Handler，并添加进 HandlerMethod</span></span><br><span class="line">		<span class="keyword">return</span> (handlerMethod != <span class="literal">null</span> ? handlerMethod.createWithResolvedBean() : <span class="literal">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">finally</span> &#123;</span><br><span class="line">		<span class="built_in">this</span>.mappingRegistry.releaseReadLock();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来，我们看 <strong>lookupHandlerMethod</strong> 的逻辑，主要逻辑委托给了 <strong>mappingRegistry</strong> 这个成员变量来处理：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> HandlerMethod <span class="title function_">lookupHandlerMethod</span><span class="params">(String lookupPath, HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	List&lt;Match&gt; matches = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">       <span class="comment">//通过 lookupPath属性中查找。如果找到了，就返回对应的RequestMappingInfo</span></span><br><span class="line">	List&lt;T&gt; directPathMatches = <span class="built_in">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">	<span class="keyword">if</span> (directPathMatches != <span class="literal">null</span>) &#123;</span><br><span class="line">           <span class="comment">// 如果匹配到了，检查其他属性是否符合要求，如请求方法，参数，header 等</span></span><br><span class="line">		addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (matches.isEmpty()) &#123;</span><br><span class="line">		<span class="comment">// 没有直接匹配到，则遍历所有的处理方法进行通配符匹配，这里大部分处理path类的</span></span><br><span class="line">           <span class="comment">// 请求，例如: /user/&#123;userId&#125;等请求</span></span><br><span class="line">		addMatchingMappings(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), matches, request);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!matches.isEmpty()) &#123;</span><br><span class="line">           <span class="comment">// 如果方法有多个匹配，不同的通配符等，则排序选择出最合适的一个</span></span><br><span class="line">		Comparator&lt;Match&gt; comparator = <span class="keyword">new</span> <span class="title class_">MatchComparator</span>(getMappingComparator(request));</span><br><span class="line">		matches.sort(comparator);</span><br><span class="line">		<span class="type">Match</span> <span class="variable">bestMatch</span> <span class="operator">=</span> matches.get(<span class="number">0</span>);</span><br><span class="line">           <span class="comment">// 如果有多个匹配的，会找到第二个最合适的进行比较</span></span><br><span class="line">		<span class="keyword">if</span> (matches.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(matches.size() + <span class="string">&quot; matching mappings: &quot;</span> + matches);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">				<span class="keyword">return</span> PREFLIGHT_AMBIGUOUS_MATCH;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="type">Match</span> <span class="variable">secondBestMatch</span> <span class="operator">=</span> matches.get(<span class="number">1</span>);</span><br><span class="line">			<span class="keyword">if</span> (comparator.compare(bestMatch, secondBestMatch) == <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m1</span> <span class="operator">=</span> bestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">Method</span> <span class="variable">m2</span> <span class="operator">=</span> secondBestMatch.handlerMethod.getMethod();</span><br><span class="line">				<span class="type">String</span> <span class="variable">uri</span> <span class="operator">=</span> request.getRequestURI();</span><br><span class="line">                   <span class="comment">// 不能有相同的最优 Match</span></span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">						<span class="string">&quot;Ambiguous handler methods mapped for &#x27;&quot;</span> + uri + <span class="string">&quot;&#x27;: &#123;&quot;</span> + m1 + <span class="string">&quot;, &quot;</span> + m2 + <span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		request.setAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE, bestMatch.handlerMethod);</span><br><span class="line">           <span class="comment">// 设置 request 参数（RequestMappingHandlerMapping 对其进行了覆写）</span></span><br><span class="line">		handleMatch(bestMatch.mapping, lookupPath, request);</span><br><span class="line">		<span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="comment">// 调用 RequestMappingHandlerMapping 类的 handleNoMatch 方法再匹配一次</span></span><br><span class="line">		<span class="keyword">return</span> handleNoMatch(<span class="built_in">this</span>.mappingRegistry.getMappings().keySet(), lookupPath, request);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过上面的过程，我们就获取到了 Handler，就开始<strong>封装执行链</strong>了，就是将我们配置的拦截器加入到执行链中去，<strong>getHandlerExecutionChain</strong> 方法如下：</p>
+<h4 id="3-3-封装执行链、重要-getHandlerExecutionChain"><a href="#3-3-封装执行链、重要-getHandlerExecutionChain" class="headerlink" title="3.3 (封装执行链、重要) getHandlerExecutionChain ()"></a>3.3 (封装执行链、重要) getHandlerExecutionChain ()</h4><p><strong>这里会传入业务的handler，也就是我们的业务controller。或者是以beanName生成的Handlermappings，反正就是具体的业务方法，然后把拦截器放在执行链的前面就可以</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getHandlerExecutionChain</span><span class="params">(Object handler, HttpServletRequest request)</span> &#123;</span><br><span class="line">	<span class="comment">// 如果当前 Handler 不是执行链类型，就使用一个新的执行链实例封装起来</span></span><br><span class="line">       <span class="type">HandlerExecutionChain</span> <span class="variable">chain</span> <span class="operator">=</span> (handler <span class="keyword">instanceof</span> HandlerExecutionChain ?</span><br><span class="line">			(HandlerExecutionChain) handler : <span class="keyword">new</span> <span class="title class_">HandlerExecutionChain</span>(handler));</span><br><span class="line"></span><br><span class="line">       <span class="comment">//获取请求的path</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">lookupPath</span> <span class="operator">=</span> <span class="built_in">this</span>.urlPathHelper.getLookupPathForRequest(request);</span><br><span class="line">	<span class="comment">// 遍历拦截器，找到跟当前 url 对应的，添加进执行链中去</span></span><br><span class="line">       <span class="keyword">for</span> (HandlerInterceptor interceptor : <span class="built_in">this</span>.adaptedInterceptors) &#123;</span><br><span class="line">		<span class="keyword">if</span> (interceptor <span class="keyword">instanceof</span> MappedInterceptor) &#123;</span><br><span class="line">			<span class="type">MappedInterceptor</span> <span class="variable">mappedInterceptor</span> <span class="operator">=</span> (MappedInterceptor) interceptor;</span><br><span class="line">			<span class="keyword">if</span> (mappedInterceptor.matches(lookupPath, <span class="built_in">this</span>.pathMatcher)) &#123;</span><br><span class="line">				chain.addInterceptor(mappedInterceptor.getInterceptor());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			chain.addInterceptor(interceptor);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> chain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到此为止，我们就获取了当前请求的 Handler 执行链，接下来看下是如何获取请求的 <strong>Handler 适配器</strong>，主要依靠 <strong>DispatcherServlet 类的 getHandlerAdapter 方法</strong>，该方法就是遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回，在这里匹配到的为 RequestMappingHandlerAdapter。DispatcherServlet 类的 getHandlerAdapter 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerAdapter <span class="title function_">getHandlerAdapter</span><span class="params">(Object handler)</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.handlerAdapters != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历所有的 HandlerAdapter，找到和当前 Handler 匹配的就返回</span></span><br><span class="line">        <span class="keyword">for</span> (HandlerAdapter adapter : <span class="built_in">this</span>.handlerAdapters) &#123;</span><br><span class="line">            <span class="keyword">if</span> (adapter.supports(handler)) &#123;</span><br><span class="line">                <span class="keyword">return</span> adapter;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;No adapter for handler [&quot;</span> + handler +</span><br><span class="line">            <span class="string">&quot;]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="4-（调用业务）HandlerAdapter-执行当前的-Handler"><a href="#4-（调用业务）HandlerAdapter-执行当前的-Handler" class="headerlink" title="4. （调用业务）HandlerAdapter 执行当前的 Handler"></a>4. （调用业务）HandlerAdapter 执行当前的 Handler</h3><p>再获取完当前请求的 Handler 适配器后，接着进行<strong>缓存处理</strong>，也就是对 last-modified 的处理，然后调用 applyPreHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，即遍历所有定义的 interceptor，执行 postHandle 方法，然后就到了实际执行 handle 的地方，doDispatch 方法中 handle 方法是执行当前 Handler，我们这里使用的是 RequestMappingHandlerAdapter，首先会进入 <strong>AbstractHandlerMethodAdapter 的 handle 方法</strong>：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> ModelAndView <span class="title function_">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span></span><br><span class="line">		<span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> handleInternal(request, response, (HandlerMethod) handler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法："><a href="#4-1-AbstractHandlerMethodAdapter-的-handle-方法中又调用了-RequestMappingHandlerAdapter-类的-handleInternal-方法：" class="headerlink" title="4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法："></a>4.1  AbstractHandlerMethodAdapter 的 handle 方法中又调用了 RequestMappingHandlerAdapter 类的 handleInternal 方法：</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">protected</span> ModelAndView <span class="title function_">handleInternal</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		ModelAndView mav;</span><br><span class="line">		checkRequest(request);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">			<span class="type">HttpSession</span> <span class="variable">session</span> <span class="operator">=</span> request.getSession(<span class="literal">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (session != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">mutex</span> <span class="operator">=</span> WebUtils.getSessionMutex(session);</span><br><span class="line">				<span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">					mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">				mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 执行方法，封装 ModelAndView</span></span><br><span class="line">			mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">				applyCacheSeconds(response, <span class="built_in">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				prepareResponse(response);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> mav;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>在执行完 handle 方法后，然后调用 applyDefaultViewName 方法<strong>组装默认视图名称</strong>，将前缀和后缀名都加上，接着调用 applyPostHandle 方法<strong>执行拦截器的 preHandle 方法</strong>，也就是遍历所有定义的 interceptor，执行 postHandle 方法。</p>
+<h3 id="5-处理最终结果以及渲染"><a href="#5-处理最终结果以及渲染" class="headerlink" title="5. 处理最终结果以及渲染"></a>5. 处理最终结果以及渲染</h3><p>最后调用 <strong>DispatcherServlet 类中的 processDispatchResult 方法</strong>，此方法是<strong>处理最终结果的，包括异常处理、渲染页面和发出完成通知触发拦截器的 afterCompletion() 方法执行等</strong>，processDispatchResult()方法代码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processDispatchResult</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> HandlerExecutionChain mappedHandler, <span class="meta">@Nullable</span> ModelAndView mv,</span></span><br><span class="line"><span class="params">			<span class="meta">@Nullable</span> Exception exception)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">		<span class="type">boolean</span> <span class="variable">errorView</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (exception != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (exception <span class="keyword">instanceof</span> ModelAndViewDefiningException) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;ModelAndViewDefiningException encountered&quot;</span>, exception);</span><br><span class="line">				mv = ((ModelAndViewDefiningException) exception).getModelAndView();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> (mappedHandler != <span class="literal">null</span> ? mappedHandler.getHandler() : <span class="literal">null</span>);</span><br><span class="line">				mv = processHandlerException(request, response, handler, exception);</span><br><span class="line">				errorView = (mv != <span class="literal">null</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 渲染</span></span><br><span class="line">		<span class="keyword">if</span> (mv != <span class="literal">null</span> &amp;&amp; !mv.wasCleared()) &#123;</span><br><span class="line">			render(mv, request, response);</span><br><span class="line">			<span class="keyword">if</span> (errorView) &#123;</span><br><span class="line">				WebUtils.clearErrorRequestAttributes(request);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(<span class="string">&quot;No view rendering, null ModelAndView returned.&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) &#123;</span><br><span class="line">			<span class="comment">// Concurrent handling started during a forward</span></span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (mappedHandler != <span class="literal">null</span>) &#123;</span><br><span class="line">			mappedHandler.triggerAfterCompletion(request, response, <span class="literal">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来让我们看下 <strong>DispatcherServlet 类的 render 方法</strong>是如何完成渲染的，DispatcherServlet 类的 render 方法渲染过程如下：</p>
+<ol>
+<li>判断 ModelAndView 中 view 是否为 view name，没有获取其实例对象：如果是根据 name，如果是则需要调用 resolveViewName 从视图解析器获取对应的视图(View)对象；否则 ModelAndView 中使用 getview 方法获取 view 对象。</li>
+<li>然后调用 View 类的 render 方法。</li>
+</ol>
+<p>DispatcherServlet 类的 render 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">render</span><span class="params">(ModelAndView mv, HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 设置本地化</span></span><br><span class="line">    <span class="type">Locale</span> <span class="variable">locale</span> <span class="operator">=</span> (<span class="built_in">this</span>.localeResolver != <span class="literal">null</span> ? <span class="built_in">this</span>.localeResolver.resolveLocale(request) : request.getLocale());</span><br><span class="line">    response.setLocale(locale);</span><br><span class="line">    View view;</span><br><span class="line">    <span class="type">String</span> <span class="variable">viewName</span> <span class="operator">=</span> mv.getViewName();</span><br><span class="line">    <span class="keyword">if</span> (viewName != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 解析视图名，得到视图</span></span><br><span class="line">        view = resolveViewName(viewName, mv.getModelInternal(), locale, request);</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;Could not resolve view with name &#x27;&quot;</span> + mv.getViewName() +</span><br><span class="line">                    <span class="string">&quot;&#x27; in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        view = mv.getView();</span><br><span class="line">        <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span>(<span class="string">&quot;ModelAndView [&quot;</span> + mv + <span class="string">&quot;] neither contains a view name nor a &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;View object in servlet with name &#x27;&quot;</span> + getServletName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Rendering view [&quot;</span> + view + <span class="string">&quot;] &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mv.getStatus() != <span class="literal">null</span>) &#123;</span><br><span class="line">            response.setStatus(mv.getStatus().value());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 委托给视图进行渲染</span></span><br><span class="line">        view.render(mv.getModelInternal(), request, response);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(<span class="string">&quot;Error rendering view [&quot;</span> + view + <span class="string">&quot;]&quot;</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>Spring</tag>
+        <tag>SpringMVC</tag>
+        <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>video玩出新花样当background</title>
+    <url>/2018/05/20/video/</url>
+    <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
+<p>因为前几天我们要进行网页设计大赛，所以我们小组又焦头烂额的坐在了一起：“又做东西啊，烦死了”！最终我们还是做出来了。也得了个第一名，虽然不怎么好。但也是对自己努力的一个肯定。</p>
+<p>学习中遇见了一些问题就不说了，我们做的页面是支付宝全站，但是支付宝个人中心有一个拿video当做视频背景的元素，我们一直没搞懂。但是恍然大悟，我们可以使用<strong>z-index</strong>属性来定义啊。好那么我们详细欣赏下面的教程！</p>
+<p>下面先给大家截图一下这个效果吧，大神勿喷~ 但是截图的又不能动~~<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b24585f4e279.png"
+                      alt="支付宝video首页"
+                ></p>
+<p>多了话不多说我们先来分析一波，首先我们这个东西用视频当做背景，所以背景一定在下面的，所以设置他的层级代码肯定为负的最多的，因为上面要放内容。那么我们既然弄肯定要全屏还有把他固定在哪里，即使我们不设置数值。然后设置他的显示亮度。多了不说了css代码上了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b2457feccb34.png"
+                      alt="css代码样式"
+                ><br>那么看到这里就有疑问了，有人问 <strong>-webkit-filter:grayscale(100%)</strong> 这段代码是干嘛的，显示的亮度。但是需要支付浏览器，webkit是兼容谷歌的，如果展示在用户面前需要兼容多个浏览器，具体的自行百度下。</p>
+<p>好那么我们css设置完成了，好我们展示下我们html的代码吧。<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b245a9666c58.png"
+                      alt="中心展示代码"
+                ><br>这个代码其实就是正常的插入一段视频。无需多的理解。</p>
+<p>好一个视频已经展现在我们的面前，总是感觉视频的速度可能播放太快或者太慢没有视觉感觉。好我们定义一下他的视频背景，首先这个 id&#x3D;v1 v1是自己取得名字，这个根据开发者自己来定。<strong>其中的0.5自行改数值。</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/06/16/5b245b49bda2c.png"
+                      alt="js代码"
+                ></p>
+<p>就这么简单我们的一个页面已经制作完成啦。现在我们看下效果吧！有什么不懂得可以QQ问我哦~</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
     <url>/2022/12/22/%E4%B8%8D%E5%B0%8F%E5%BF%83%E6%8F%90%E4%BA%A4%E5%88%B0%20Git%20%E7%9A%84%E6%96%87%E4%BB%B6%EF%BC%8C%E6%80%8E%E4%B9%88%E5%AE%8C%E5%85%A8%E4%BB%8E%E4%BB%93%E5%BA%93%E4%B8%AD%E6%B8%85%E9%99%A4/</url>
     <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
@@ -996,6 +996,44 @@
       <tags>
         <tag>Git</tag>
         <tag>远程仓库</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人主页折腾记</title>
+    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
+    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
+<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
+<p>话不多说,先上图！</p>
+<p>(开局一张图,故事全靠编)</p>
+<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
+                      alt="首页图"
+                ></p>
+<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
+                      alt="关于我"
+                ></p>
+<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
+<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
+<p>3：更简洁大气的页面</p>
+<p>4：增加邮件联系的方式</p>
+<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
+<p>———————–中场抱怨一手————————-</p>
+<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
+<p>———————–中场抱怨结束————————-</p>
+<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
+<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
+<p>全球最大的同性交友网站链接奉上:</p>
+<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
+<p>嗯！ 最后祝各位老朋友:</p>
+<p>天天快乐，幸福安康。</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
       </tags>
   </entry>
   <entry>
@@ -1074,93 +1112,6 @@
       </tags>
   </entry>
   <entry>
-    <title>关于停止使用 957xx.cc域名</title>
-    <url>/2022/11/29/%E5%85%B3%E4%BA%8E%E5%81%9C%E6%AD%A2%E4%BD%BF%E7%94%A8%20957xx.cc%E5%9F%9F%E5%90%8D/</url>
-    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
-<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
-<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
-<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
-<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
-]]></content>
-      <tags>
-        <tag>通知</tag>
-        <tag>暂停</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>个人主页折腾记</title>
-    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
-    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
-<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
-<p>话不多说,先上图！</p>
-<p>(开局一张图,故事全靠编)</p>
-<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
-                      alt="首页图"
-                ></p>
-<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
-                      alt="关于我"
-                ></p>
-<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
-<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
-<p>3：更简洁大气的页面</p>
-<p>4：增加邮件联系的方式</p>
-<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
-<p>———————–中场抱怨一手————————-</p>
-<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
-<p>———————–中场抱怨结束————————-</p>
-<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
-<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
-<p>全球最大的同性交友网站链接奉上:</p>
-<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
-<p>嗯！ 最后祝各位老朋友:</p>
-<p>天天快乐，幸福安康。</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>新的一年,HI!</title>
-    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
-    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
-<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
-<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
-<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
-<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
-<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
-<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
-<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
-<p>​     2:学习一些框架,自学一些语言等</p>
-<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
-<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
-<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
-<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
-                     
-                ></p>
-<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
-<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
-<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
-<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
-<p>2.去一次旅游(见一个人)  不知道能不能</p>
-<p>3.希望在年底学会开车 哈哈~~</p>
-<p>嘿嘿,给大家一声晚来的新年快乐！</p>
-<p>​     </p>
-]]></content>
-      <tags>
-        <tag>谈心</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>半年了，你的梦想又去了哪里?</title>
     <url>/2018/08/10/%E5%8D%8A%E5%B9%B4%E4%BA%86%EF%BC%8C%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3%E5%8F%88%E5%8E%BB%E4%BA%86%E5%93%AA%E9%87%8C/</url>
     <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
@@ -1178,6 +1129,20 @@
 <p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
 <p>​    </p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>关于停止使用 957xx.cc域名</title>
+    <url>/2022/11/29/%E5%85%B3%E4%BA%8E%E5%81%9C%E6%AD%A2%E4%BD%BF%E7%94%A8%20957xx.cc%E5%9F%9F%E5%90%8D/</url>
+    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
+<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
+<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
+<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
+<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
+]]></content>
+      <tags>
+        <tag>通知</tag>
+        <tag>暂停</tag>
+      </tags>
   </entry>
   <entry>
     <title>我的一个道姑朋友-背景</title>
@@ -1248,6 +1213,53 @@
       </tags>
   </entry>
   <entry>
+    <title>来聊(水)下最近hexo备份的思路</title>
+    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
+<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
+<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
+<li>把hexo文件夹备份至自己的本地的文件</li>
+<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
+<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
+</ol>
+<p>重点说一下同步盘的思想</p>
+<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
+<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
+<ol>
+<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
+<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
+</ol>
+<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
+<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
+<ol>
+<li>跨平台性，针对多设备的兼容</li>
+<li>不限速</li>
+<li>bugfix的数量以及修复的速度</li>
+<li>易用性</li>
+</ol>
+<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
+<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
+<li>拷贝文件夹到oneDrive</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
+</ol>
+<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
+<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>OneDrive</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>老朋友，别来无恙啊。</title>
     <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
@@ -1261,6 +1273,41 @@
       <tags>
         <tag>hexo</tag>
         <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>新的一年,HI!</title>
+    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
+    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
+<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
+<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
+<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
+<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
+<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
+<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
+<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
+<p>​     2:学习一些框架,自学一些语言等</p>
+<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
+<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
+<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
+<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
+                     
+                ></p>
+<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
+<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
+<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
+<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
+<p>2.去一次旅游(见一个人)  不知道能不能</p>
+<p>3.希望在年底学会开车 哈哈~~</p>
+<p>嘿嘿,给大家一声晚来的新年快乐！</p>
+<p>​     </p>
+]]></content>
+      <tags>
+        <tag>谈心</tag>
       </tags>
   </entry>
   <entry>
@@ -1309,53 +1356,6 @@
 ]]></content>
       <tags>
         <tag>鸡汤</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>来聊(水)下最近hexo备份的思路</title>
-    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
-<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
-<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
-<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
-<li>把hexo文件夹备份至自己的本地的文件</li>
-<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
-<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
-</ol>
-<p>重点说一下同步盘的思想</p>
-<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
-<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
-<ol>
-<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
-<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
-</ol>
-<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
-<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
-<ol>
-<li>跨平台性，针对多设备的兼容</li>
-<li>不限速</li>
-<li>bugfix的数量以及修复的速度</li>
-<li>易用性</li>
-</ol>
-<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
-<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
-<li>拷贝文件夹到oneDrive</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
-</ol>
-<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
-<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>OneDrive</tag>
       </tags>
   </entry>
 </search>
