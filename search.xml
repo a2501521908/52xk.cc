@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Arthas直接执行Spring Context中的函数</title>
+    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
+<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
+<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
+<ol>
+<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
+<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
+<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
+</ol>
+<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
+<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
+<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
+<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
+<ol>
+<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
+<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
+<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
+]]></content>
+      <tags>
+        <tag>arthas</tag>
+        <tag>springboot</tag>
+        <tag>spring</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>2019给自己的年终总结</title>
     <url>/2019/12/31/2019%E7%BB%99%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</url>
     <content><![CDATA[<h2 id="开头"><a href="#开头" class="headerlink" title="开头:"></a>开头:</h2><p>新的一年新的气象，我看各个博主都已经开始给自己立了一个新年的总结，下午前脚把代码Push上，我就过来给自己一个总结，毕竟觉得自己是挺重要的一年！</p>
@@ -75,6 +106,371 @@
 ]]></content>
       <tags>
         <tag>总结</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>29.22分钟学会正则表达式</title>
+    <url>/2018/11/22/29-22%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
+<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
+<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
+
+<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
+<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
+<ul>
+<li>原义字符</li>
+<li>元字符</li>
+</ul>
+<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
+<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
+<ul>
+<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
+<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
+<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
+<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
+<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
+<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
+<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
+<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
+<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
+<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
+<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
+<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
+<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
+<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
+<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
+<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
+<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
+<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
+<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
+</ul>
+<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
+                      alt="clipboard.png"
+                ></p>
+<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
+
+<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
+<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要以A为结尾的正则，则是如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
+<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
+<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
+                      alt="clipboard.png"
+                ></p>
+<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
+<p><strong>那么有没有更简便更短的方法呢？</strong></p>
+<p>巧了，正则就是辣么强大</p>
+<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
+<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
+                      alt="clipboard.png"
+                ></p>
+<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
+
+<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p>让我们看看可视化工具的结果，方便理解</p>
+<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
+<p>如果按照上面这样写，则如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
+<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
+<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
+                      alt="clipboard.png"
+                ></p>
+<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
+<ul>
+<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
+<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
+</ul>
+<p>上表格！</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
+                      alt="clipboard.png"
+                ></p>
+<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
+                      alt="clipboard.png"
+                ></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
+<p>顺便把这个负向前瞻看看吧</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
+                      alt="clipboard.png"
+                ></p>
+<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
+<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后你打开可视化工具</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
+                      alt="clipboard.png"
+                ></p>
+<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
+<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
+                      alt="clipboard.png"
+                ></p>
+<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
+                      alt="clipboard.png"
+                ></p>
+<ul>
+<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
+<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
+<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
+<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
+</ul>
+<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
+<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
       </tags>
   </entry>
   <entry>
@@ -466,407 +862,11 @@
 <p><a class="link"   href="https://my.oschina.net/keking/blog/3056698" >spring boot集成kafka之spring-kafka深入探秘 - 凯京科技的个人空间 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
 ]]></content>
       <tags>
-        <tag>kafka</tag>
         <tag>springboot</tag>
+        <tag>kafka</tag>
         <tag>mq</tag>
         <tag>分布式</tag>
         <tag>Docker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Arthas直接执行Spring Context中的函数</title>
-    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
-<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
-<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
-<ol>
-<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
-<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
-<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
-</ol>
-<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
-<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
-<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
-<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
-<ol>
-<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
-<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
-<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
-]]></content>
-      <tags>
-        <tag>springboot</tag>
-        <tag>arthas</tag>
-        <tag>spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>29.22分钟学会正则表达式</title>
-    <url>/2018/11/22/29-22%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
-<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
-<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
-
-<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
-<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
-<ul>
-<li>原义字符</li>
-<li>元字符</li>
-</ul>
-<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
-<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
-<ul>
-<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
-<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
-<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
-<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
-<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
-<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
-<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
-<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
-<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
-<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
-<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
-<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
-<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
-<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
-<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
-<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
-<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
-<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
-<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
-</ul>
-<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
-                      alt="clipboard.png"
-                ></p>
-<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
-
-<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
-<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要以A为结尾的正则，则是如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
-<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
-<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
-                      alt="clipboard.png"
-                ></p>
-<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
-<p><strong>那么有没有更简便更短的方法呢？</strong></p>
-<p>巧了，正则就是辣么强大</p>
-<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
-<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
-                      alt="clipboard.png"
-                ></p>
-<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
-
-<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p>让我们看看可视化工具的结果，方便理解</p>
-<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
-<p>如果按照上面这样写，则如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
-<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
-<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
-                      alt="clipboard.png"
-                ></p>
-<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
-
-<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
-<ul>
-<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
-<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
-</ul>
-<p>上表格！</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
-                      alt="clipboard.png"
-                ></p>
-<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
-                      alt="clipboard.png"
-                ></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
-
-<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
-<p>顺便把这个负向前瞻看看吧</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
-                      alt="clipboard.png"
-                ></p>
-<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
-<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后你打开可视化工具</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
-                      alt="clipboard.png"
-                ></p>
-<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
-<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
-                      alt="clipboard.png"
-                ></p>
-<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
-                      alt="clipboard.png"
-                ></p>
-<ul>
-<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
-<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
-<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
-<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
-</ul>
-<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
-<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
-                ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
-                ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
       </tags>
   </entry>
   <entry>
@@ -942,6 +942,270 @@
       </tags>
   </entry>
   <entry>
+    <title>Spring如何解决循环依赖(三级缓存)</title>
+    <url>/2023/07/29/Spring%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%EF%BC%88%E4%B8%89%E7%BA%A7%E7%BC%93%E5%AD%98%EF%BC%89/</url>
+    <content><![CDATA[<h1 id="SpringMVC源码的分析"><a href="#SpringMVC源码的分析" class="headerlink" title="SpringMVC源码的分析"></a>SpringMVC源码的分析</h1><h1 id="大纲"><a href="#大纲" class="headerlink" title="大纲"></a>大纲</h1><p>整篇文章大纲如下：<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/qyhGQuUN5mZKoSI.png"
+                      alt="image.png"
+                ><br><a name="RfrAL"></a></p>
+<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p><a name="BJRhL"></a></p>
+<h2 id="1-1什么是循环依赖？"><a href="#1-1什么是循环依赖？" class="headerlink" title="1.1什么是循环依赖？"></a>1.1什么是循环依赖？</h2><p>一个或多个对象之间存在直接或间接的依赖关系，这种依赖关系构成一个环形调用，有下面 3 种方式<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/7zsdLShl9aeUpr3.png"
+                      alt="image.png"
+                ><br />我们看一个简单的 Demo，对标“情况 2”。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AService</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> BService bService;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AService aService;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是一个经典的循环依赖，它能正常运行，后面我们会通过源码的角度，解读整体的执行流程。<br><a name="FU343"></a></p>
+<h2 id="1-2-三级缓存概念"><a href="#1-2-三级缓存概念" class="headerlink" title="1.2 三级缓存概念"></a>1.2 三级缓存概念</h2><p>spring就是通过三级缓存去解决的循环依赖的问题。</p>
+<ol>
+<li>第一级缓存：singletonObjects，用于保存实例化、注入、初始化完成的Bean实例</li>
+<li>第二级缓存：earlySingletonObjects，用于保存实例化完成的Bean</li>
+<li>第三级缓存：singletonFactories，用于保存Bean创建工厂，以便后面有机会创建对象</li>
+</ol>
+<p>我们查看下具体的获取单例源码：<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/4wtlXKfLkd8D2cY.png"
+                      alt="image.png"
+                ><br />执行逻辑：</p>
+<ul>
+<li>先从“第一级缓存”中找对象，有就返回，没有就找“二级缓存”</li>
+<li>找“二级缓存”，有就返回，没有就找“三级缓存”</li>
+<li>找“三级缓存”，找到了就获取对象，放到“二级缓存”，从“三级缓存”中移除<br><a name="pzM4Q"></a></li>
+</ul>
+<h2 id="1-3-原理执行流程"><a href="#1-3-原理执行流程" class="headerlink" title="1.3 原理执行流程"></a>1.3 原理执行流程</h2><p><a name="HzU4f"></a></p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/KQ7kwFevTW3dPHD.png"
+                      alt="image.png"
+                ></h2><ol>
+<li>在第一层中，先去获取 A 的 Bean，发现没有就准备去创建一个，然后将 A 的代理工厂放入“三级缓存”（这个 A 其实是一个半成品，还没有对里面的属性进行注入），但是 A 依赖 B 的创建，就必须先去创建 B；</li>
+<li>在第二层中，准备创建 B，发现 B 又依赖 A，需要先去创建 A；</li>
+<li>在第三层中，去创建 A，因为第一层已经创建了 A 的代理工厂，直接从“三级缓存”中拿到 A 的代理工厂，获取 A 的代理对象，放入“二级缓存”，并清除“三级缓存”；</li>
+<li>回到第二层，现在有了 A 的代理对象，对 A 的依赖完美解决（这里的 A 仍然是个半成品），B 初始化成功；</li>
+<li>回到第一层，现在 B 初始化成功，完成 A 对象的属性注入，然后再填充 A 的其它属性，以及 A 的其它步骤（包括 AOP），完成对 A 完整的初始化功能（这里的 A 才是完整的 Bean）。</li>
+<li>将 A 放入“一级缓存”。<br><a name="bsWkM"></a></li>
+</ol>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><p>我们以AService、BService之间的依赖关系，来调试这一段代码。<br><a name="OJ5YY"></a></p>
+<h2 id="找到代码入口"><a href="#找到代码入口" class="headerlink" title="找到代码入口"></a>找到代码入口</h2><p>在Spring的<code>AbstractApplicationContext#refresh</code>函数中，重点查看 <code>finishBeanFactoryInitialization(beanFactory)</code>函数<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/uIvK6qbJfdF1pP5.png"
+                      alt="image.png"
+                ><br />我们在跳进去<code>finishBeanFactoryInitialization(beanFactory)</code>函数后内的<code>preInstantiateSingletons</code>函数，这个函数的作用是预创建所有的单例Bean。也就是说容器启动时加载Bean的地方。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/pBDSywJ25OhtMrW.png"
+                      alt="image.png"
+                ><br />找到AService<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/QP6BwczynSF3Xru.png"
+                      alt="image.png"
+                ><br><a name="trYTb"></a></p>
+<h2 id="第一层"><a href="#第一层" class="headerlink" title="第一层"></a>第一层</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/ev3jCRZYlyf9uon.png"
+                      alt="image.png"
+                ><br><a name="KYtSS"></a></p>
+<h3 id="createBean-创建AService"><a href="#createBean-创建AService" class="headerlink" title="createBean 创建AService"></a>createBean 创建AService</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/3ylkHGNhPDoLSBw.png"
+                      alt="image.png"
+                ><br><a name="JPGbW"></a></p>
+<h3 id="又去调用doCreateBean"><a href="#又去调用doCreateBean" class="headerlink" title="又去调用doCreateBean"></a>又去调用doCreateBean</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/pEHnrOLmdCU91oF.png"
+                      alt="image.png"
+                ><br><a name="uCQdY"></a></p>
+<h3 id="调用-addSingletonFactory-放入三级缓存"><a href="#调用-addSingletonFactory-放入三级缓存" class="headerlink" title="调用 addSingletonFactory() (放入三级缓存)"></a>调用 addSingletonFactory() (放入三级缓存)</h3><p>进入 doCreateBean() 后，调用 addSingletonFactory()</p>
+<blockquote>
+<p>在这个函数中还做了创建Bean的实例，createBeanInstance</p>
+</blockquote>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/61JjUcXVlhgiab2.png"
+                      alt="image.png"
+                ><br><a name="SkCSd"></a></p>
+<h3 id="查看是否放入三级缓存"><a href="#查看是否放入三级缓存" class="headerlink" title="查看是否放入三级缓存"></a>查看是否放入三级缓存</h3><p>我们查看下是否放入到了三级缓存中了<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/dh8WugCoG2ZDwrV.png"
+                      alt="image.png"
+                ><br />通过条件表达式可以看出来确实放入了三级缓存中</p>
+<blockquote>
+<p>addSingletonFactory函数如下：<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/Luw68W7trvUpoSn.png"
+                      alt="image.png"
+                ></p>
+</blockquote>
+<p><a name="m0gAD"></a></p>
+<h3 id="进入populateBean属性注入"><a href="#进入populateBean属性注入" class="headerlink" title="进入populateBean属性注入"></a>进入populateBean属性注入</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/iqRUnjMX2lwcmfI.png"
+                      alt="image.png"
+                ><br><a name="xb8J5"></a></p>
+<h3 id="执行-postProcessProperties"><a href="#执行-postProcessProperties" class="headerlink" title="执行 postProcessProperties()"></a>执行 postProcessProperties()</h3><p>进入到 populateBean()，执行 postProcessProperties()，这里是一个策略模式，找到下图的策略对象。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/5RMwNkOQ1zKyPsU.png"
+                      alt="image.png"
+                ><br />找到<code>org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor#postProcessProperties</code>后，我们简单查看下元数据<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/oKBx6WuysVhJ9qS.png"
+                      alt="image.png"
+                ><br><a name="AYOE0"></a></p>
+<h3 id="执行依赖注入属性-inject"><a href="#执行依赖注入属性-inject" class="headerlink" title="执行依赖注入属性 inject()"></a>执行依赖注入属性 inject()</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/L6NxsrEUCt8YJWR.png"
+                      alt="image.png"
+                ><br />下面的流程都是为了获取AService的成员对象，然后进行注入<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/8A6GKkp7MXEidQq.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/ysFQ3HOxXYaI6kr.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/1aklu9xdVhtsXBU.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/o3We5iptkZBEGcL.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/1EO6LGsBhZFJ8jg.png"
+                      alt="image.png"
+                ><br />到这里，基本第一层就执行完了。应该去执行getBea(BService)的逻辑了<br><a name="eRBYf"></a></p>
+<h2 id="第二层"><a href="#第二层" class="headerlink" title="第二层"></a>第二层</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/yCEx7KzW4RsVQ6q.png"
+                      alt="image.png"
+                ><br><a name="SNkjr"></a></p>
+<h3 id="doResolveDependency"><a href="#doResolveDependency" class="headerlink" title="doResolveDependency()"></a>doResolveDependency()</h3><p>获取BService的bean，从doGetBean()，到doResolveDependency()，和第一层逻辑完全一样，好到 BService依赖的对象名 AService<br />前面流程一样的，直接到<code>org.springframework.beans.factory.support.DefaultListableBeanFactory#doResolveDependency</code>就可以啦<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/vuGImN8OskPpa6i.png"
+                      alt="image.png"
+                ><br><a name="MKkMy"></a></p>
+<h3 id="再次获取AService的Bean"><a href="#再次获取AService的Bean" class="headerlink" title="再次获取AService的Bean"></a>再次获取AService的Bean</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/85CEqdZgcFyXaiM.png"
+                      alt="image.png"
+                ><br />到这里，第二层基本已经完成了。需要再次进入到第三次套娃，啊哈哈<br><a name="AbzsR"></a></p>
+<h2 id="第三层"><a href="#第三层" class="headerlink" title="第三层"></a>第三层</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/rsBbUQxnTq1c4Ju.png"
+                      alt="image.png"
+                ><br /><strong>在第一层和第二层中，我们每次都会从 getSingleton() 获取对象，但是由于之前没有初始化 louzai1 和 louzai2 的三级缓存，所以获取对象为空。</strong><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/oTukrl6jLnpFwgt.png"
+                      alt="image.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/pW36mQrikITLgV1.png"
+                      alt="image.png"
+                ></p>
+<p>到了第三层，由于第三级缓存有 AService 数据，这里使用三级缓存中的工厂，为 AService 创建一个代理对象，塞入二级缓存。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/BcIsnrH4ZyXJz8e.png"
+                      alt="image.png"
+                ><br />这里就拿到了AService的对象，解决了BService的依赖关系，返回到第二层。<br><a name="gSnJX"></a></p>
+<h2 id="返回第二层"><a href="#返回第二层" class="headerlink" title="返回第二层"></a>返回第二层</h2><p>返回到第二层后，BService的初始化结束，这里就结束了么？二级缓存的数据，啥时候会给到一级呢？<br />答案来了，在 doGetBean() 中，我们会通过 createBean() 创建一个 BService 的 bean，当 BService 的 bean 创建成功后，我们会执行 getSingleton()，它会对 BService 的结果进行处理。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/r2jWqXwSxv7BkFa.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/w2gR1NcSvKUl8ze.png"
+                      alt="image.png"
+                ><br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/asy8l5KOgTq4Yi3.png"
+                      alt="image.png"
+                ><br><a name="wwuyB"></a></p>
+<h2 id="返回第一层"><a href="#返回第一层" class="headerlink" title="返回第一层"></a>返回第一层</h2><p>在AServic初始化完成后，会把AService的二级缓存清除，并将对象放入一级缓存中。至此依赖循环解决完毕<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/9hWvi1mQax6eN8r.png"
+                      alt="image.png"
+                ><br><a name="HmRSm"></a></p>
+<h1 id="原理总结"><a href="#原理总结" class="headerlink" title="原理总结"></a>原理总结</h1><p><a name="BUPqf"></a></p>
+<h2 id="为什么要有三级缓存？"><a href="#为什么要有三级缓存？" class="headerlink" title="为什么要有三级缓存？"></a>为什么要有三级缓存？</h2><p>我们先说“一级缓存”的作用，变量命名为 singletonObjects，结构是 Map&lt;String, Object&gt;，它就是一个单例池，将初始化好的对象放到里面，给其它线程使用，<strong>如果没有第一级缓存，程序不能保证 Spring 的单例属性。</strong><br />“二级缓存”先放放，我们直接看“三级缓存”的作用，变量命名为 singletonFactories，结构是 Map&lt;String, ObjectFactory&lt;?&gt;&gt;，Map 的 Value 是一个对象的代理工厂，所以“三级缓存”的作用，其实就是用来存放对象的代理工厂。<br />那这个对象的代理工厂有什么作用呢，我先给出答案，<strong>它的主要作用是存放半成品的单例 Bean，目的是为了“打破循环”</strong>，可能大家还是不太懂，这里我再稍微解释一下。<br />我们回到文章开头的例子，创建 A 对象时，会把实例化的 A 对象存入“三级缓存”，这个 A 其实是个半成品，因为没有完成 A 的依赖属性 B 的注入，所以后面当初始化 B 时，B 又要去找 A，这时就需要从“三级缓存”中拿到这个半成品的 A（这里描述，其实也不完全准确，因为不是直接拿，为了让大家好理解，我就先这样描述），打破循环。<br />那我再问一个问题，<strong>为什么“三级缓存”不直接存半成品的 A，而是要存一个代理工厂呢 ？答案是因为 AOP。</strong><br />在解释这个问题前，我们看一下这个代理工厂的源码，让大家有一个更清晰的认识。<br />直接找到创建 A 对象时，把实例化的 A 对象存入“三级缓存”的代码，直接用前面的两幅截图。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/ABmCUqub5vLQ19z.png"
+                      alt="image.png"
+                ><br />下面我们主要看这个对象工厂是如何得到的，进入 getEarlyBeanReference() 方法。<br /><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/sf5vHm9SL8YJqbD.png"
+                      alt="image.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2023/07/29/wcpgi3VXTxaWdlN.png"
+                      alt="image.png"
+                ><br />最后一幅图太重要了，我们知道这个对象工厂的作用：</p>
+<ul>
+<li><strong>如果 A 有 AOP，就创建一个代理对象；</strong></li>
+<li><strong>如果 A 没有 AOP，就返回原对象。</strong></li>
+</ul>
+<p><strong>那“二级缓存”的作用就清楚了，就是用来存放对象工厂生成的对象，这个对象可能是原对象，也可能是个代理对象。</strong><br />我再问一个问题，为什么要这样设计呢？把二级缓存干掉不行么 ？我们继续往下看。<br><a name="MfNsz"></a></p>
+<h2 id="能去掉第二级缓存吗？"><a href="#能去掉第二级缓存吗？" class="headerlink" title="能去掉第二级缓存吗？"></a>能去掉第二级缓存吗？</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> C c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> A a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">C</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据上面的套娃逻辑，A 需要找 B 和 C，但是 B 需要找 A，C 也需要找 A。<br /><strong>假如 A 需要进行 AOP</strong>，因为代理对象每次都是生成不同的对象，如果干掉第二级缓存，只有第一、三级缓存：</p>
+<ul>
+<li><strong>B 找到 A 时，直接通过三级缓存的工厂的代理对象，生成对象 A1。</strong></li>
+<li><strong>C 找到 A 时，直接通过三级缓存的工厂的代理对象，生成对象 A2。</strong></li>
+</ul>
+<p>看到问题没？<strong>你通过 A 的工厂的代理对象，生成了两个不同的对象 A1 和 A2</strong>，所以为了避免这种问题的出现，我们搞个二级缓存，把 A1 存下来，下次再获取时，直接从二级缓存获取，无需再生成新的代理对象。<br /><strong>所以“二级缓存”的目的是为了避免因为 AOP 创建多个对象，其中存储的是半成品的 AOP 的单例 bean。</strong><br />如果没有 AOP 的话，我们其实只要 1、3 级缓存，就可以满足要求。<br><a name="kDavK"></a></p>
+<h2 id="最后总结"><a href="#最后总结" class="headerlink" title="最后总结"></a>最后总结</h2><p>我们再回顾一下 3 级缓存的作用：</p>
+<ul>
+<li><strong>一级缓存：为“Spring 的单例属性”而生，就是个单例池，用来存放已经初始化完成的单例 Bean；</strong></li>
+<li><strong>二级缓存：为“解决 AOP”而生，存放的是半成品的 AOP 的单例 Bean；</strong></li>
+<li><strong>三级缓存：为“打破循环”而生，存放的是生成半成品单例 Bean 的工厂方法。</strong></li>
+</ul>
+<p><a name="SgVXe"></a></p>
+<h1 id="附件"><a href="#附件" class="headerlink" title="附件"></a>附件</h1><p><a class="link"   href="https://docs.qq.com/mind/DRGZiUkhaZHpXbGlr" >腾讯文档<i class="fas fa-external-link-alt"></i></a></p>
+]]></content>
+      <tags>
+        <tag>Spring</tag>
+        <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>video玩出新花样当background</title>
     <url>/2018/05/20/video/</url>
     <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
@@ -996,44 +1260,6 @@
       <tags>
         <tag>Git</tag>
         <tag>远程仓库</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>个人主页折腾记</title>
-    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
-    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
-<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
-<p>话不多说,先上图！</p>
-<p>(开局一张图,故事全靠编)</p>
-<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
-                      alt="首页图"
-                ></p>
-<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
-                      alt="关于我"
-                ></p>
-<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
-<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
-<p>3：更简洁大气的页面</p>
-<p>4：增加邮件联系的方式</p>
-<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
-<p>———————–中场抱怨一手————————-</p>
-<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
-<p>———————–中场抱怨结束————————-</p>
-<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
-<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
-<p>全球最大的同性交友网站链接奉上:</p>
-<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
-<p>嗯！ 最后祝各位老朋友:</p>
-<p>天天快乐，幸福安康。</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
       </tags>
   </entry>
   <entry>
@@ -1112,6 +1338,44 @@
       </tags>
   </entry>
   <entry>
+    <title>个人主页折腾记</title>
+    <url>/2019/06/07/%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E6%8A%98%E8%85%BE%E8%AE%B0/</url>
+    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
+<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
+<p>话不多说,先上图！</p>
+<p>(开局一张图,故事全靠编)</p>
+<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
+                      alt="首页图"
+                ></p>
+<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
+                      alt="关于我"
+                ></p>
+<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
+<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
+<p>3：更简洁大气的页面</p>
+<p>4：增加邮件联系的方式</p>
+<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
+<p>———————–中场抱怨一手————————-</p>
+<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
+<p>———————–中场抱怨结束————————-</p>
+<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
+<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
+<p>全球最大的同性交友网站链接奉上:</p>
+<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
+<p>嗯！ 最后祝各位老朋友:</p>
+<p>天天快乐，幸福安康。</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>半年了，你的梦想又去了哪里?</title>
     <url>/2018/08/10/%E5%8D%8A%E5%B9%B4%E4%BA%86%EF%BC%8C%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3%E5%8F%88%E5%8E%BB%E4%BA%86%E5%93%AA%E9%87%8C/</url>
     <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
@@ -1129,6 +1393,88 @@
 <p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
 <p>​    </p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>新的一年,HI!</title>
+    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
+    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
+<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
+<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
+<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
+<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
+<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
+<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
+<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
+<p>​     2:学习一些框架,自学一些语言等</p>
+<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
+<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
+<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
+<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
+                     
+                ></p>
+<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
+<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
+<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
+<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
+<p>2.去一次旅游(见一个人)  不知道能不能</p>
+<p>3.希望在年底学会开车 哈哈~~</p>
+<p>嘿嘿,给大家一声晚来的新年快乐！</p>
+<p>​     </p>
+]]></content>
+      <tags>
+        <tag>谈心</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>来聊(水)下最近hexo备份的思路</title>
+    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
+<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
+<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
+<li>把hexo文件夹备份至自己的本地的文件</li>
+<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
+<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
+</ol>
+<p>重点说一下同步盘的思想</p>
+<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
+<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
+<ol>
+<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
+<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
+</ol>
+<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
+<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
+<ol>
+<li>跨平台性，针对多设备的兼容</li>
+<li>不限速</li>
+<li>bugfix的数量以及修复的速度</li>
+<li>易用性</li>
+</ol>
+<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
+<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
+<li>拷贝文件夹到oneDrive</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
+</ol>
+<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
+<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>OneDrive</tag>
+      </tags>
   </entry>
   <entry>
     <title>关于停止使用 957xx.cc域名</title>
@@ -1213,53 +1559,6 @@
       </tags>
   </entry>
   <entry>
-    <title>来聊(水)下最近hexo备份的思路</title>
-    <url>/2022/11/11/%E6%9D%A5%E8%81%8A-%E6%B0%B4-%E4%B8%8B%E6%9C%80%E8%BF%91hexo%E5%A4%87%E4%BB%BD%E7%9A%84%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
-<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
-<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
-<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
-<li>把hexo文件夹备份至自己的本地的文件</li>
-<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
-<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
-</ol>
-<p>重点说一下同步盘的思想</p>
-<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
-<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
-<ol>
-<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
-<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
-</ol>
-<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
-<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
-<ol>
-<li>跨平台性，针对多设备的兼容</li>
-<li>不限速</li>
-<li>bugfix的数量以及修复的速度</li>
-<li>易用性</li>
-</ol>
-<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
-<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
-<li>拷贝文件夹到oneDrive</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
-</ol>
-<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
-<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>OneDrive</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>老朋友，别来无恙啊。</title>
     <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
@@ -1273,41 +1572,6 @@
       <tags>
         <tag>hexo</tag>
         <tag>hello</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>新的一年,HI!</title>
-    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
-    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
-<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
-<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
-<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
-<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
-<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
-<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
-<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
-<p>​     2:学习一些框架,自学一些语言等</p>
-<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
-<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
-<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
-<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
-                     
-                ></p>
-<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
-<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
-<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
-<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
-<p>2.去一次旅游(见一个人)  不知道能不能</p>
-<p>3.希望在年底学会开车 哈哈~~</p>
-<p>嘿嘿,给大家一声晚来的新年快乐！</p>
-<p>​     </p>
-]]></content>
-      <tags>
-        <tag>谈心</tag>
       </tags>
   </entry>
   <entry>
