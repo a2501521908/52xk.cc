@@ -374,34 +374,14 @@
 ]]></content>
   </entry>
   <entry>
-    <title>Arthas直接执行Spring Context中的函数</title>
-    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
-<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
-<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
-<ol>
-<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
-<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
-<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
-</ol>
-<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
-<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
-<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
-<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
-<ol>
-<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
-<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
-<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
+    <title>MySQL亿级数据如何快速增加字段？</title>
+    <url>/2024/01/07/MySQL%E4%BA%BF%E7%BA%A7%E6%95%B0%E6%8D%AE%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E5%A2%9E%E5%8A%A0%E5%AD%97%E6%AE%B5%EF%BC%9F/</url>
+    <content><![CDATA[<p>今天主要介绍一下MySQL 8.0.19 instant add column的新特性，基于亿级数据秒速增加字段，下面一起来看看吧～</p>
 ]]></content>
       <tags>
-        <tag>arthas</tag>
-        <tag>springboot</tag>
-        <tag>spring</tag>
+        <tag>MySQL</tag>
+        <tag>数据库</tag>
+        <tag>大数据</tag>
       </tags>
   </entry>
   <entry>
@@ -793,11 +773,111 @@
 <p><a class="link"   href="https://my.oschina.net/keking/blog/3056698" >spring boot集成kafka之spring-kafka深入探秘 - 凯京科技的个人空间 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
 ]]></content>
       <tags>
-        <tag>springboot</tag>
         <tag>kafka</tag>
+        <tag>springboot</tag>
         <tag>mq</tag>
         <tag>分布式</tag>
         <tag>Docker</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Arthas直接执行Spring Context中的函数</title>
+    <url>/2023/04/13/Arthas%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8CSpring%20Context%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
+<h1 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h1><p>Spring MVC应用，请求会经过一系列的Spring Bean处理，那么我们可以在Spring MVC的类里拦截到一些请求。<br>使用Arthas Attach成功之后，执行<code>tt</code>命令来记录<code>RequestMappingHandlerAdapter#invokeHandlerMethod</code>的请求，可以直接获取到Spring context了就</p>
+<h2 id="1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类"><a href="#1-使用tt命令监控Spring-RequestMappingHandlerAdapter中的类" class="headerlink" title="1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类"></a>1. 使用tt命令监控Spring RequestMappingHandlerAdapter中的类</h2><p>执行下列命令后，你需要做两件事</p>
+<ol>
+<li>触发http请求，让tt命令监听到<code>RequestMappingHandlerAdapter</code></li>
+<li>监控控制台，看到下方有一条记录即可。获取到下列结果的<code>INDEX</code>值，比如1000<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod</span></span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">结果：</span><br><span class="line">Affect(class count: 1 , method count: 1) cost in 323 ms, listenerId: 2</span><br><span class="line"> INDEX      TIMESTAMP                  COST(ms)      IS-RET     IS-EXP     OBJECT               CLASS                                    METHOD                                  </span><br><span class="line">---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> 1000       2023-04-13 10:47:54        19.308463     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br><span class="line"> 1001       2023-04-13 10:47:54        34.872646     true       false      0x39ae0bff           RequestMappingHandlerAdapter             invokeHandlerMethod                     </span><br></pre></td></tr></table></figure>
+<strong>目前已经监听到了spring的bean执行了，下面来获取spring的context</strong></li>
+</ol>
+<h2 id="2-获取Spring的context"><a href="#2-获取Spring的context" class="headerlink" title="2. 获取Spring的context"></a>2. 获取Spring的context</h2><p>可以用<code>tt</code>命令的<code>-i</code>参数来指定<code>index</code>，并且用<code>-w</code>参数来执行ognl表达式来获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tt -i INDEX -w &#x27;target.getApplicationContext()&#x27;</span><br><span class="line">..........结果忽略</span><br><span class="line">Affect(row-cnt:1) cost in 7 ms.</span><br></pre></td></tr></table></figure>
+<h2 id="3-从Spring-context里获取任意bean"><a href="#3-从Spring-context里获取任意bean" class="headerlink" title="3. 从Spring context里获取任意bean"></a>3. 从Spring context里获取任意bean</h2><p>获取到spring context之后，就可以获取到任意的bean了，比如获取到<code>logBusinessOperateServiceImpl</code>，并调用<code>reloadEntityFields()</code>函数：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">[arthas@1]$ </span><span class="language-bash">tt -i 1000 -w <span class="string">&#x27;target.getApplicationContext().getBean(&quot;logBusinessOperateServiceImpl&quot;).reloadEntityFields()&#x27;</span></span></span><br><span class="line">结果：</span><br><span class="line">null</span><br><span class="line">Affect(row-cnt:1) cost in 30 ms.</span><br></pre></td></tr></table></figure>
+<p>如果需要传递参数的函数，则直接在调用方法的参数里直接写即可(按照方法重载的规则)，例如<code>reloadEntityFields(&#39;admin&#39;,123,3.7F)</code></p>
+<h1 id="更多的思路"><a href="#更多的思路" class="headerlink" title="更多的思路"></a>更多的思路</h1><p>在很多代码里都有static函数或者static holder类，顺滕摸瓜，可以获取很多其它的对象。比如在Dubbo里通过<code>SpringExtensionFactory</code>获取spring context：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ognl <span class="string">&#x27;#context=@com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory@contexts.iterator.next,</span></span> </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="string">context.getBean(&quot;userServiceImpl&quot;).findUser(1)&#x27;</span></span></span><br><span class="line">@User[</span><br><span class="line">    id=@Integer[1],</span><br><span class="line">    name=@String[Deanna Borer],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>帮助地址</p>
+<ol>
+<li>原链接，GitHub issues： <a class="link"   href="https://github.com/alibaba/arthas/issues/482" >https://github.com/alibaba/arthas/issues/482<i class="fas fa-external-link-alt"></i></a>，具体详细内容可在里面讨论。</li>
+<li>官方提供Demo： <a class="link"   href="https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot" >https://github.com/hengyunabc/spring-boot-inside/tree/master/demo-arthas-spring-boot<i class="fas fa-external-link-alt"></i></a></li>
+<li>Arthas快速开始：<a class="link"   href="https://arthas.aliyun.com/doc/quick-start.html" >https://arthas.aliyun.com/doc/quick-start.html<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
+]]></content>
+      <tags>
+        <tag>springboot</tag>
+        <tag>arthas</tag>
+        <tag>spring</tag>
       </tags>
   </entry>
   <entry>
@@ -1137,75 +1217,6 @@
       </tags>
   </entry>
   <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/QQ%E9%82%AE%E7%AE%B1%E5%A6%82%E4%BD%95%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%88%B6%E4%BD%9C%E8%87%AA%E5%B7%B1%E7%9A%84%E7%8B%AC%E7%89%B9%E9%82%AE%E7%AE%B1%EF%BC%81/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
-                ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
-                ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>video玩出新花样当background</title>
     <url>/2018/05/20/video/</url>
     <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
@@ -1241,6 +1252,25 @@
 ]]></content>
       <tags>
         <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
+    <url>/2022/12/22/%E4%B8%8D%E5%B0%8F%E5%BF%83%E6%8F%90%E4%BA%A4%E5%88%B0%20Git%20%E7%9A%84%E6%96%87%E4%BB%B6%EF%BC%8C%E6%80%8E%E4%B9%88%E5%AE%8C%E5%85%A8%E4%BB%8E%E4%BB%93%E5%BA%93%E4%B8%AD%E6%B8%85%E9%99%A4/</url>
+    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
+<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
+<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
+<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
+<blockquote>
+<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
+</blockquote>
+]]></content>
+      <tags>
+        <tag>Git</tag>
+        <tag>远程仓库</tag>
       </tags>
   </entry>
   <entry>
@@ -1437,60 +1467,6 @@
       </tags>
   </entry>
   <entry>
-    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
-    <url>/2022/12/22/%E4%B8%8D%E5%B0%8F%E5%BF%83%E6%8F%90%E4%BA%A4%E5%88%B0%20Git%20%E7%9A%84%E6%96%87%E4%BB%B6%EF%BC%8C%E6%80%8E%E4%B9%88%E5%AE%8C%E5%85%A8%E4%BB%8E%E4%BB%93%E5%BA%93%E4%B8%AD%E6%B8%85%E9%99%A4/</url>
-    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
-<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
-
-<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
-<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
-<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
-<blockquote>
-<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
-</blockquote>
-]]></content>
-      <tags>
-        <tag>Git</tag>
-        <tag>远程仓库</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>新的一年,HI!</title>
-    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
-    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
-<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
-<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
-<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
-<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
-<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
-<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
-<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
-<p>​     2:学习一些框架,自学一些语言等</p>
-<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
-<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
-<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
-<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
-                     
-                ></p>
-<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
-<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
-<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
-<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
-<p>2.去一次旅游(见一个人)  不知道能不能</p>
-<p>3.希望在年底学会开车 哈哈~~</p>
-<p>嘿嘿,给大家一声晚来的新年快乐！</p>
-<p>​     </p>
-]]></content>
-      <tags>
-        <tag>谈心</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>我的一个道姑朋友-背景</title>
     <url>/2018/07/03/%E6%88%91%E7%9A%84%E4%B8%80%E4%B8%AA%E9%81%93%E5%A7%91%E6%9C%8B%E5%8F%8B-%E8%83%8C%E6%99%AF/</url>
     <content><![CDATA[<p>陌生人，你好。欢迎来到这里！</p>
@@ -1559,6 +1535,57 @@
       </tags>
   </entry>
   <entry>
+    <title>新的一年,HI!</title>
+    <url>/2019/02/12/%E6%96%B0%E7%9A%84%E4%B8%80%E5%B9%B4-HI/</url>
+    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
+<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
+<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
+<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
+<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
+<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
+<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
+<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
+<p>​     2:学习一些框架,自学一些语言等</p>
+<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
+<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
+<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
+<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
+                     
+                ></p>
+<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
+<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
+<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
+<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
+<p>2.去一次旅游(见一个人)  不知道能不能</p>
+<p>3.希望在年底学会开车 哈哈~~</p>
+<p>嘿嘿,给大家一声晚来的新年快乐！</p>
+<p>​     </p>
+]]></content>
+      <tags>
+        <tag>谈心</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>老朋友，别来无恙啊。</title>
+    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
+    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
+<p>没错，你又看到了，我好像又折腾了一波。</p>
+<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
+<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
+<p>反正最后磕磕绊绊的还是过来了~  </p>
+<hr>
+<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>那些年我们在北京租过的房子</title>
     <url>/2018/07/13/%E9%82%A3%E4%BA%9B%E5%B9%B4%E6%88%91%E4%BB%AC%E5%9C%A8%E5%8C%97%E4%BA%AC%E7%A7%9F%E8%BF%87%E7%9A%84%E6%88%BF%E5%AD%90/</url>
     <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
@@ -1604,22 +1631,6 @@
 ]]></content>
       <tags>
         <tag>鸡汤</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>老朋友，别来无恙啊。</title>
-    <url>/2018/06/28/%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E5%B0%8F%E8%BD%B2%E5%8D%9A%E5%AE%A2/</url>
-    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
-<p>没错，你又看到了，我好像又折腾了一波。</p>
-<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
-<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
-<p>反正最后磕磕绊绊的还是过来了~  </p>
-<hr>
-<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>hello</tag>
       </tags>
   </entry>
 </search>
