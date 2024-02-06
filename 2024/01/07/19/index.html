@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+    <meta name="description" content="小轲博客，是小轲的个人博客！更新个人教程，网站程序等。当然会更新小轲自己的生活等">
+    <meta name="author" content="小轲">
+    
+    <title>
+        
+            MySQL亿级数据如何快速增加字段？ |
+        
+        小轲博客
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/fontawesome/css/fontawesome.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/fontawesome/css/regular.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/fontawesome/css/solid.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/fontawesome/css/brands.min.css">
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN","path":"search.xml"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"style":{"primary_color":"#0066CC","avatar":"/images/head-img.jpg","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰。"},"scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"code_copy":{"enable":true,"style":"default"},"code_block":{},"side_tools":{},"pjax":{"enable":true},"lazyload":{"enable":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"version":"3.5.2"};
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"};
+  </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            
+<header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+               小轲博客
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                首页
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                归档
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/tags"
+                            >
+                                标签
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/links"
+                            >
+                                友链
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                关于
+                            </a>
+                        </li>
+                    
+                    
+                        <li class="menu-item search search-popup-trigger">
+                            <i class="fas fa-search"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">首页</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">归档</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/tags">标签</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/links">友链</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">关于</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            <div class="article-title">
+                <span class="title-hover-animation">MySQL亿级数据如何快速增加字段？</span>
+            </div>
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/head-img.jpg">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">小轲</span>
+                            
+                                <span class="author-label">Lv3</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            
+<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        
+            <i class="fa-regular fa-calendar-plus"></i>&nbsp;
+        
+        <span class="pc">2024-01-07 15:51:53</span>
+        <span class="mobile">2024-01-07 15:51</span>
+    </span>
+    
+        <span class="article-update-date article-meta-item">
+        <i class="fas fa-file-pen"></i>&nbsp;
+        <span class="pc">2024-02-06 10:39:08</span>
+    </span>
+    
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/MySQL/">MySQL</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content keep-markdown-body">
+                <p>今天主要介绍一下MySQL 8.0.19 instant add column的新特性，基于亿级数据秒速增加字段，下面一起来看看吧～</p>
+<h1 id="MySQL-DDL-的方法"><a href="#MySQL-DDL-的方法" class="headerlink" title="MySQL DDL 的方法"></a>MySQL DDL 的方法</h1><p>MySQL 在大型表上的 DDL 会带来耗时较久、负载较高、额外空间占用、MDL、主从同步延时等情况。需要特别引起重视，而MySQL 的 DDL 有很多种方法。</p>
+<p>MySQL 本身自带三种方法，分别是：copy、inplace、instant。</p>
+<ul>
+<li>copy 算法为最古老的算法，在 MySQL 5.5 及以下为默认算法。</li>
+<li>从 MySQL 5.6 开始，引入了 inplace 算法并且默认使用。inplace 算法还包含两种类型：rebuild-table 和 not-rebuild-table。MySQL 使用 inplace 算法时，会自动判断，能使用 not-rebuild-table 的情况下会尽量使用，不能的时候才会使用 rebuild-table。当 DDL 涉及到主键和全文索引相关的操作时，无法使用 not-rebuild-table，必须使用 rebuild-table。其他情况下都会使用 not-rebuild-table。</li>
+<li>从 MySQL 8.0.12 开始，引入了 instant 算法并且默认使用。目前 instant 算法只支持增加列等少量 DDL 类型的操作，其他类型仍然会默认使用 inplace。</li>
+</ul>
+<p>有一些第三方工具也可以实现 DDL 操作，最常见的是 percona 的 pt-online-schema-change 工具（简称为 pt-osc），和 github 的 gh-ost 工具，均支持 MySQL 5.5 以上的版本。</p>
+<h2 id="各类工具的对比"><a href="#各类工具的对比" class="headerlink" title="各类工具的对比"></a>各类工具的对比</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2024/01/07/o9ItDYORU7AbyFM.png"
+                      alt="工具对比"
+                ></p>
+<p>一般情况下的建议：</p>
+<ul>
+<li>如果使用的是 MySQL 5.5 或者 MySQL 5.6，推荐使用 gh-ost</li>
+<li>如果使用的是 MySQL 5.7，索引等不涉及修改数据的操作，建议使用默认的 inplace 算法。如果涉及到修改数据（例如增加列），不关心主从同步延时的情况下使用默认的 inplace 算法，关心主从同步延时的情况下使用 gh-ost</li>
+<li>如果使用的是 MySQL 8.0，推荐使用 MySQL 默认的算法设置，在语句不支持 instant 算法并且在意主从同步延时的情况下使用 gh-ost</li>
+</ul>
+<h1 id="MySQL-DDL-的原理简析"><a href="#MySQL-DDL-的原理简析" class="headerlink" title="MySQL DDL 的原理简析"></a>MySQL DDL 的原理简析</h1><h2 id="（1）copy算法"><a href="#（1）copy算法" class="headerlink" title="（1）copy算法"></a>（1）copy算法</h2><p>较简单的实现方法，MySQL 会建立一个新的临时表，把源表的所有数据写入到临时表，在此期间无法对源表进行数据写入。MySQL 在完成临时表的写入之后，用临时表替换掉源表。这个算法主要被早期（&lt;&#x3D;5.5）版本所使用。</p>
+<h2 id="（2）inplace-算法"><a href="#（2）inplace-算法" class="headerlink" title="（2）inplace 算法"></a>（2）inplace 算法</h2><p>从 5.6 开始，常用的 DDL 都默认使用这个算法。inplace 算法包含两类：inplace-no-rebuild 和 inplace-rebuild，两者的主要差异在于是否需要重建源表。</p>
+<p>inplace 算法的操作阶段主要分为三个：</p>
+<ul>
+<li>Prepare阶段： - 创建新的临时 frm 文件(与 InnoDB 无关)。 - 持有 EXCLUSIVE-MDL 锁，禁止读写。 - 根据 alter 类型，确定执行方式（copy，online-rebuild，online-not-rebuild）。 更新数据字典的内存对象。 - 分配 row_log 对象记录数据变更的增量（仅 rebuild 类型需要）。 - 生成新的临时ibd文件 new_table（仅rebuild类型需要）。</li>
+<li>Execute 阶段：降级EXCLUSIVE-MDL锁，允许读写。扫描old_table聚集索引（主键）中的每一条记录 rec。遍历new_table的聚集索引和二级索引，逐一处理。根据 rec 构造对应的索引项。将构造索引项插入 sort_buffer 块排序。将 sort_buffer 块更新到 new_table 的索引上。记录 online-ddl 执行过程中产生的增量（仅 rebuild 类型需要）。重放 row_log 中的操作到 new_table 的索引上（not-rebuild 数据是在原表上更新）。重放 row_log 中的DML操作到 new_table 的数据行上。</li>
+<li>Commit阶段：当前 Block 为 row_log 最后一个时，禁止读写，升级到 EXCLUSIVE-MDL 锁。重做 row_log 中最后一部分增量。更新 innodb 的数据字典表。提交事务（刷事务的 redo 日志）。修改统计信息。rename 临时 ibd 文件，frm文件。变更完成，释放 EXCLUSIVE-MDL 锁。</li>
+</ul>
+<h2 id="（3）instant-算法"><a href="#（3）instant-算法" class="headerlink" title="（3）instant 算法"></a>（3）instant 算法</h2><p>MySQL 8.0.12 才提出的新算法，目前只支持添加列等少量操作，利用 8.0 新的表结构设计，可以直接修改表的 metadata 数据，省掉了 rebuild 的过程，极大的缩短了 DDL 语句的执行时间。</p>
+<h2 id="（4）pt-online-schema-change"><a href="#（4）pt-online-schema-change" class="headerlink" title="（4）pt-online-schema-change"></a>（4）pt-online-schema-change</h2><p>借鉴了 copy 算法的思路，由外部工具来完成临时表的建立，数据同步，用临时表替换源表这三个步骤。其中数据同步是利用 MySQL 的触发器来实现的，会少量影响到线上业务的 QPS 及 SQL 响应时间。</p>
+<h1 id="MySQL-8-0特性instant-add-column"><a href="#MySQL-8-0特性instant-add-column" class="headerlink" title="MySQL 8.0特性instant add column"></a>MySQL 8.0特性instant add column</h1><p>MySQL 数据库针对亿级别的大表加字段是痛苦的，需要对表进行重建，MySQL 5.7 支持 Online DDL，大部分 DDL 不影响对表的读取和写入，但是依然会消耗非常多的时间，且占用额外的磁盘空间，并会造成主从延迟。所以大表 DDL 仍是一件令 DBA 头痛的事。而mysql8.0使用instant ADD COLUMN特性，只需很短的时间，字段就加好了，享受MongoDB那样的非结构化存储的灵活方便,无形中减少了开发的工作量。</p>
+<p>快速加列采用的是 instant 算法，使得添加列时不再需要 rebuild 整个表，只需要在表的 metadata 中记录新增列的基本信息即可。在 alter 语句后增加 ALGORITHM&#x3D;INSTANT 即代表使用 instant 算法， 如果未明确指定，则支持 instant 算法的操作会默认使用。如果 ALGORITHM&#x3D;INSTANT 指定但不支持，则操作立即失败并显示错误。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://s2.loli.net/2024/01/10/JuX8UbaR4yS1TnB.png"
+                      alt="image.png"
+                ></p>
+<p>关于列的 DDL 操作，是否支持 instant 等算法，官方文档给出了一个表格，整理如下，星号表示不是全部支持，有依赖项。</p>
+<p>instant 算法使用最广泛的应该是添加列了，可以看到使用该算法还是有些限制的，一些限制如下：</p>
+<ul>
+<li>如果 alter 语句包含了 add column 和其他的操作，其中有操作不支持 instant 算法的，那么 alter 语句会报错，所有的操作都不会执行。</li>
+<li>如果指定了AFTER，字段必须是在最后一列，否则需要重建表；</li>
+<li>只能顺序加列, 仅支持在最后添加列，而不支持在现有列的中间添加列。</li>
+<li>不支持压缩表，即该表行格式不能是 COMPRESSED。</li>
+<li>不支持包含全文索引的表。</li>
+<li>不支持临时表。</li>
+<li>不支持那些在数据字典表空间中创建的表。</li>
+<li>DROP COLUMN需要重建表；</li>
+<li>modify修改字段属性需要重建表。</li>
+</ul>
+<h1 id="效果对比与演示"><a href="#效果对比与演示" class="headerlink" title="效果对比与演示"></a>效果对比与演示</h1><h2 id="（1）初始化测试数据"><a href="#（1）初始化测试数据" class="headerlink" title="（1）初始化测试数据"></a>（1）初始化测试数据</h2><p>创建数据的过程使用存储过程</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#创建表</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `large_user` (</span><br><span class="line">  `id` <span class="type">bigint</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `name` <span class="type">varchar</span>(<span class="number">64</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `age` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span></span><br><span class="line">) </span><br><span class="line">#创建日志表</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `large_user_log` (</span><br><span class="line">  `id` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `msg` <span class="type">varchar</span>(<span class="number">1000</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span> COMMENT <span class="string">&#x27;提交信息记录&#x27;</span></span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8;</span><br><span class="line">#创建存储过程</span><br><span class="line">DELIMITER ;;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">PROCEDURE</span> `insert_large_user`(id_begin <span class="type">INT</span>, id_end <span class="type">INT</span>)</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">DECLARE</span> i <span class="type">int</span>;</span><br><span class="line"><span class="keyword">SET</span> i <span class="operator">=</span> id_begin;</span><br><span class="line"><span class="keyword">SET</span> AUTOCOMMIT <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">WHILE i <span class="operator">&gt;=</span> id_begin <span class="operator">&amp;&amp;</span> i <span class="operator">&lt;=</span> id_end DO</span><br><span class="line">    <span class="keyword">INSERT</span> <span class="keyword">INTO</span> large_user(id, name, age) <span class="keyword">VALUES</span> (i, concat(<span class="string">&#x27;user_&#x27;</span>, i <span class="operator">%</span> <span class="number">100000</span>), i <span class="operator">%</span> <span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">SET</span> i <span class="operator">=</span> i <span class="operator">+</span> <span class="number">1</span>;</span><br><span class="line">    IF <span class="built_in">MOD</span>(i, <span class="number">100000</span>) <span class="operator">&lt;=</span><span class="number">0</span> <span class="keyword">THEN</span></span><br><span class="line">        <span class="keyword">INSERT</span> <span class="keyword">INTO</span> large_user_log (id, msg) <span class="keyword">VALUES</span>(i, <span class="string">&#x27;ready to commit&#x27;</span>);</span><br><span class="line">        <span class="keyword">COMMIT</span>;</span><br><span class="line">    <span class="keyword">END</span> IF;</span><br><span class="line"><span class="keyword">END</span> WHILE;</span><br><span class="line"></span><br><span class="line"><span class="keyword">END</span>;;</span><br><span class="line">DELIMITER ;</span><br><span class="line"></span><br><span class="line">#调用存储过程，产生一亿条数据</span><br><span class="line"><span class="keyword">call</span> insert_large_user(<span class="number">1</span>, <span class="number">100000000</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="（2）使用效果对比"><a href="#（2）使用效果对比" class="headerlink" title="（2）使用效果对比"></a>（2）使用效果对比</h2><p>我们在Demo中分别使用两种数据库，一种是MySQL8.0，另一种是MySQL5.7做相关的测试。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> version()</span><br></pre></td></tr></table></figure>
+
+<p>8.0的版本为：8.0.33</p>
+<p>5.7的版本为：5.7.18-txsql-log</p>
+<h2 id="（3）新增字段的SQL"><a href="#（3）新增字段的SQL" class="headerlink" title="（3）新增字段的SQL"></a>（3）新增字段的SQL</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> `large_user` </span><br><span class="line"><span class="keyword">ADD</span> <span class="keyword">COLUMN</span> `id_card` <span class="type">varchar</span>(<span class="number">255</span>) <span class="keyword">NULL</span> COMMENT <span class="string">&#x27;身份证号&#x27;</span> AFTER `age`</span><br></pre></td></tr></table></figure>
+
+<p>MySQL8.0执行效果：Time: 0.068s</p>
+<p>MySQL5.7执行效果：Time: 158.898s</p>
+<h2 id="（4）删除字段的SQL"><a href="#（4）删除字段的SQL" class="headerlink" title="（4）删除字段的SQL"></a>（4）删除字段的SQL</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> `large_user` </span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">COLUMN</span> `id_card`</span><br></pre></td></tr></table></figure>
+
+<p>MySQL8.0执行效果：Time: 0.063s</p>
+<p>MySQL5.7执行效果：Time: 282.09s</p>
+<h1 id="更多和参考文档"><a href="#更多和参考文档" class="headerlink" title="更多和参考文档"></a>更多和参考文档</h1><p>在本次测试中，测试结果可能受到CPU、内存、SSD的影响从而执行时长不固定，但MySQL8.0 instant  算法带来的算法更新可以很直观的看出来执行时长的进步。</p>
+<p>本次文章参考文档</p>
+<ol>
+<li><a class="link"   target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html" >https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://www.toutiao.com/article/6933566079608439308/" >https://www.toutiao.com/article/6933566079608439308/<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://blog.csdn.net/qq_25138909/article/details/103781012" >https://blog.csdn.net/qq_25138909/article/details/103781012<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul class="copyright-info-content">
+        <li>
+            <span class="type">本文标题</span>：<span class="content">MySQL亿级数据如何快速增加字段？</span>
+        </li>
+        <li>
+            <span class="type">本文作者</span>：<span class="content">小轲</span>
+        </li>
+        <li>
+            <span class="type">创建时间</span>：<span class="content">2024-01-07 15:51:53</span>
+        </li>
+        <li class="post-link">
+            <span class="type">本文链接</span>：<span class="content">2024/01/07/19/</span>
+        </li>
+        <li>
+            <span class="type">版权声明</span>：<span class="content">本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！</span>
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/MySQL/">#MySQL</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/">#大数据</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                               rel="next"
+                               href="/2023/07/29/18/"
+                            >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">Spring如何解决循环依赖(三级缓存)</span>
+                                <span class="post-nav-item">下一篇</span>
+                            </span>
+                                <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+            
+                <div class="comment-container">
+                    
+<div class="comments-container">
+    <div id="comments-anchor"></div>
+    <div class="comment-area-title">
+        <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    
+        
+            
+
+    <div class="gitalk-comment-container">
+        <div id="gitalk-container"></div>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+        <script data-pjax src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+        <script data-pjax>
+          function loadGitalk() {
+            let __gitalk__pathname = decodeURI(location.pathname);
+            const __gitalk__pathnameLength = __gitalk__pathname.length;
+            const __gitalk__pathnameMaxLength = 50;
+            if (__gitalk__pathnameLength > __gitalk__pathnameMaxLength) {
+              __gitalk__pathname = __gitalk__pathname.substring(0, __gitalk__pathnameMaxLength - 3) + '...';
+            }
+
+            try {
+              Gitalk && new Gitalk({
+                clientID: '98dcf7e70682aab74e7d',
+                clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+                repo: 'blog-comment',
+                owner: 'a2501521908',
+                admin: 'a2501521908',
+                id: __gitalk__pathname,
+                language: 'zh-CN'
+              }).render('gitalk-container');
+            } catch (e) {
+              window.Gitalk = null;
+            }
+          }
+
+          if ('true' === 'true') {
+            const loadGitalkTimeout = setTimeout(() => {
+              loadGitalk();
+              clearTimeout(loadGitalkTimeout);
+            }, 1000);
+          } else {
+            window.addEventListener('DOMContentLoaded', loadGitalk);
+          }
+        </script>
+    </div>
+
+
+
+        
+    
+</div>
+
+                </div>
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL-DDL-%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-text">MySQL DDL 的方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E7%B1%BB%E5%B7%A5%E5%85%B7%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-text">各类工具的对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL-DDL-%E7%9A%84%E5%8E%9F%E7%90%86%E7%AE%80%E6%9E%90"><span class="nav-text">MySQL DDL 的原理简析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%881%EF%BC%89copy%E7%AE%97%E6%B3%95"><span class="nav-text">（1）copy算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%882%EF%BC%89inplace-%E7%AE%97%E6%B3%95"><span class="nav-text">（2）inplace 算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%883%EF%BC%89instant-%E7%AE%97%E6%B3%95"><span class="nav-text">（3）instant 算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%884%EF%BC%89pt-online-schema-change"><span class="nav-text">（4）pt-online-schema-change</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL-8-0%E7%89%B9%E6%80%A7instant-add-column"><span class="nav-text">MySQL 8.0特性instant add column</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%88%E6%9E%9C%E5%AF%B9%E6%AF%94%E4%B8%8E%E6%BC%94%E7%A4%BA"><span class="nav-text">效果对比与演示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%881%EF%BC%89%E5%88%9D%E5%A7%8B%E5%8C%96%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE"><span class="nav-text">（1）初始化测试数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%882%EF%BC%89%E4%BD%BF%E7%94%A8%E6%95%88%E6%9E%9C%E5%AF%B9%E6%AF%94"><span class="nav-text">（2）使用效果对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%883%EF%BC%89%E6%96%B0%E5%A2%9E%E5%AD%97%E6%AE%B5%E7%9A%84SQL"><span class="nav-text">（3）新增字段的SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%EF%BC%884%EF%BC%89%E5%88%A0%E9%99%A4%E5%AD%97%E6%AE%B5%E7%9A%84SQL"><span class="nav-text">（4）删除字段的SQL</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E5%A4%9A%E5%92%8C%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-text">更多和参考文档</span></a></li></ol>
+    </div>
+</div>
+
+            </div>
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            
+<footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+                <span>2016</span> -
+            
+            2024
+            
+                &nbsp;<i class="fas fa-heart icon-animate"></i>
+                &nbsp;<a href="/">小轲</a>
+            
+        </div>
+        
+        <div class="theme-info info-item">
+            由 <a target="_blank" href="https://hexo.io">Hexo</a> 驱动&nbsp;|&nbsp;主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.5.2</a>
+        </div>
+        
+            <div class="icp-info info-item">
+                <a target="_blank" rel="nofollow"
+                   href="https://beian.miit.gov.cn"
+                >
+                    京ICP备2021024856号-1
+                </a>
+            </div>
+        
+        
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item flex-center toggle-show-toc">
+                <i class="fas fa-list"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+            <li class="tools-item flex-center go-to-comments">
+                <i class="fas fa-comment"></i>
+                <span class="post-comments-count"></span>
+            </li>
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="zoom-in-image-mask">
+    <img class="zoom-in-image">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fas fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="close-popup-btn">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+</main>
+
+
+
+<script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/utils.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/main.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/header-shrink.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/back2top.js"></script><script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/dark-light-toggle.js"></script>
+
+
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/local-search.js"></script>
+
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/code-block.js"></script>
+
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/lazyload.js"></script>
+
+
+<div class="post-scripts pjax">
+    
+        <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/post-helper.js"></script>
+        
+            <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/libs/anime.min.js"></script>
+        
+        
+            <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/toc.js"></script>
+        
+    
+</div>
+
+
+    <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/libs/pjax.min.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            KEEP.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            KEEP.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            KEEP.refresh();
+        });
+    });
+</script>
+
+
+
+</body>
+</html>
