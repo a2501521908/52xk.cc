@@ -198,7 +198,7 @@
     
         <span class="article-update-date article-meta-item">
         <i class="fas fa-file-pen"></i>&nbsp;
-        <span class="pc">2024-05-13 16:07:48</span>
+        <span class="pc">2024-05-13 22:49:14</span>
     </span>
     
     
@@ -250,7 +250,7 @@
 </ol>
 </blockquote>
 <p>权衡利弊+强迫症考虑后，还是决定改一下</p>
-<h1 id="修改源码"><a href="#修改源码" class="headerlink" title="修改源码"></a>修改源码</h1><p>找到  <code>/themes/keep/layout\_partial/home-article-meta-info.ejs</code> 文件，修改头部的三目运算符变量规则即可。</p>
+<h1 id="修改源码"><a href="#修改源码" class="headerlink" title="修改源码"></a>修改源码</h1><p>找到  <code>/themes/keep/layout/_partial/home-article-meta-info.ejs</code> 文件，修改头部的三目运算符变量规则即可。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;%</span><br><span class="line">//const target_date = post.date !== post.updated ? post.updated : post.date</span><br><span class="line">const target_date = post.date !== post.updated ? post.date : post.updated</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
 
 
