@@ -78,6 +78,302 @@
       </tags>
   </entry>
   <entry>
+    <title>29.22分钟学会正则表达式</title>
+    <url>/2018/11/22/7/</url>
+    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
+<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
+<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
+
+<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
+<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
+<ul>
+<li>原义字符</li>
+<li>元字符</li>
+</ul>
+<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
+<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
+<ul>
+<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
+<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
+<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
+<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
+<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
+<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
+<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
+<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
+<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
+<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
+<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
+<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
+<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
+<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
+<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
+<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
+<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
+<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
+<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
+</ul>
+<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
+                      alt="clipboard.png"
+                ></p>
+<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
+
+<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
+<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要以A为结尾的正则，则是如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
+<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
+<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
+                      alt="clipboard.png"
+                ></p>
+<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
+<p><strong>那么有没有更简便更短的方法呢？</strong></p>
+<p>巧了，正则就是辣么强大</p>
+<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
+<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
+                      alt="clipboard.png"
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
+                      alt="clipboard.png"
+                ></p>
+<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
+
+<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
+                      alt="clipboard.png"
+                ></p>
+<p>让我们看看可视化工具的结果，方便理解</p>
+<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
+                      alt="clipboard.png"
+                ></p>
+<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
+<p>如果按照上面这样写，则如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
+<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
+
+<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
+<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
+                      alt="clipboard.png"
+                ></p>
+<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
+                      alt="clipboard.png"
+                ></p>
+<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
+                      alt="clipboard.png"
+                ></p>
+<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
+<ul>
+<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
+<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
+</ul>
+<p>上表格！</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
+                      alt="clipboard.png"
+                ></p>
+<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
+                      alt="clipboard.png"
+                ></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
+<p>顺便把这个负向前瞻看看吧</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
+                      alt="clipboard.png"
+                ></p>
+<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
+<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后你打开可视化工具</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
+                      alt="clipboard.png"
+                ></p>
+<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
+<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
+                      alt="clipboard.png"
+                ></p>
+<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
+                      alt="clipboard.png"
+                ></p>
+<ul>
+<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
+<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
+<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
+<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
+</ul>
+<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
+<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
+]]></content>
+  </entry>
+  <entry>
     <title>Arthas直接执行Spring Context中的函数</title>
     <url>/2023/04/13/17/</url>
     <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Arthas提供了非常丰富的关于调用拦截的命令，比如 <code>trace</code>&#x2F;<code>watch</code>&#x2F;<code>monitor</code>&#x2F;<code>tt</code> 。但是很多时候我们在排查问题时，需要更多的线索，并不只是函数的参数和返回值。<br>比如在一个Spring应用里，想获取到Spring context里的其它bean。如果能随意获取到Spring bean，那就可以“为所欲为”了。<br>下面介绍如何利用Arthas获取到Spring context。</p>
@@ -505,6 +801,75 @@
       </tags>
   </entry>
   <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/6/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>MySQL亿级数据如何快速增加字段？</title>
     <url>/2024/01/07/19/</url>
     <content><![CDATA[<p>今天主要介绍一下MySQL 8.0.19 instant add column的新特性，基于亿级数据秒速增加字段，下面一起来看看吧～</p>
@@ -590,77 +955,8 @@
       </tags>
   </entry>
   <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/6/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
-                ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
-                ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>SpringMVC源码的分析</title>
-    <url>/2023/03/18/16/</url>
+    <url>/2023/07/01/16/</url>
     <content><![CDATA[<h1 id="SpringMVC执行过程"><a href="#SpringMVC执行过程" class="headerlink" title="SpringMVC执行过程"></a>SpringMVC执行过程</h1><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p>Spring MVC 的四大组件:<strong>前端控制器（DispatcherServlet）、处理器映射器（HandlerMapping）、处理器适配器（HandlerAdapter）以及视图解析器（ViewResolver）</strong> 的角度来看一下 Spring MVC 对用户请求的处理过程，过程如下图所示:<br>其中，DispatcherServlet是前端控制器，它负责接收用户的请求，并调用其他组件来处理。HandlerMapping是处理器映射器，它负责根据请求的URL找到对应的Controller对象，并返回给DispatcherServlet。HandlerAdapter是处理器适配器，它负责根据Controller对象的类型，找到合适的适配器对象，并调用Controller对象的方法，返回ModelAndView对象。ModelAndView对象包含了模型数据和视图名称。ViewResolver是视图解析器，它负责根据视图名称找到对应的视图对象，并返回给DispatcherServlet。View是视图对象，它负责渲染模型数据，并返回响应给用户。<br>这样一来，springmvc就实现了一个基于MVC模式的web框架，将请求处理分成了不同的步骤和组件，<strong>提高了可扩展性和灵活性。</strong></p>
 <p><img  
                      lazyload
@@ -728,393 +1024,6 @@
         <tag>Spring</tag>
         <tag>SpringMVC</tag>
         <tag>源码分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>29.22分钟学会正则表达式</title>
-    <url>/2018/11/22/7/</url>
-    <content><![CDATA[<h2 id="写在最前面"><a href="#写在最前面" class="headerlink" title="写在最前面"></a>写在最前面</h2><p><strong>看到标题你可能会疑惑为什么不是30分钟？</strong><br>因为我这个文章图文并茂，非常恐怖，兄弟，其实你不用30分钟就可以看懂。<br>你可能会以为我在吹牛B，但是当你看完的时候，一掐表，你会发现<br>我真的是在吹牛B<br><strong>那又为什么是.22呢？</strong><br>作为一个理科生，保留两位小数是不变的信仰。<br>而在下，仅仅是喜欢2这个数字，如是而已</p>
-<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>正则表达式，又称规则表达式。（英语：Regular Expression，在代码中常简写为regex、regexp或RE），计算机科学的一个概念。正则表达式通常被用来检索、替换、校验那些符合某个模式(规则)的文本。</p>
-<h2 id="RegExp对象"><a href="#RegExp对象" class="headerlink" title="RegExp对象"></a>RegExp对象</h2><p>在爪洼死苦瑞per特中，RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。<br>那么要如何使用呢？<br>两种方式：<strong>字面量，构造函数</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\bhello\b/g  //字面量 </span><br><span class="line">// \b代表单词边界（WordBoundary） 也就是说这个正则匹配的是 hello world这种hello 而不是helloworld</span><br><span class="line">//因为helloworld连起来了，没有单词边界</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = new RegExp(&#x27;\\bhello\\b&#x27;,&#x27;g&#x27;)</span><br><span class="line">//注意两者的区别</span><br><span class="line">//后面这种方法需要转义反斜杠（javascript的原因）,</span><br><span class="line">//而且这个g(修饰符,全局匹配)是单独提取出来的</span><br><span class="line">//而且正则两边没有/包围的，上面第一种是这样的=&gt; /正则表达式/</span><br></pre></td></tr></table></figure>
-
-<h2 id="正则可视化工具"><a href="#正则可视化工具" class="headerlink" title="正则可视化工具"></a>正则可视化工具</h2><p><a class="link"   href="https://jex.im/regulex/#!flags=&re=%5E%28a%7Cb%29*?" >Regulex<i class="fas fa-external-link-alt"></i></a><br>可视化图形，对理解正则有非常<strong>大</strong>的帮助<br>二话不说先进来这个网站，这个文章将使用这个网站来验证写的例子。</p>
-<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>正则表达式由两种基本字符类组成</p>
-<ul>
-<li>原义字符</li>
-<li>元字符</li>
-</ul>
-<p>原义字符，就是表示原本意思的字符，像上面正则中的hello，就代表匹配hello这个字符串<br>元字符呢，就是表示不是原本意思的字符，这样想就简单多了吧。像上面这个\b</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a979bb3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9791ff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>既然元字符表示的不是本身的字符，那我如果就要匹配它原本的字符呢？比如说我就要匹配+号，*号，那么请使用 \ 来转义字符</strong></p>
-<p>下面这些元字符先随便过一遍先，不用背熟也可往下看~</p>
-<ul>
-<li>$ 匹配输入字符串的结尾位置。如果设置了 RegExp 对象的 Multiline 属性，则 $ 也匹配 ‘n’ 或 ‘r’。要匹配 $ 字符本身，请使用 $。</li>
-<li>() 标记一个子表达式的开始和结束位置。子表达式可以获取供以后使用。要匹配这些字符，请使用 ( 和 )。</li>
-<li>* 匹配前面的子表达式零次或多次。要匹配 * 字符，请使用 *。</li>
-<li>+ 匹配前面的子表达式一次或多次。要匹配 + 字符，请使用 +。</li>
-<li>. 匹配除换行符 n 之外的任何单字符。要匹配 . ，请使用 . 。</li>
-<li>[] 标记一个中括号表达式的开始。要匹配 [，请使用 [。</li>
-<li>{} 标记限定符表达式的开始。要匹配 {，请使用 {。</li>
-<li>| 指明两项之间的一个选择。要匹配 |，请使用 |。</li>
-<li>? 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。要匹配 ? 字符，请使用 ?。</li>
-<li>\ 将下一个字符标记为或特殊字符、或原义字符、或向后引用、或八进制转义符。例如， ‘n’ 匹配字符 ‘n’。’n’ 匹配换行符。序列 ‘&#39; 匹配 “”，而 ‘(‘ 则匹配 “(“。</li>
-<li>^ 匹配输入字符串的开始位置，除非在方括号表达式中使用，此时它表示不接受该字符集合。要匹配 ^ 字符本身，请使用 ^。</li>
-<li>\cX 匹配由x指明的控制字符。例如， cM 匹配一个 Control-M 或回车符。x 的值必须为 A-Z 或 a-z 之一。否则，将 c 视为一个原义的 ‘c’ 字符。</li>
-<li>\f 匹配一个换页符。等价于 x0c 和 cL。</li>
-<li>\n 匹配一个换行符。等价于 x0a 和 cJ。</li>
-<li>\r 匹配一个回车符。等价于 x0d 和 cM。</li>
-<li>\s 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ fnrtv]。注意 Unicode 正则表达式会匹配全角空格符。</li>
-<li>\S 匹配任何非空白字符。等价于 <a class="link"   href="https://segmentfault.com/a/1190000016964825#fn-1" >1<i class="fas fa-external-link-alt"></i></a>。</li>
-<li>\t 匹配一个制表符。等价于 x09 和 cI。</li>
-<li>\v 匹配一个垂直制表符。等价于 x0b 和 cK</li>
-</ul>
-<h2 id="边界"><a href="#边界" class="headerlink" title="边界"></a>边界</h2><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9792b4.png"
-                      alt="clipboard.png"
-                ></p>
-<p>从一开始的例子我们就知道了这个b,不对，是这个\b<br>他表示的就是单词边界的意思.<br>我们知道，f<em>ck这个是有很多用法的，可以单独用，也可以加个ing多种词性使用。<br>然后我们只想找到单独的f</em>ck,看代码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">//作为光荣的社会主义接班人怎么可能用f*ck做例子呢?</span><br><span class="line">var reg = /\bis\b/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;this X me&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /is/g;</span><br><span class="line">var str = &quot;this is me&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;)</span><br><span class="line">//&quot;thX X me&quot;</span><br></pre></td></tr></table></figure>
-
-<p>两者区别清晰可见，不容我多说了吧，各位客官。</p>
-<p>再来看看一个问题，<strong>如果我只要开头部分的A字符而文本中间的A字符却不要，又该如何？</strong><br>只需如此，便可对敌</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /^A/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;XBA&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf682db6f114.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要以A为结尾的正则，则是如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /A$/g;</span><br><span class="line">var str = &quot;ABA&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;ABX&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681a9f4213.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意，正如开头结尾的位置一样，^和$的位置也是如此，^放在正则表达式前面，$放在表达式后面</strong></p>
-<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><p>一般情况下，正则表达式一个字符对应字符串的一个字符<br>比如表达式 \bhello 就表示 匹配 字符\b h e l l o，</p>
-<p><strong>如果我们想要匹配一类字符的时候?</strong><br>比如我要匹配a或者b或者c，我们就可以使用元字符 []来构建一个简单的类<br>[a,b,c]就把a，b，c归为一类，表示可以匹配a或者b或者c。<br>如果你会一丢丢英文的话，你应该就可以看懂下面的图，one of a，b，c，也就是匹配abc中任意一个~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aa3360b.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="范围类"><a href="#范围类" class="headerlink" title="范围类"></a>范围类</h2><p>当我们学习了上面的内容以后，如果我们要写匹配0到9的数字，就应该是这样写</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aabd273.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是如果我要匹配更多呢？那不是键盘都要敲烂了？这正则也太不智能了吧？？？</strong><br>显然，你能想到的，创造正则的人也想到了<br>我们可以这样子</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681aaed373.png"
-                      alt="clipboard.png"
-                ></p>
-<p>好了，方便了一些，然后你可能又会吃惊，那么我的短横线-呢？我如果要匹配0-9以及短横线呢？<br>莫慌，只要在后面补回去即可<br>这个图可以清楚看到有两条分支，也就是说我可以走0-9这条路也可以走短横线这条路</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4f38a.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf681ac4ea3e.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="预定义类"><a href="#预定义类" class="headerlink" title="预定义类"></a>预定义类</h2><p>学习了上面以后，我们就可以书写匹配数字的正则了，[0-9]</p>
-<p><strong>那么有没有更简便更短的方法呢？</strong></p>
-<p>巧了，正则就是辣么强大</p>
-<p>在上面的元字符部分内容中，你可能已经窥得其中精妙了</p>
-<p>上表格，不是，上图（这个segmentfault哪里插入表格啊？？）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830454dff.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68303e4577.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307699ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307819c3.png"
-                      alt="clipboard.png"
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307aa177.png"
-                      alt="clipboard.png"
-                ></p>
-<p>我们可以根据英文单词的意思，来记住这些预定义类的用法。<br><strong>我们发现，大写字母和小写字母的区别就是取反!，如d和D</strong><br>同时我们从表格中的等价类可以发现如果我们要一个类的取反，那么就在类中加一个 <strong>^</strong><br><strong>none of abc</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68307ee314.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><strong>如果要你写一个匹配10个数字的正则？你会怎么写</strong><br>诶~你可能已经胸有成竹的写下了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d\d\d\d\d\d\d\d\d\d</span><br></pre></td></tr></table></figure>
-
-<p>吃惊，你会发现，尽管是你单身二十余年的右手，依然感到了一丝乏力！<br><strong>疲惫，有时是在过度劳累之后</strong><br>为了挽救一些人的右臂，正则有了量词<br>实现上面的需求我们只要 \d{10}<br><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683097bd98.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>Digit 10times</strong><br>为了方便一些英语不好的人，比如我，我甚至使用了鲜为人知的百度翻译（广告费私我）</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830e1bdbe.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>但是，如果我不知道要匹配具体多少个数字呢？反正就是匹配100个到1000个之间的数字</strong><br>当当当当~</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830dcc9ef.png"
-                      alt="clipboard.png"
-                ></p>
-<p>让我们看看可视化工具的结果，方便理解</p>
-<p><strong>注意，这个{n,m}是包括n次和m次的哦，是闭区间哦</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf6830ece695.png"
-                      alt="clipboard.png"
-                ></p>
-<h2 id="贪婪模式与非贪婪模式"><a href="#贪婪模式与非贪婪模式" class="headerlink" title="贪婪模式与非贪婪模式"></a>贪婪模式与非贪婪模式</h2><p>从上面一则我们知道，如果我们要匹配100到1000个数字的话，是这样写<br>\d{100,1000}<br><strong>如果我给的字符串里有1000个数字，但是我只想匹配前面100个呢？</strong></p>
-<p>如果按照上面这样写，则如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>我们可以看到，上面这个例子是匹配了6个数字，将6个数字替换了，尽管他的正则匹配的是3到6个数字。</p>
-<p><strong>没错，它是贪婪的！它会尽可能地匹配更多！</strong><br>这就是正则的 贪婪匹配，这是默认的，如果我们不想要那么贪婪，如何变得容易满足一点？<br><strong>只需要在量词后面加上 ? 即可</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;3,6&#125;?/;</span><br><span class="line">var str = &quot;123456789&quot;;</span><br><span class="line">str.replace(reg,&#x27;替换成这个&#x27;);</span><br><span class="line">//&quot;替换成这个456789&quot;</span><br></pre></td></tr></table></figure>
-
-<p>可以清楚看到正则只匹配了前面3个数字~这就是正则的非贪婪模式</p>
-<h2 id="分支条件"><a href="#分支条件" class="headerlink" title="分支条件"></a>分支条件</h2><p>如果我只需要匹配100个或者1000个数字呢？<br>就只有100和1000两种可能，而不是100到1000任意一个数字，又该如何对敌？<br>这就要设计到正则的分支条件了</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;100&#125;|\d&#123;1000&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683b8ec145.png"
-                      alt="clipboard.png"
-                ></p>
-<p>需要注意的是这个 | 分割的是左右两边所有部分，而不是仅仅连着这个符号的左右两部分，看下图</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683ba2887a.png"
-                      alt="clipboard.png"
-                ></p>
-<p>有时候我们只需要一部分是分支，后面走的是同一条主干，只需要把分支用()包含即可</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb24e22.png"
-                      alt="clipboard.png"
-                ></p>
-<p><strong>注意：这个匹配是从正则左边的分支条件开始的，如果左边满足了，那么右边就不会在对比！</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;4&#125;|\d&#123;2&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">// &quot;X5&quot;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;|\d&#123;4&#125;/</span><br><span class="line">var str = &quot;12345&quot;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;X345&quot;</span><br></pre></td></tr></table></figure>
-
-<h2 id="前瞻-x2F-后顾"><a href="#前瞻-x2F-后顾" class="headerlink" title="前瞻&#x2F;后顾"></a>前瞻&#x2F;后顾</h2><p>sometimes，我们要找寻的字符可能还要依靠前后字符来确定<br><strong>比如说我要替换连续的2个数字，而且它的前面要连着是2个英文字母，这样的数字我才要</strong><br>你可能会疑惑,这样写不就完事了吗？</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\d&#123;2&#125;\w&#123;2&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>上面匹配的是2个数字和2个字母，虽然是连着的，但是匹配了是4个字符，如果我要替换匹配文本的话，那就替换了4个字符，而我们只想替换2个数字！</strong><br>这个时候就需要用到断言了<br>首先我们需要明白几个点</p>
-<ul>
-<li>正则表达式从文本头部到尾部开始解析，文本尾部方向叫做‘前’，也就是往前走，就是往尾巴走</li>
-<li><strong>前瞻</strong>就是正则表达式匹配到规则（此例中的‘2个数字’）的时候，向前看看，看看是否符合断言（此例中的‘前面连着2个字母’），后瞻&#x2F;后顾的规则则相反。（javascript不支持后顾）</li>
-</ul>
-<p>上表格！</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bb4acfb.png"
-                      alt="clipboard.png"
-                ></p>
-<p>根据表格内容，我们就可以解决这个问题了，注意\w包括数字哦~题目要求是连着2个字母</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf68485c0021.png"
-                      alt="clipboard.png"
-                ></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var reg = /\d&#123;2&#125;(?=[a-zA-Z]&#123;2&#125;)/;</span><br><span class="line">var str = &quot;1a23bc456def&quot;;</span><br><span class="line">str.replace(reg,&#x27;X&#x27;);</span><br><span class="line">//&quot;1aXbc456def&quot;</span><br></pre></td></tr></table></figure>
-
-<p><strong>只替换了数字，没有替换后面的断言哦！</strong></p>
-<p>顺便把这个负向前瞻看看吧</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc30240.png"
-                      alt="clipboard.png"
-                ></p>
-<p>看到这个<strong>not</strong> followed by 我想你应该知晓用法了</p>
-<h2 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h2><p><strong>当我们要匹配一个出现三次的单词而不是数字的时候，会怎么写呢？</strong><br>你可能会这样写</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hello&#123;3&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后你打开可视化工具</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bc2e857.png"
-                      alt="clipboard.png"
-                ></p>
-<p>妈耶，居然只重复了我的o字母！死渣则，好过分</p>
-<p><strong>其实，我们只要使用（）就可以达到分组的目的，使量词作用于分组，上面分支条件中的括号亦是如此</strong></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683bd1f493.png"
-                      alt="clipboard.png"
-                ></p>
-<p>分组以后怎么使用分组内容呢？<br>首先看一个问题，<strong>如何匹配8个不连续的数字？</strong><br>如果你不使用分组，你会发现根本无从下手，因为你不能判断出有无重复！<br>我们先公布答案，再来分析一波</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2018/11/22/5bf683c04a93a.png"
-                      alt="clipboard.png"
-                ></p>
-<ul>
-<li>首先，这个(?!负向前瞻断言A)表达式B，这里使用的是负向前瞻，也就是说断言A前面的内容（表达式B），不能符合表达式A，这个说法很拗口，我嘴巴都拗不过来了。能听明白吧，这个设计就是，我这个断言是“出现重复的数字”，然后表达式是“8个数字”，<strong>”8个数字“不能复合“出现重复的数字”</strong></li>
-<li>然后，这个 .<em>(\d).</em> 呢，是先找到一个在任意位置出现的数字，为什么是任意位置呢？因为我们判断的重复可能出现在任何位置；看上面的可视化也就可以明白，<strong>\d前后有0-n个字符,所以说他是任意位置的</strong>。</li>
-<li>最关键的来了，这个\1代表什么呢？仔细看你可以发现，\d加了一个括号，这个括号就代表着<strong>分组</strong>，那么是几号分组呢？第一个括号就是分组1（默认情况下），如果还有第二个括号，那就是分组2，<strong>前瞻的括号是不算的噢</strong>，而这个\1呢就代表着引用这个分组1，使用\2引用分组2。你也许会好奇，我引用它是相当于在这个位置写了一个\d吗？NOP，不仅仅这么简单，<strong>它引用的是这个\d的内容，也就是说他会和\d是一样的值！这不就是重复了吗？！！！</strong>这个 .<em>(\d).<em>\1 就代表着**任意位置出现了任意次数的重复</em></em></li>
-<li>最后，我们把这些整合在一起就是，<strong>匹配8个数字不能出现任意的重复</strong>。(?!出现任意重复)8个数字，因为这个(?!)是负向前瞻，所以。。。emmm。。这样就理解了吧。</li>
-</ul>
-<p>分组还有其他更详细的内容，但是篇幅有限，<strong>马上就到30分钟了</strong>。只好捡一些有价值常用的讲了~</p>
-<h2 id="嘿嘿嘿"><a href="#嘿嘿嘿" class="headerlink" title="嘿嘿嘿"></a>嘿嘿嘿</h2><p>正则就介绍到这里啦~</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
-    <url>/2022/12/22/14/</url>
-    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
-<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
-
-<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
-<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
-<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
-<blockquote>
-<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
-</blockquote>
-]]></content>
-      <tags>
-        <tag>Git</tag>
-        <tag>远程仓库</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>个人主页折腾记</title>
-    <url>/2019/06/07/9/</url>
-    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
-<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
-<p>话不多说,先上图！</p>
-<p>(开局一张图,故事全靠编)</p>
-<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
-                      alt="首页图"
-                ></p>
-<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
-                      alt="关于我"
-                ></p>
-<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
-<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
-<p>3：更简洁大气的页面</p>
-<p>4：增加邮件联系的方式</p>
-<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
-<p>———————–中场抱怨一手————————-</p>
-<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
-<p>———————–中场抱怨结束————————-</p>
-<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
-<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
-<p>全球最大的同性交友网站链接奉上:</p>
-<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
-<p>嗯！ 最后祝各位老朋友:</p>
-<p>天天快乐，幸福安康。</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hexo Keep主题修改首页文章展示时间 version&lt; 4.1.0</title>
-    <url>/2024/04/01/20/</url>
-    <content><![CDATA[<h1 id="Note"><a href="#Note" class="headerlink" title="Note"></a>Note</h1><p>新的时间查阅官网文档后，主题更新版本到 4.1.0 就可以支持这个特性啦，不需要再修改源码。如果你的版本低于4.1.0，那么下面的文章可以帮到你。</p>
-<blockquote>
-<p><a class="link"   href="https://keep-docs.xpoet.cn/basis/configuration-guide/home.html#post-datetime" >https://keep-docs.xpoet.cn/basis/configuration-guide/home.html#post-datetime<i class="fas fa-external-link-alt"></i></a></p>
-</blockquote>
-<h1 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h1><p>在批量更新hexo的markdown文章文件后，发现首页的时间是以更新文章为准。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://s2.loli.net/2024/05/13/59IpywGVc6fvjxt.png"
-                      alt="show time"
-                ></p>
-<p>个人喜好，此处的文章想展示为<code>createTime</code> ,看了一遍Keep的文档，发现没得到什么解决方案，看起来只能去改源码了</p>
-<p>在修改源码之前，其实还有一些注意事项：</p>
-<blockquote>
-<ol>
-<li>不建议直接修改源代码，可能会在更新模板版本时遇见的问题<ol>
-<li>如使用NPM更新，则修改后的文件会被新的NPM版本直接覆盖</li>
-<li>如使用Git更新，则可能会出现pull失败，因为代码冲突或者版本的原因</li>
-</ol>
-</li>
-</ol>
-</blockquote>
-<p>权衡利弊+强迫症考虑后，还是决定改一下</p>
-<h1 id="修改源码"><a href="#修改源码" class="headerlink" title="修改源码"></a>修改源码</h1><p>找到  <code>/themes/keep/layout/_partial/home-article-meta-info.ejs</code> 文件，修改头部的三目运算符变量规则即可。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;%</span><br><span class="line">//const target_date = post.date !== post.updated ? post.updated : post.date</span><br><span class="line">const target_date = post.date !== post.updated ? post.date : post.updated</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <tags>
-        <tag>hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -1382,20 +1291,6 @@
       </tags>
   </entry>
   <entry>
-    <title>关于停止使用 957xx.cc域名</title>
-    <url>/2022/11/29/13/</url>
-    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
-<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
-<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
-<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
-<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
-]]></content>
-      <tags>
-        <tag>通知</tag>
-        <tag>暂停</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>video玩出新花样当background</title>
     <url>/2018/05/20/1/</url>
     <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
@@ -1434,23 +1329,109 @@
       </tags>
   </entry>
   <entry>
-    <title>半年了，你的梦想又去了哪里?</title>
-    <url>/2018/08/10/5/</url>
-    <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
+    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
+    <url>/2022/12/22/14/</url>
+    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
+<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
+<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
+<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
+<blockquote>
+<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
+</blockquote>
+]]></content>
+      <tags>
+        <tag>Git</tag>
+        <tag>远程仓库</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人主页折腾记</title>
+    <url>/2019/06/07/9/</url>
+    <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
+<p>端午节在家无聊,所以把之前的个人主页更新了一下,毕竟这是我的第一个域名也是我的第一个网站,怀念当年的感觉也很喜欢那时候的感觉,所以决定更新一手！</p>
+<p>话不多说,先上图！</p>
+<p>(开局一张图,故事全靠编)</p>
+<h2 id="网站图片"><a href="#网站图片" class="headerlink" title="网站图片"></a>网站图片</h2><h3 id="首页："><a href="#首页：" class="headerlink" title="首页："></a>首页：</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75517e1b198840.png"
+                      alt="首页图"
+                ></p>
+<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/06/08/5cfb75a57bb7b49629.png"
+                      alt="关于我"
+                ></p>
+<h2 id="网站的小功能List"><a href="#网站的小功能List" class="headerlink" title="网站的小功能List:"></a>网站的小功能List:</h2><p>1：依旧存在 中英繁 国际化页面</p>
+<p>2：增加一言： 一些可以鼓励自己的心灵鸡汤之类的</p>
+<p>3：更简洁大气的页面</p>
+<p>4：增加邮件联系的方式</p>
+<p>这个网站是我很喜欢的一个网站,并且我有精力就努力的维护下去,很有纪念意义！</p>
+<p>———————–中场抱怨一手————————-</p>
+<p>嗯今天看了好多朋友的网站,发现有的可能已经宕机，有的做的越来越帅,也发现了很多人已经停更。可能都来不及说一声再见把！</p>
+<p>———————–中场抱怨结束————————-</p>
+<p>更新之后的设计使用了现在很流行的弧形UI，配色使用了贵族很喜欢用的紫色！嗯 自我感觉良好</p>
+<h2 id="关于源代码"><a href="#关于源代码" class="headerlink" title="关于源代码:"></a>关于源代码:</h2><p>我在挂别的地方测试的时候就已经很多小伙伴找我要了,反正静态的网站,很喜欢我们就一起用 hhh</p>
+<p>全球最大的同性交友网站链接奉上:</p>
+<p><a class="link"   href="https://github.com/a2501521908/homedemo" >https://github.com/a2501521908/homedemo<i class="fas fa-external-link-alt"></i></a></p>
+<p>嗯！ 最后祝各位老朋友:</p>
+<p>天天快乐，幸福安康。</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>关于停止使用 957xx.cc域名</title>
+    <url>/2022/11/29/13/</url>
+    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
+<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
+<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
+<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
+<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
+]]></content>
+      <tags>
+        <tag>通知</tag>
+        <tag>暂停</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo Keep主题修改首页文章展示时间 version&lt; 4.1.0</title>
+    <url>/2024/04/01/20/</url>
+    <content><![CDATA[<h1 id="Note"><a href="#Note" class="headerlink" title="Note"></a>Note</h1><p>新的时间查阅官网文档后，主题更新版本到 4.1.0 就可以支持这个特性啦，不需要再修改源码。如果你的版本低于4.1.0，那么下面的文章可以帮到你。</p>
+<blockquote>
+<p><a class="link"   href="https://keep-docs.xpoet.cn/basis/configuration-guide/home.html#post-datetime" >https://keep-docs.xpoet.cn/basis/configuration-guide/home.html#post-datetime<i class="fas fa-external-link-alt"></i></a></p>
+</blockquote>
+<h1 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h1><p>在批量更新hexo的markdown文章文件后，发现首页的时间是以更新文章为准。</p>
 <p><img  
                      lazyload
                      alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b268f2843120335.jpg"
-                     
+                     data-src="https://s2.loli.net/2024/05/13/59IpywGVc6fvjxt.png"
+                      alt="show time"
                 ></p>
-<p>​     昨天无意间，无意间看到了以前的小米手机(红  红 红..红米)手机还是以前上高中上面的照片，看到了以前跟同学们的一些合照，想到了上一年同学聚会的场面，谁谁谁都变了许多呀。哎呀，你看看我，想到了这些就又开始怀旧了起来，不知不觉的，时间总是不等人。总是感觉还有时间，可是回头才发现，真的是不珍惜 什么都没有了。</p>
-<p>​    正当还犯牢骚的时候，忽然想看看春节还有多长时间，似乎出来这么长时间总是感觉时间过的很快。结果一百度，瞬间吓蒙了。自己似乎都不知道过年实在几月，还有多长时间。还得自己百度。</p>
-<p>​    回忆半年前的那些在一块玩耍，放炮的照片，再看看外面北京这个大城市的蓝天白云，楼下的车辆一辆又一辆的过。光阴似箭，离开村子也半年了。</p>
-<p>​    然而，我思想还是我刚刚走进社会。还是一个吚吖学语的幼儿，还是一个不谙人世的少年，还是一个刚刚立志的青年。我就应学习东西的才刚刚尝到一滴甘露，应对知识的海洋，我才初涉小溪，刚刚湿脚；应对社会这个大学校，我才刚刚进门，刚刚看到科学的殿堂，才刚刚听到最基础的ABC、AOE；应对人生这道考题，我才刚刚思考，刚刚有了一点初浅的认识，刚刚看到前进的方向，刚刚看到一丝追求目标的亮光…… </p>
-<p>​    但是，这一切容不得你思考，容不得你学习，容不得你偿试，容不得你练习、演习，岁月却已经催人老了，你的人生却已走过少年、青年,转眼间已经走过五分之一了。</p>
-<p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
-<p>​    </p>
+<p>个人喜好，此处的文章想展示为<code>createTime</code> ,看了一遍Keep的文档，发现没得到什么解决方案，看起来只能去改源码了</p>
+<p>在修改源码之前，其实还有一些注意事项：</p>
+<blockquote>
+<ol>
+<li>不建议直接修改源代码，可能会在更新模板版本时遇见的问题<ol>
+<li>如使用NPM更新，则修改后的文件会被新的NPM版本直接覆盖</li>
+<li>如使用Git更新，则可能会出现pull失败，因为代码冲突或者版本的原因</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<p>权衡利弊+强迫症考虑后，还是决定改一下</p>
+<h1 id="修改源码"><a href="#修改源码" class="headerlink" title="修改源码"></a>修改源码</h1><p>找到  <code>/themes/keep/layout/_partial/home-article-meta-info.ejs</code> 文件，修改头部的三目运算符变量规则即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;%</span><br><span class="line">//const target_date = post.date !== post.updated ? post.updated : post.date</span><br><span class="line">const target_date = post.date !== post.updated ? post.date : post.updated</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
+
 ]]></content>
+      <tags>
+        <tag>hexo</tag>
+      </tags>
   </entry>
   <entry>
     <title>免费CDN jsDelivr使用</title>
@@ -1528,99 +1509,23 @@
       </tags>
   </entry>
   <entry>
-    <title>那些年我们在北京租过的房子</title>
-    <url>/2018/07/13/5/</url>
-    <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
-<p> <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b259a7712389665.jpg"
-                      alt="img"
-                > </p>
-<p>后来我搬家到学校门口一个房子里的床位，一个三居室，住着14个人，我的小房间有四个女生，另外一个大房间有八个男生，还有一对小情侣在小屋里住着，每人300元每月。我在这里住了大约两年，舍友换了无数无数，中国的外国的，打工的考研的，精神正常的精神不正常的。有个姐姐的老公在对面的学校里读博士，她在门口租一个床位陪读，后来他们毕业后一起去了美国。有个女生在那个屋子里考了三年北大光华MBA，终于梦想成真，考上的那一年她哭的坐不起来。有人在那个屋子里恋爱又失恋，有人在那个屋子里每天摔摔打打。每天晚上排队洗澡洗衣服像一个风景，着急的时候头冲着水龙头随便洗一下就湿漉漉的去上课了。那时候似乎谁都没有想起来还有吹风机，也不觉得人多。14个人一起在客厅看电视的时候，拥挤的场面简直像世界杯直播一样热闹。</p>
-<p>大学最后一学期，我因为实习在CBD区，天天上班要2个小时实在要吐血了，于是在北京大望路地铁站旁边与人合租了一间房。这间房子总共6平米，一人一张床占4平米，还有半平米放衣柜，1.5平米的地面。这间房子价格800元，我和另一个女生一人400元，那时候实习工资是每月1200，后来变成1760。我们两个都是一个行业，因此相处还比较容易。我实习时候经常加班到深夜，每次回来的时候，她已经睡了，只有灯亮着电脑开着收音机在被子里也开着。每次回家都要翻开她被子找收音机关掉，再关灯关电脑。她的电脑是台式机，总是轰轰的声音，我叫她的电脑是拖拉机。我们一起住了半年，彼此毕业开始正式工作，但低廉的工资让我们依旧只能还住在这个楼里，因为这里是还算黄金位置的大望路地铁边上唯一的年代久远的筒子楼，价格比同小区的高层住宅要便宜很多。</p>
+    <title>半年了，你的梦想又去了哪里?</title>
+    <url>/2018/08/10/5/</url>
+    <content><![CDATA[<p>  不知不觉，半年时间已经过去了。时光如梭，怎么样? 你的梦想呢? 是不是更远了一步?</p>
 <p><img  
                      lazyload
                      alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
-                      alt="img"
-                > </p>
-<p>她换到另外一个20平米的大房间里与人合租，我继续一人租这个小房间租了半年。这期间，我很好的大学朋友去了法国读MBA，临走和我坐在小房子里聊天，房子太小了，我有点不好意思让她来。我妈来北京看奥运会也住在这里，因为太热没有空调，我妈睡在地上，我睡在床上。我妈后来说，看见我住的这么小，心里很难受。这期间我还买了我第一个笔记本，是一个二手的笔记本，1200元钱，我就是用这个笔记本开始了我的写作道路，一直到三年后这个本光荣就义。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25ce8c1c275032.jpg"
-                      alt="img"
-                >  </p>
-<p>再过半年，隔壁的姑娘要换房子，我就去了隔壁20平米的大房间，每月1000元，水电网另计，怎么也要每月1200吧。网络我从一楼的一户人家牵线上来，上来后还分给三家用，因此每月大约20块钱就够了。到现在每次交很贵的网费的时候总是想起这事儿，还总想总隔壁分一根线，可惜没人跟我分了。要说这个房子大而光明，还挺不错的，但唯一的问题是厕所。因为四家合用，隔壁是三个男生，一对夫妻，门口那家是八个洗脚妹，人多到厕所巨堵，到后期天天屎飘在马桶里，你还不得不继续上。更惨烈的是有时候你在旁边洗澡，旁边就是飘着屎的马桶。找人来通了很多很多次，但终究不知道为什么还总是要赌。门口的打工妹用洗衣机总是把水流到楼道里，楼上和楼下的邻居就会来破口大骂，好几次打110报警，每次我都要连哄带骗的安慰邻居，再收拾楼道，因为洗脚妹们开着洗衣机就不知道去哪儿玩儿去了。在这个房子里，我开始每天1500字写博客，雷打不动的坚持，就是从这个房子里开始的。开始用电饭锅给自己做饭，买了一个二手洗衣机200块钱，都是从这里开始。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
-                      alt="img"
-                >  </p>
-<p>房子到期后，我决定离开这个屎太多的地方。于是在网上找到了蒲黄榆的一个房子。这是个大约有20年历史的老房子，是个高层，还是个银行的宿舍，因此邻居都是老人家，且鲜有租客。房子陈旧，但能看得出当年是新房的时候，房东还是花了大力气装成当年最时髦的样子，家具虽然过时，都都是上好的实打实的实木家具。在这里，我结交了非常好的朋友。他们知道我是个半夜写作白天上班的人，因此主动承担起三年倒垃圾打扫卫生的工作，从来不用我动手，也不用操心。可能我做饭比较烂，他们每次都做好饭给我送来吃，从来不让我进厨房，还说我进厨房一次她们要收拾半宿还是她们来吧。起初我在这里租住最小的房间6平米，600元，小小的热热的但很温馨，我就在这个小房间里写了我人生的第一本书《从北京到台湾这么近那么远》。那时候记者来我家采访，三个人根本站不进来，只能我和记者坐在床上，摄影大哥站门口，还一位站走廊里。现在每次看到这本书，都忍不住想到那些小日子，只有梦想，能让人克服一切的困难，让每天的日子，都闪闪发亮！</p>
-<p> <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b26516fc3c82430.jpg"
-                      alt="img"
-                > </p>
-<p>后来我转到隔壁20平米1000元每月的房间里，到我走的时候房间的价格差不多1500一个月，因为是房东直租，依旧算是很便宜的价格吧。只是唯一重大的问题是，这个房间楼下正对着一个神经衰弱还有心脏病的老太太，只要我在楼上小心翼翼的走一步路，老太太都会认为是之天大的声音而找上门来，甚至为此心脏病发急救过。后来，房东把新买的地毯都放在了我的房间里，老太太依然能听到声音，甚至半夜一点把110叫来投诉我扰民，可是110来了看见什么都没有随便打发下就走了。无力承受老太太的生命，只能三五天去一趟老太太家，提着瓜果梨桃去看看她是在家好好的还是又去医院了。在这个房间里， 我写了我人生第三本书，并跳了槽，度过了两年半的时光，我毕业后重要的人生转变，职场转变，以及迅速的成熟长大都是在这里，包括遇到至好的朋友，以及终于过上了安全而安稳的生活。</p>
-<p>后来，因为租房的价格愈发昂贵，我买了房子；再后来我结婚，又换到了婚房里。尽管自己的房子干净又整洁，安静又安稳，但我总记得那些租房子的时光，那些铭刻在我青春里的每一天，那些心惊胆战又脏乱差的日子，或者被110训话或被邻居投诉的日子，像利剑挂在我心上，又像星星，回想起来会给自己点赞。直到现在，我依旧喜欢帮朋友找房子，喜欢没事儿看租房网站，总会回想起以前自己租房的日子，以及那些在下班后黑灯瞎火与中介去黑漆漆的小区看房子的场景。</p>
-<p>我一直相信，有一天每一个人都会有自己的房子，自己的家庭。这大千世界的一隅，总有一天会有一盏等着我们回家的灯。而年轻的时候所有的颠沛流离都将成为日后心中的慰藉，是青春的圣火，是跃动的生命。它们闪着光，透着亮，提醒着我们曾经那么年轻，曾经那么敢闯，曾经天不怕地不怕，曾经什么都可以接受和忍耐。</p>
-<p>所有的年轻，有一天都会长大与成熟，当回忆往事的时候，望着远方，怦然一笑，就是对青春时光里所有的所有，最好的诠释与珍藏。</p>
+                     data-src="https://i.loli.net/2019/07/02/5d1b268f2843120335.jpg"
+                     
+                ></p>
+<p>​     昨天无意间，无意间看到了以前的小米手机(红  红 红..红米)手机还是以前上高中上面的照片，看到了以前跟同学们的一些合照，想到了上一年同学聚会的场面，谁谁谁都变了许多呀。哎呀，你看看我，想到了这些就又开始怀旧了起来，不知不觉的，时间总是不等人。总是感觉还有时间，可是回头才发现，真的是不珍惜 什么都没有了。</p>
+<p>​    正当还犯牢骚的时候，忽然想看看春节还有多长时间，似乎出来这么长时间总是感觉时间过的很快。结果一百度，瞬间吓蒙了。自己似乎都不知道过年实在几月，还有多长时间。还得自己百度。</p>
+<p>​    回忆半年前的那些在一块玩耍，放炮的照片，再看看外面北京这个大城市的蓝天白云，楼下的车辆一辆又一辆的过。光阴似箭，离开村子也半年了。</p>
+<p>​    然而，我思想还是我刚刚走进社会。还是一个吚吖学语的幼儿，还是一个不谙人世的少年，还是一个刚刚立志的青年。我就应学习东西的才刚刚尝到一滴甘露，应对知识的海洋，我才初涉小溪，刚刚湿脚；应对社会这个大学校，我才刚刚进门，刚刚看到科学的殿堂，才刚刚听到最基础的ABC、AOE；应对人生这道考题，我才刚刚思考，刚刚有了一点初浅的认识，刚刚看到前进的方向，刚刚看到一丝追求目标的亮光…… </p>
+<p>​    但是，这一切容不得你思考，容不得你学习，容不得你偿试，容不得你练习、演习，岁月却已经催人老了，你的人生却已走过少年、青年,转眼间已经走过五分之一了。</p>
+<p>​    或许人生就是这样，也许人也是这样，总是在不知道珍惜的时候，总以为时间和她(他)都还在，却或过头来，我们都已经分道扬镳了。没办法，眼下只能好好的使劲拼呀,加油 朋友们。</p>
+<p>​    </p>
 ]]></content>
-      <tags>
-        <tag>鸡汤</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>来聊(水)下最近hexo备份的思路</title>
-    <url>/2022/11/11/11/</url>
-    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
-<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
-<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
-<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
-<li>把hexo文件夹备份至自己的本地的文件</li>
-<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
-<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
-</ol>
-<p>重点说一下同步盘的思想</p>
-<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
-<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
-<ol>
-<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
-<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
-</ol>
-<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
-<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
-<ol>
-<li>跨平台性，针对多设备的兼容</li>
-<li>不限速</li>
-<li>bugfix的数量以及修复的速度</li>
-<li>易用性</li>
-</ol>
-<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
-<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
-<li>拷贝文件夹到oneDrive</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
-</ol>
-<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
-<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>OneDrive</tag>
-      </tags>
   </entry>
   <entry>
     <title>我的一个道姑朋友-背景</title>
@@ -1691,22 +1596,6 @@
       </tags>
   </entry>
   <entry>
-    <title>老朋友，别来无恙啊。</title>
-    <url>/2018/06/28/3/</url>
-    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
-<p>没错，你又看到了，我好像又折腾了一波。</p>
-<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
-<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
-<p>反正最后磕磕绊绊的还是过来了~  </p>
-<hr>
-<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
-]]></content>
-      <tags>
-        <tag>hexo</tag>
-        <tag>hello</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>新的一年,HI!</title>
     <url>/2019/02/12/8/</url>
     <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
@@ -1739,6 +1628,117 @@
 ]]></content>
       <tags>
         <tag>谈心</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>来聊(水)下最近hexo备份的思路</title>
+    <url>/2022/11/11/11/</url>
+    <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
+<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
+<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
+<li>把hexo文件夹备份至自己的本地的文件</li>
+<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
+<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
+</ol>
+<p>重点说一下同步盘的思想</p>
+<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
+<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
+<ol>
+<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
+<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
+</ol>
+<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
+<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
+<ol>
+<li>跨平台性，针对多设备的兼容</li>
+<li>不限速</li>
+<li>bugfix的数量以及修复的速度</li>
+<li>易用性</li>
+</ol>
+<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
+<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
+<li>拷贝文件夹到oneDrive</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
+</ol>
+<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
+<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>OneDrive</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>老朋友，别来无恙啊。</title>
+    <url>/2018/06/28/3/</url>
+    <content><![CDATA[<h1 id="Hi，My-Friend-，Hello-hexo"><a href="#Hi，My-Friend-，Hello-hexo" class="headerlink" title="Hi，My Friend ，Hello hexo"></a>Hi，My Friend ，Hello hexo</h1><p>朋友，你好啊~  别来无恙啊。</p>
+<p>没错，你又看到了，我好像又折腾了一波。</p>
+<p>估计这次完事之后不会在折腾了，等着穷到毕业~</p>
+<p>但是这个博客也是挺好的，做的其中遇到了很多的问题，也特别感谢我的表哥<a class="link"   href="https://qsong.top/" >@唯美陌阡<i class="fas fa-external-link-alt"></i></a>,因为从来没想过这么多问题。也是做起来比动态博客还要麻烦的一批~帮助我解决了很多问题。</p>
+<p>反正最后磕磕绊绊的还是过来了~  </p>
+<hr>
+<h1 id="为何要搬过来？"><a href="#为何要搬过来？" class="headerlink" title="为何要搬过来？"></a>为何要搬过来？</h1><p>做一个动态博客的成本确实不小，在我这个小小的学生狗面前还是付不起那种高级的服务器费用，同时这个没有那么多限制，可以随心所欲。恩 还得继续 加油！</p>
+]]></content>
+      <tags>
+        <tag>hexo</tag>
+        <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>那些年我们在北京租过的房子</title>
+    <url>/2018/07/13/5/</url>
+    <content><![CDATA[<p>2006年，因为转学到北京，我开始在学校门口租房。我人生第一次自己租住的房子，是学校附近不远的城中村。城中村的入口在清华旁边的一条宽广的马路上，门口看只是一条普通的巷子。走进去1000米，才会看到里面别有洞天。这个城中村全部都是平房以及农民自己搭建的小二楼，住着的都是附近卖菜的送水的或者做小生意的一些社会最底层的劳动人民。我住的房间大约有40平米，平房，一月500块，和三个女生一起合住，每人的租金不到200块钱。没有厕所和厨房，都要去公用的厕所，有时候你在坑上蹲着，面前就飘来一只大狼狗。这里什么都有卖，打电话都便宜的很，瓜果梨桃卖的也很便宜。我在这里住了大约一两个月，因此治安不好，天天有房间被盗，而我跟同屋的女生也不太处的来。他们要早起早睡，而我还是学生要做功课。几次矛盾下来，我就离开了。我再也没有回去过，但是每次看到电视里南方工厂里打工妹生活的纪录片，我就会想起那个地方来，总觉得，那是特别珍贵的一段经历和记忆。</p>
+<p> <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b259a7712389665.jpg"
+                      alt="img"
+                > </p>
+<p>后来我搬家到学校门口一个房子里的床位，一个三居室，住着14个人，我的小房间有四个女生，另外一个大房间有八个男生，还有一对小情侣在小屋里住着，每人300元每月。我在这里住了大约两年，舍友换了无数无数，中国的外国的，打工的考研的，精神正常的精神不正常的。有个姐姐的老公在对面的学校里读博士，她在门口租一个床位陪读，后来他们毕业后一起去了美国。有个女生在那个屋子里考了三年北大光华MBA，终于梦想成真，考上的那一年她哭的坐不起来。有人在那个屋子里恋爱又失恋，有人在那个屋子里每天摔摔打打。每天晚上排队洗澡洗衣服像一个风景，着急的时候头冲着水龙头随便洗一下就湿漉漉的去上课了。那时候似乎谁都没有想起来还有吹风机，也不觉得人多。14个人一起在客厅看电视的时候，拥挤的场面简直像世界杯直播一样热闹。</p>
+<p>大学最后一学期，我因为实习在CBD区，天天上班要2个小时实在要吐血了，于是在北京大望路地铁站旁边与人合租了一间房。这间房子总共6平米，一人一张床占4平米，还有半平米放衣柜，1.5平米的地面。这间房子价格800元，我和另一个女生一人400元，那时候实习工资是每月1200，后来变成1760。我们两个都是一个行业，因此相处还比较容易。我实习时候经常加班到深夜，每次回来的时候，她已经睡了，只有灯亮着电脑开着收音机在被子里也开着。每次回家都要翻开她被子找收音机关掉，再关灯关电脑。她的电脑是台式机，总是轰轰的声音，我叫她的电脑是拖拉机。我们一起住了半年，彼此毕业开始正式工作，但低廉的工资让我们依旧只能还住在这个楼里，因为这里是还算黄金位置的大望路地铁边上唯一的年代久远的筒子楼，价格比同小区的高层住宅要便宜很多。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
+                      alt="img"
+                > </p>
+<p>她换到另外一个20平米的大房间里与人合租，我继续一人租这个小房间租了半年。这期间，我很好的大学朋友去了法国读MBA，临走和我坐在小房子里聊天，房子太小了，我有点不好意思让她来。我妈来北京看奥运会也住在这里，因为太热没有空调，我妈睡在地上，我睡在床上。我妈后来说，看见我住的这么小，心里很难受。这期间我还买了我第一个笔记本，是一个二手的笔记本，1200元钱，我就是用这个笔记本开始了我的写作道路，一直到三年后这个本光荣就义。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25ce8c1c275032.jpg"
+                      alt="img"
+                >  </p>
+<p>再过半年，隔壁的姑娘要换房子，我就去了隔壁20平米的大房间，每月1000元，水电网另计，怎么也要每月1200吧。网络我从一楼的一户人家牵线上来，上来后还分给三家用，因此每月大约20块钱就够了。到现在每次交很贵的网费的时候总是想起这事儿，还总想总隔壁分一根线，可惜没人跟我分了。要说这个房子大而光明，还挺不错的，但唯一的问题是厕所。因为四家合用，隔壁是三个男生，一对夫妻，门口那家是八个洗脚妹，人多到厕所巨堵，到后期天天屎飘在马桶里，你还不得不继续上。更惨烈的是有时候你在旁边洗澡，旁边就是飘着屎的马桶。找人来通了很多很多次，但终究不知道为什么还总是要赌。门口的打工妹用洗衣机总是把水流到楼道里，楼上和楼下的邻居就会来破口大骂，好几次打110报警，每次我都要连哄带骗的安慰邻居，再收拾楼道，因为洗脚妹们开着洗衣机就不知道去哪儿玩儿去了。在这个房子里，我开始每天1500字写博客，雷打不动的坚持，就是从这个房子里开始的。开始用电饭锅给自己做饭，买了一个二手洗衣机200块钱，都是从这里开始。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b25b740c3f73843.jpg"
+                      alt="img"
+                >  </p>
+<p>房子到期后，我决定离开这个屎太多的地方。于是在网上找到了蒲黄榆的一个房子。这是个大约有20年历史的老房子，是个高层，还是个银行的宿舍，因此邻居都是老人家，且鲜有租客。房子陈旧，但能看得出当年是新房的时候，房东还是花了大力气装成当年最时髦的样子，家具虽然过时，都都是上好的实打实的实木家具。在这里，我结交了非常好的朋友。他们知道我是个半夜写作白天上班的人，因此主动承担起三年倒垃圾打扫卫生的工作，从来不用我动手，也不用操心。可能我做饭比较烂，他们每次都做好饭给我送来吃，从来不让我进厨房，还说我进厨房一次她们要收拾半宿还是她们来吧。起初我在这里租住最小的房间6平米，600元，小小的热热的但很温馨，我就在这个小房间里写了我人生的第一本书《从北京到台湾这么近那么远》。那时候记者来我家采访，三个人根本站不进来，只能我和记者坐在床上，摄影大哥站门口，还一位站走廊里。现在每次看到这本书，都忍不住想到那些小日子，只有梦想，能让人克服一切的困难，让每天的日子，都闪闪发亮！</p>
+<p> <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b26516fc3c82430.jpg"
+                      alt="img"
+                > </p>
+<p>后来我转到隔壁20平米1000元每月的房间里，到我走的时候房间的价格差不多1500一个月，因为是房东直租，依旧算是很便宜的价格吧。只是唯一重大的问题是，这个房间楼下正对着一个神经衰弱还有心脏病的老太太，只要我在楼上小心翼翼的走一步路，老太太都会认为是之天大的声音而找上门来，甚至为此心脏病发急救过。后来，房东把新买的地毯都放在了我的房间里，老太太依然能听到声音，甚至半夜一点把110叫来投诉我扰民，可是110来了看见什么都没有随便打发下就走了。无力承受老太太的生命，只能三五天去一趟老太太家，提着瓜果梨桃去看看她是在家好好的还是又去医院了。在这个房间里， 我写了我人生第三本书，并跳了槽，度过了两年半的时光，我毕业后重要的人生转变，职场转变，以及迅速的成熟长大都是在这里，包括遇到至好的朋友，以及终于过上了安全而安稳的生活。</p>
+<p>后来，因为租房的价格愈发昂贵，我买了房子；再后来我结婚，又换到了婚房里。尽管自己的房子干净又整洁，安静又安稳，但我总记得那些租房子的时光，那些铭刻在我青春里的每一天，那些心惊胆战又脏乱差的日子，或者被110训话或被邻居投诉的日子，像利剑挂在我心上，又像星星，回想起来会给自己点赞。直到现在，我依旧喜欢帮朋友找房子，喜欢没事儿看租房网站，总会回想起以前自己租房的日子，以及那些在下班后黑灯瞎火与中介去黑漆漆的小区看房子的场景。</p>
+<p>我一直相信，有一天每一个人都会有自己的房子，自己的家庭。这大千世界的一隅，总有一天会有一盏等着我们回家的灯。而年轻的时候所有的颠沛流离都将成为日后心中的慰藉，是青春的圣火，是跃动的生命。它们闪着光，透着亮，提醒着我们曾经那么年轻，曾经那么敢闯，曾经天不怕地不怕，曾经什么都可以接受和忍耐。</p>
+<p>所有的年轻，有一天都会长大与成熟，当回忆往事的时候，望着远方，怦然一笑，就是对青春时光里所有的所有，最好的诠释与珍藏。</p>
+]]></content>
+      <tags>
+        <tag>鸡汤</tag>
       </tags>
   </entry>
 </search>
