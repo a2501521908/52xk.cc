@@ -801,75 +801,6 @@
       </tags>
   </entry>
   <entry>
-    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
-    <url>/2018/09/07/6/</url>
-    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
-<p>​     闲话不多说，我们开始吧！</p>
-<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
-<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
-<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
-                     
-                ></p>
-<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
-<p>​      <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
-                     
-                ></p>
-<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
-                     
-                ></p>
-<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
-                     
-                ></p>
-<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
-<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
-                     
-                ></p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
-                     
-                ></p>
-<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
-                     
-                ></p>
-<p>  <img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
-                     
-                ></p>
-<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
-<p>有什么问题不懂的，可以练习我哦</p>
-]]></content>
-      <tags>
-        <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>MySQL亿级数据如何快速增加字段？</title>
     <url>/2024/01/07/19/</url>
     <content><![CDATA[<p>今天主要介绍一下MySQL 8.0.19 instant add column的新特性，基于亿级数据秒速增加字段，下面一起来看看吧～</p>
@@ -952,6 +883,75 @@
         <tag>MySQL</tag>
         <tag>数据库</tag>
         <tag>大数据</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>QQ邮箱如何绑定自己的域名，制作自己的独特邮箱！</title>
+    <url>/2018/09/07/6/</url>
+    <content><![CDATA[<p>​    今天下午无聊，北京的天气今天清爽了下来，洗个澡坐到了电脑前，一个QQ消息过来。哦~ 我朋友他们公司注册了一个域名，想问我怎么自定义自己的公司的域名，看着更有专业性呢? 碰巧，也今天下午闲下来了。就直接跟他说拉~ 下面看下这个教程说不定对你有帮助哦~</p>
+<p>​     闲话不多说，我们开始吧！</p>
+<p>​     首先第一步，先进去QQ邮箱为我们提供专业的域名邮箱入口。(这里注意一点:<strong>登陆的账号建议就是你之后管理这个域名的账号</strong>) ，进去之后直接点创建域名邮箱</p>
+<p>​      <a class="link"   href="http://domain.mail.qq.com/" >点我<i class="fas fa-external-link-alt"></i></a></p>
+<p>​     第二步: 进去之后，他会根据傻瓜式操作的告诉你，下一步怎么办。现在我们需要做的就是，填写上你的域名(<strong>注意必须要有操作的权限，后期需要绑定解析</strong> )</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ec3d1525958.jpg"
+                     
+                ></p>
+<p>​     第三步: 选择你的域名归属，这里直接点其他吧</p>
+<p>​      <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f3155a96169.jpg"
+                     
+                ></p>
+<p>​      第四步: 直接进去验证域名所有权，然后解析到腾讯的服务器上。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f4d2ab16815.jpg"
+                     
+                ></p>
+<p>这里就需要进去你的云计算的控制面板了，这里腾讯云为例。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f13c0317762.jpg"
+                     
+                ></p>
+<p>当然了，第一个也就是cname的记录了，注意下第二个我们选择 mx记录</p>
+<p>随后操作完之后，域名验证好了，现在就可以直接进入账号的控制面板了。</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279eeaf5796816.jpg"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279e9041d58211.jpg"
+                     
+                ></p>
+<p>  第五步:然后我们就可以管理了，点击管理进入这个页面</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279f40c4219462.jpg"
+                     
+                ></p>
+<p>  <img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b279ed6b8244796.jpg"
+                     
+                ></p>
+<p>好了，设置完了，到这里就好啦。赶紧去叫你的朋友发个邮件帮你看看吧~</p>
+<p>有什么问题不懂的，可以练习我哦</p>
+]]></content>
+      <tags>
+        <tag>技术</tag>
       </tags>
   </entry>
   <entry>
@@ -1291,6 +1291,25 @@
       </tags>
   </entry>
   <entry>
+    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
+    <url>/2022/12/22/14/</url>
+    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
+<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
+<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
+<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
+<blockquote>
+<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
+</blockquote>
+]]></content>
+      <tags>
+        <tag>Git</tag>
+        <tag>远程仓库</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>video玩出新花样当background</title>
     <url>/2018/05/20/1/</url>
     <content><![CDATA[<p>hi,好久不见啊。转眼间端午节了，不知道你们又在干嘛呢？别的不扯了，端午节快乐啊哈~</p>
@@ -1329,25 +1348,6 @@
       </tags>
   </entry>
   <entry>
-    <title>不小心提交到Git远程仓库的文件，怎么完全从仓库中清除?</title>
-    <url>/2022/12/22/14/</url>
-    <content><![CDATA[<p>使用 Git 做代码版本控制时，有时候会不小心把某些敏感的文件提交到 Git 仓库，可能过后很久才发现。或者是以前提交的文件，现在发现不合适，需要从仓库中清理。 如果但是删除文件，然后提交的话，还是可以从仓库的历史记录中找出这个文件，这个问题就比较严重了。</p>
-<p>所以，如果要彻底从 Git 仓库中删除某个文件可以用如下操作：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git filter-branch --index-filter &#x27;git rm -rf --cached --ignore-unmatch path_to_file&#x27; HEAD</span><br></pre></td></tr></table></figure>
-
-<p>其中 <code>path_to_file</code> 就是你要删除的文件在项目中的相对路径，例如：src&#x2F;main&#x2F;resource&#x2F;application.yml 。</p>
-<p>执行此命令后，git 会遍历整个仓库的历史记录找出这个文件，清理，然后重新构造 git 的历史链条。</p>
-<p>接下来强推就行了<code>git push -f</code>，这样远程仓库上也不会再存在这个文件了。</p>
-<blockquote>
-<p>本文章转载于OSCHINA用户红薯：<a class="link"   href="https://my.oschina.net/javayou/blog/5497254" >不小心提交到 Git 的敏感文件，怎么完全从仓库中清除 - Java自由人 - OSCHINA - 中文开源技术交流社区<i class="fas fa-external-link-alt"></i></a></p>
-</blockquote>
-]]></content>
-      <tags>
-        <tag>Git</tag>
-        <tag>远程仓库</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>个人主页折腾记</title>
     <url>/2019/06/07/9/</url>
     <content><![CDATA[<p>活跃一下,不然可能以为我sei了！</p>
@@ -1383,20 +1383,6 @@
 ]]></content>
       <tags>
         <tag>技术</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>关于停止使用 957xx.cc域名</title>
-    <url>/2022/11/29/13/</url>
-    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
-<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
-<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
-<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
-<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
-]]></content>
-      <tags>
-        <tag>通知</tag>
-        <tag>暂停</tag>
       </tags>
   </entry>
   <entry>
@@ -1528,6 +1514,20 @@
 ]]></content>
   </entry>
   <entry>
+    <title>关于停止使用 957xx.cc域名</title>
+    <url>/2022/11/29/13/</url>
+    <content><![CDATA[<h1 id="关于停止使用-957xx-cc域名"><a href="#关于停止使用-957xx-cc域名" class="headerlink" title="关于停止使用 957xx.cc域名"></a>关于停止使用 957xx.cc域名</h1><h2 id="详情"><a href="#详情" class="headerlink" title="详情"></a>详情</h2><p>因原域名到期并且备案被撤销，所以转向新的域名。即：<code>52xk.cc</code>，寓意为：我爱小轲，新的域名更好记更简单，是本人珍藏了很久的一个域名，最近终于得以机会使用</p>
+<p>同时，域名邮箱也进行了下架，幸好没使用老域名邮箱注册什么平台，不然换绑也够头疼喽！</p>
+<h2 id="收到网站备案IP整改通知解决方案"><a href="#收到网站备案IP整改通知解决方案" class="headerlink" title="收到网站备案IP整改通知解决方案"></a>收到网站备案IP整改通知解决方案</h2><p>同时在这里给大家说一下，如果云计算厂商主动联系你，并且说你的解析IP与备案IP不一致，要求你将域名解析IP修改为与备案IP一致或者提交变更备案将域名IP修改为域名实际解析IP，本人是如何解决的</p>
+<p>很多朋友可能都是备案后原云主机会被回收，IP自然也不存在无法找回了，变更又得提交一大堆程序并且还得买云服务器！如果遇到此情况还请你不要惊慌，在今天（2022-11-29）目前还是可以使用云计算厂商的CDN产品，CDN再转发到你现有源站即可。</p>
+<p>如果客服的态度很严格，那你依旧有权利要求客服去找他的上级沟通，最终达成一致。</p>
+]]></content>
+      <tags>
+        <tag>通知</tag>
+        <tag>暂停</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>我的一个道姑朋友-背景</title>
     <url>/2018/07/03/4/</url>
     <content><![CDATA[<p>陌生人，你好。欢迎来到这里！</p>
@@ -1596,41 +1596,6 @@
       </tags>
   </entry>
   <entry>
-    <title>新的一年,HI!</title>
-    <url>/2019/02/12/8/</url>
-    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
-<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
-<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
-<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
-<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
-<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
-<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
-<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
-<p>​     2:学习一些框架,自学一些语言等</p>
-<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
-<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
-<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
-<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
-<p><img  
-                     lazyload
-                     alt="image"
-                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
-                     
-                ></p>
-<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
-<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
-<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
-<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
-<p>2.去一次旅游(见一个人)  不知道能不能</p>
-<p>3.希望在年底学会开车 哈哈~~</p>
-<p>嘿嘿,给大家一声晚来的新年快乐！</p>
-<p>​     </p>
-]]></content>
-      <tags>
-        <tag>谈心</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>来聊(水)下最近hexo备份的思路</title>
     <url>/2022/11/11/11/</url>
     <content><![CDATA[<h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
@@ -1691,6 +1656,41 @@
       <tags>
         <tag>hexo</tag>
         <tag>hello</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>新的一年,HI!</title>
+    <url>/2019/02/12/8/</url>
+    <content><![CDATA[<p>  转眼已经2019了,时间过的可是真快,生活还是那么的苟且，坐在即将出发的路上给自己来一个晚来的新年文章。</p>
+<h3 id="先给自己来一个简单的2018的年总结吧"><a href="#先给自己来一个简单的2018的年总结吧" class="headerlink" title="先给自己来一个简单的2018的年总结吧:"></a>先给自己来一个简单的2018的年总结吧:</h3><h5 id="1：博客折腾折腾我还是到了hexo-并且越来越懒了…"><a href="#1：博客折腾折腾我还是到了hexo-并且越来越懒了…" class="headerlink" title="1：博客折腾折腾我还是到了hexo,并且越来越懒了…"></a>1：博客折腾折腾我还是到了hexo,并且越来越懒了…</h5><p>​           2018年夏天左右,服务器到期了现在我一个穷鬼想了想还是不要弄服务器的了,毕竟来回都是RMB，能少点阿里就少点吧,还可以学习一点新的东西</p>
+<h5 id="2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了"><a href="#2：来到了我现在的学校-努力的学习-放下了一切的杂念-以后我想也不会了" class="headerlink" title="2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)"></a>2：来到了我现在的学校,努力的学习,放下了一切的杂念(以后我想也不会了)</h5><p>​           还是清楚的记得去年的我狂妄自大的去做一些事情，结果在3月份出来去<a class="link"   href="https://baike.baidu.com/item/%E5%AE%BF%E8%BF%81/" >宿迁<i class="fas fa-external-link-alt"></i></a>看一个学校的时候，试听期间就感觉到了这里大佬云集,甚至说的东西我都还有点听不懂,才知道自己的三斤八两,不过也还是把自己的性子磨了磨，但是也有一些原因来到了我现在的学校。</p>
+<h5 id="3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm"><a href="#3-年底了学校给了15天的假期回家-给自己动了个小小的手术-emm" class="headerlink" title="3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm"></a>3:   年底了学校给了15天的假期回家,给自己动了个小小的手术,emm</h5><p>​         今年回家回来,不知道是我真的点背还是怎么,脚的指甲老是去肉里探索(瞬间心里wc)，一想到始终还是得做,毕竟到时候上班回来的话时间可能会更少,就去了医院做了这个小小的手术。</p>
+<p>​         当然了,这个年假是我目前活这么长最无聊的年假,真真正正的躺了15天,在上车的前两个小时,抓紧回来更新了这个文章,希望自己以后可以幸运点.</p>
+<p>​        不过时间没有白白浪费掉还好,我和我的小组一起趁着年假，做了一个小小的项目,也学会了很多的业务逻辑</p>
+<p>  哈哈哈，看到这里可能：？？？ 黑人问号，你到底在干了什么</p>
+<h3 id="现在在学习的一些东西"><a href="#现在在学习的一些东西" class="headerlink" title="现在在学习的一些东西:"></a>现在在学习的一些东西:</h3><p>​     1:首要的就是把自己眼前的java学好,以及深入java web开发</p>
+<p>​     2:学习一些框架,自学一些语言等</p>
+<p>​     3:以及一些大数据时代一个bug触发机必须掌握的东西</p>
+<p>  嗯,可能大神看到了这个微微一笑,没错我确实好菜,希望到时候大佬带带我~</p>
+<p><strong>EMMMMMMMMM—————–这可能是最心情复杂的文章</strong></p>
+<p>为什么这么说呢？因为在写上面的时候我还在不慌不忙的写，结果直接告诉我，高速封路了…….</p>
+<p><img  
+                     lazyload
+                     alt="image"
+                     data-src="https://i.loli.net/2019/07/02/5d1b252c772a827336.jpg"
+                     
+                ></p>
+<p>赶紧合起来电脑就去高铁站,就想着期待有一张我的票,慌慌张张的emm,想着只要是别误了我上课怎么都行,售票员小哥哥跟我说,高铁没了就剩下一张站着的火车票,瞬间运气爆棚 站着上了火车。</p>
+<p>当我走到石家庄的时候,有一个人可能是坐累了,叫了我一下他就抱着孩子去卧铺那边了,真的是遇到贵人了,在火车上都不敢睡觉,生怕人家回来了人家站着我在哪坐着,EMMMM</p>
+<p>就这样到了北京站直接就回来了，2点多,被这场封高速已经弄得绝望了。</p>
+<h3 id="扯这么多-给自己的2019立一个flag吧！"><a href="#扯这么多-给自己的2019立一个flag吧！" class="headerlink" title="扯这么多,给自己的2019立一个flag吧！"></a><strong><strong>扯这么多,给自己的2019立一个flag吧！</strong></strong></h3><p>1.在北京实习找到一份稳定的饭碗。</p>
+<p>2.去一次旅游(见一个人)  不知道能不能</p>
+<p>3.希望在年底学会开车 哈哈~~</p>
+<p>嘿嘿,给大家一声晚来的新年快乐！</p>
+<p>​     </p>
+]]></content>
+      <tags>
+        <tag>谈心</tag>
       </tags>
   </entry>
   <entry>
