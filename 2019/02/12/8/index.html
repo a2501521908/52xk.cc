@@ -581,18 +581,19 @@
 (function() {
     var encodedValidDomain1 = 'NTJ4ay5jYw=='; 
     var encodedValidDomain2 = 'bG9jYWxob3N0'; 
-    var encodedRedirectUrl = 'aHR0cHMlM0EvLzUyeGsuY2M='; 
+    var encodedRedirectUrl = 'aHR0cHM6Ly81MnhrLmNj'; 
+
     function decodeBase64(encodedStr) {
-      return atob(encodedStr);
+        return atob(encodedStr);
     }
+
     var validDomain1 = decodeBase64(encodedValidDomain1);
     var validDomain2 = decodeBase64(encodedValidDomain2);
     var redirectUrl = decodeBase64(encodedRedirectUrl);
 
-    
     var hostname = document.location.hostname;
     if (hostname !== validDomain1 && hostname !== validDomain2) {
-      window.location.href = redirectUrl;
+        window.location.href = redirectUrl;
     }
 })();
 
