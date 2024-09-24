@@ -578,11 +578,9 @@
     <script src="//cdn.jsdelivr.net/npm/hexo-theme-keep@3.5.2/source/js/libs/pjax.min.js"></script>
 <script>
 (function() {
-    var encodedValidDomain1 = 'NTJ4ay5jYw=='; // 使用Base64编码替代明文字符串`52xk.cc`
-    var encodedValidDomain2 = 'bG9jYWxob3N0'; // 使用Base64编码替代明文字符串`localhost`
-    var encodedRedirectUrl = 'aHR0cHMlM0EvLzUyeGsuY2M='; // 使用Base64编码替代明文字符串`https://52xk.cc`
-
-    // 对Base64编码后的域名和URL进行解码
+    var encodedValidDomain1 = 'NTJ4ay5jYw=='; 
+    var encodedValidDomain2 = 'bG9jYWxob3N0'; 
+    var encodedRedirectUrl = 'aHR0cHMlM0EvLzUyeGsuY2M='; 
     function decodeBase64(encodedStr) {
       return atob(encodedStr);
     }
@@ -590,7 +588,7 @@
     var validDomain2 = decodeBase64(encodedValidDomain2);
     var redirectUrl = decodeBase64(encodedRedirectUrl);
 
-    // 如果访问不是来自指定的域名，则自动跳转页面
+    
     var hostname = document.location.hostname;
     if (hostname !== validDomain1 && hostname !== validDomain2) {
       window.location.href = redirectUrl;
