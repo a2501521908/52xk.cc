@@ -9,7 +9,7 @@
     
     <title>
         
-            忽然想说说阿里云盘的BUG |
+            关于博客被恶意镜像这件事 |
         
         小轲博客
     </title>
@@ -170,7 +170,7 @@
         <div class="article-content-container">
 
             <div class="article-title">
-                <span class="title-hover-animation">忽然想说说阿里云盘的BUG</span>
+                <span class="title-hover-animation">关于博客被恶意镜像这件事</span>
             </div>
 
             
@@ -192,13 +192,13 @@
         
             <i class="fa-regular fa-calendar-plus"></i>&nbsp;
         
-        <span class="pc">2024-09-17 14:08:43</span>
-        <span class="mobile">2024-09-17 14:08</span>
+        <span class="pc">2024-09-25 14:08:43</span>
+        <span class="mobile">2024-09-25 14:08</span>
     </span>
     
         <span class="article-update-date article-meta-item">
         <i class="fas fa-file-pen"></i>&nbsp;
-        <span class="pc">2024-09-18 13:34:22</span>
+        <span class="pc">2024-09-26 22:10:25</span>
     </span>
     
     
@@ -208,15 +208,11 @@
             <ul>
                 
                     <li>
-                        <a href="/tags/%E4%BA%91%E7%9B%98/">云盘</a>&nbsp;
+                        <a href="/tags/%E5%8D%9A%E5%AE%A2/">博客</a>&nbsp;
                     </li>
                 
                     <li>
-                        | <a href="/tags/BUG/">BUG</a>&nbsp;
-                    </li>
-                
-                    <li>
-                        | <a href="/tags/%E6%B5%8B%E8%AF%95/">测试</a>&nbsp;
+                        | <a href="/tags/%E9%95%9C%E5%83%8F/">镜像</a>&nbsp;
                     </li>
                 
             </ul>
@@ -235,53 +231,52 @@
             
 
             <div class="article-content keep-markdown-body">
-                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>中秋假期期间，有一件事冲上了热搜。让人一惊，阿里云盘忽然出了一个BUG，用户相册数据竟能越过鉴权和隔离策略直接展示在其他用户面前！这件事对所有阿里云盘用户来说，无异于说是灾难的，相当于多人的隐私直接展现在一个大屏幕上，谁都可以看。</p>
-<img  title="" 
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>从来没想过会有人开辟这种赛道，竟然有人把我的博客内容完全<code>clone</code>下来。文字内容转换为繁体，然后完全复刻我的博客出来…. </p>
+<img  
                      lazyload
                      alt="image"
-                     data-src="https://s2.loli.net/2024/09/18/jFSa2EZrNGqT8hv.png"
-                      alt="" style="zoom:25%;"
+                     data-src="https://s2.loli.net/2024/09/26/3HClDn52gWcQGO4.png"
+                      alt="QQ_1727358157457.png" style="zoom:25%;" 
                 >
 
+<p>冷静下来思考，这其中究竟有什么利益？值得花一个域名的价钱来<code>clone</code>我一个小站？而且还屏蔽大陆的IP访问，大陆直接404</p>
+<ol>
+<li><p>利用部分文章，来获得Google、Bing搜索引擎的排名</p>
+</li>
+<li><p>盗版我的博客文章，为了后期的劣币驱逐良币</p>
+</li>
+<li><p>我写的太好了，就想留着看</p>
+</li>
+</ol>
+<p>从上面这些可获益情况来看，都是属于为了吃醋而包一顿饺子，虽然暂时想不明白，但还是得着手解决这个问题</p>
+<h1 id="落地过程"><a href="#落地过程" class="headerlink" title="落地过程"></a>落地过程</h1><p>跟松哥聊天解闷时，他帮我找到了解决问题的思路以及别人的落地过程。在此处特别致谢一下，一起帮我解决了这个棘手问题</p>
 <blockquote>
-<p>特别感谢我的习惯，哦不，应该感谢我的倔强？在20年前的安卓手机打开网盘APP后默认就会访问访问我的 <code>通讯录/相册/短信</code> 等信息，直接默认我同意就自动上传上去了！因此我也被迫的学会了权限管理，在ios平台虽然没有默认同意，也要经常点击拒绝才可以。</p>
+<p>我: 有个人克隆了我的博客。。</p>
+<p>我：这是出于啥目的😯</p>
+<p>松哥：😀哇哦</p>
+<p>松哥：我打开是404</p>
+<p>我：dns被污染了？</p>
+<p>我：不对，国内IP一访问就是404；国外IP一访问就是我的博客</p>
+<p>松哥：搞不懂一点</p>
+<p>我：但为啥盯着我的博客呢？难不成是我写的太好了，非得国外镜像一个？</p>
+<p>松哥：😂好家伙，采集现在这么明目张胆了</p>
+<p>我：而且不知道咋做到的，还原度这么高… 我理解<code>hexo g</code>后，在GitHub仓库里应该是纯html才对吧？他竟然能顺路翻译成繁体，还自动发布</p>
+<p>松哥：6666，确实，这个人怕是对你有点意思 哈哈哈</p>
+<p>一段时间过后……….</p>
+<p>松哥：<a class="link"   target="_blank" rel="noopener" href="https://yfzhu.cn/posts/1014/%EF%BC%8Chttps://xyzbz.cn/archives/1214/" >https://yfzhu.cn/posts/1014/，https://xyzbz.cn/archives/1214/<i class="fas fa-external-link-alt"></i></a>  好像你站点也是这样，被恶意镜像了</p>
 </blockquote>
-<p>但是具体的记录看了下，过程大概如下：</p>
-<ol>
-<li>创建一个新的相册</li>
-<li>筛选过滤数据仅展示相册，就出来了😂</li>
-</ol>
-<h1 id="BUG猜想"><a href="#BUG猜想" class="headerlink" title="BUG猜想"></a>BUG猜想</h1><p>阿里的技术通常使用Java方案，在Java中很流行一种判空策略，下面简单的使用MP的一个例子做一个简单的猜想，仅猜想哈。并没有什么内部消息，是自己的意淫。</p>
-<p>通常我们会在程序中严格的指定用户ID，但是很多人的代码是这样写的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 形参忽略，主要有 userId、albumId、status</span></span><br><span class="line"><span class="keyword">public</span> List&lt;DriveAlbum&gt; <span class="title function_">selectDriveAlbum</span><span class="params">(...)</span> &#123;</span><br><span class="line">    LambdaQueryWrapper&lt;DriveAlbum&gt; queryWrapper = <span class="keyword">new</span> <span class="title class_">LambdaQueryWrapper</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//用户id精确eq，判断不为空再拼接</span></span><br><span class="line">    queryWrapper.eq(StringUtils.isNotBlank(userId), <span class="string">&quot;user_id&quot;</span>, userId);</span><br><span class="line">    <span class="comment">//相册id精确eq，判断不为空再拼接</span></span><br><span class="line">    queryWrapper.eq(StringUtils.isNotBlank(albumId), <span class="string">&quot;album_id&quot;</span>, albumId);</span><br><span class="line">    queryWrapper.eq(status != <span class="literal">null</span>, <span class="string">&quot;status&quot;</span>, status);</span><br><span class="line">    <span class="keyword">return</span> driveAlbumMapper.selectList(queryWrapper);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h2 id="1-增加跳转代码"><a href="#1-增加跳转代码" class="headerlink" title="1. 增加跳转代码"></a>1. 增加跳转代码</h2><p>验证该域名是否为<code>localhost</code>、<code>52xk.cc</code> ，不是的话粗暴跳转到<a href="https://52xk.cc/">https://52xk.cc</a> 即可</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">(<span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="comment">// Base64编码的合法域名1，对应域名是 &#x27;52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedValidDomain1 = <span class="string">&#x27;NTJ4ay5jYw==&#x27;</span>; <span class="comment">// 52xk.cc</span></span><br><span class="line">    <span class="comment">// Base64编码的合法域名2，对应域名是 &#x27;localhost&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedValidDomain2 = <span class="string">&#x27;bG9jYWxob3N0&#x27;</span>; <span class="comment">// localhost</span></span><br><span class="line">    <span class="comment">// Base64编码的跳转URL，对应的URL是 &#x27;https://52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedRedirectUrl = <span class="string">&#x27;aHR0cHM6Ly81MnhrLmNj&#x27;</span>; <span class="comment">// https://52xk.cc</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解码Base64编码的字符串</span></span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">decodeBase64</span>(<span class="params">encodedStr</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="title function_">atob</span>(encodedStr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解码后的合法域名1，应该等于 &#x27;52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> validDomain1 = <span class="title function_">decodeBase64</span>(encodedValidDomain1);</span><br><span class="line">    <span class="comment">// 解码后的合法域名2，应该等于 &#x27;localhost&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> validDomain2 = <span class="title function_">decodeBase64</span>(encodedValidDomain2);</span><br><span class="line">    <span class="comment">// 解码后的跳转URL，应该等于 &#x27;https://52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> redirectUrl = <span class="title function_">decodeBase64</span>(encodedRedirectUrl);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取当前页面的域名</span></span><br><span class="line">    <span class="keyword">var</span> hostname = <span class="variable language_">document</span>.<span class="property">location</span>.<span class="property">hostname</span>;</span><br><span class="line">    <span class="comment">// 如果当前域名不是合法域名1或合法域名2，则跳转到指定的URL</span></span><br><span class="line">    <span class="keyword">if</span> (hostname !== validDomain1 &amp;&amp; hostname !== validDomain2) &#123;</span><br><span class="line">        <span class="variable language_">window</span>.<span class="property">location</span>.<span class="property">href</span> = redirectUrl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)();</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
 
-<p>看完上面的策略，假如实参传递来userId和albumId，则SQL可能会是如下的效果：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#查询<span class="number">10086</span>用户权限下的<span class="number">10010</span>相册</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span>  <span class="keyword">FROM</span> drive_album <span class="keyword">WHERE</span>  user_id <span class="operator">=</span>&quot;10086&quot; <span class="keyword">and</span> album_id<span class="operator">=</span>&quot;10010&quot; <span class="keyword">ORDER</span> <span class="keyword">BY</span> create_time <span class="keyword">DESC</span>;</span><br></pre></td></tr></table></figure>
-
-<p>但是假如实参传的都为null或者不命中判断呢？</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#查询所有用户的所有相册</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span>  <span class="keyword">FROM</span> drive_album <span class="keyword">ORDER</span> <span class="keyword">BY</span> create_time <span class="keyword">DESC</span>;</span><br></pre></td></tr></table></figure>
-
-<p>这样就会直接越权访问别人的数据了，为什么为null就不清楚了</p>
-<p>当然，我认为阿里绝对不可能没有预案，肯定有更复杂的检查和策略来杜绝这种跨账号之间的资产访问。</p>
-<p>我上面仅仅是用来猜想的，仅仅是简单的举例子，仅用来参考。阿里的响应速度还是很快的，看到后很快就做了拦截和修复，最快的保证了用户的数字资产安全，点赞👍</p>
-<h1 id="应对策略"><a href="#应对策略" class="headerlink" title="应对策略"></a>应对策略</h1><ol>
-<li><p>完善的自动化测试：不能仅做接口测试，还需要每次都进行模拟点击测试</p>
-<ol>
-<li>满足测试的覆盖率，核心功能的通过率</li>
-<li>在CI&#x2F;CD流程上增加测试覆盖率check，通过后再进入部署流程</li>
-</ol>
-</li>
-<li><p>常态化的code review：code review的过程可以让队友帮我们发现问题，降低问题的发生概率</p>
-</li>
-<li><p>在编程方面严格限制，一旦检测到重要的数据被越权访问，直接拒绝本次请求。简单例子如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;DriveAlbum&gt; <span class="title function_">selectDriveAlbum</span><span class="params">(...)</span> &#123;</span><br><span class="line">    <span class="comment">// 判断 userId 或 albumId 是否为 null</span></span><br><span class="line">    <span class="keyword">if</span> (StringUtils.isBlank(userId) || albumId == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BizException</span>(<span class="string">&quot;网络有问题，请稍后再试哦&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 构建 MyBatis Plus 的 LambdaQueryWrapper</span></span><br><span class="line">    LambdaQueryWrapper&lt;DriveAlbum&gt; queryWrapper = <span class="keyword">new</span> <span class="title class_">LambdaQueryWrapper</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 忽略</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>完善报警机制，一旦抛出相关报警发送到相关群聊中@相关值班同学，做到最快发现问题、最快响应问题</p>
-</li>
-<li><p>统一登录系统 &amp; 统一拦截系统在重要的操作中，如果相关隔离标识异常，尽量不做放行。宁可被投诉，也不可把数据越权输出</p>
-</li>
-<li><p>学习阿里云盘，如果实在因为不可抗力因素不能快速的修复，则直接把数据全部拦截，影响面做到最小</p>
-</li>
+<h2 id="2-向Google投诉"><a href="#2-向Google投诉" class="headerlink" title="2. 向Google投诉"></a>2. 向Google投诉</h2><p>国外的搜索引擎中，Google是主要的搜索来源。玩这套的大概率也就图个Google搜索了，所以肯定收录了，直接举报这个域名即可</p>
+<p><a class="link"   target="_blank" rel="noopener" href="https://support.google.com/legal/answer/3110420" >https://support.google.com/legal/answer/3110420<i class="fas fa-external-link-alt"></i></a></p>
+<h2 id="3-启用防盗链"><a href="#3-启用防盗链" class="headerlink" title="3. 启用防盗链"></a>3. 启用防盗链</h2><p>博客尽量屏蔽掉陌生的<code>referer</code>，尤其静态资源。可在Gateway部分去做白名单限制，这里不做详细解释</p>
+<h2 id="4-锁定IP，拉黑处理"><a href="#4-锁定IP，拉黑处理" class="headerlink" title="4. 锁定IP，拉黑处理"></a>4. 锁定IP，拉黑处理</h2><p>找到相关爬取日志，拉黑IP处理即可，也是在Gateway下手即可</p>
+<h2 id="5-最后的最后"><a href="#5-最后的最后" class="headerlink" title="5. 最后的最后"></a>5. 最后的最后</h2><p>收手吧兄弟,这条街上全是阿祖😅</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li><a class="link"   target="_blank" rel="noopener" href="https://yfzhu.cn/posts/1014/" >https://yfzhu.cn/posts/1014/<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://xyzbz.cn/archives/1214/" >https://xyzbz.cn/archives/1214/<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1724145" >https://cloud.tencent.com/developer/article/1724145<i class="fas fa-external-link-alt"></i></a></li>
 </ol>
 
             </div>
@@ -291,16 +286,16 @@
                     <div class="article-copyright-info-container">
     <ul class="copyright-info-content">
         <li>
-            <span class="type">本文标题</span>：<span class="content">忽然想说说阿里云盘的BUG</span>
+            <span class="type">本文标题</span>：<span class="content">关于博客被恶意镜像这件事</span>
         </li>
         <li>
             <span class="type">本文作者</span>：<span class="content">小轲</span>
         </li>
         <li>
-            <span class="type">创建时间</span>：<span class="content">2024-09-17 14:08:43</span>
+            <span class="type">创建时间</span>：<span class="content">2024-09-25 14:08:43</span>
         </li>
         <li class="post-link">
-            <span class="type">本文链接</span>：<span class="content">2024/09/17/21/</span>
+            <span class="type">本文链接</span>：<span class="content">2024/09/25/22/</span>
         </li>
         <li>
             <span class="type">版权声明</span>：<span class="content">本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！</span>
@@ -315,15 +310,11 @@
                 <ul class="post-tags-box">
                     
                         <li class="tag-item">
-                            <a href="/tags/%E4%BA%91%E7%9B%98/">#云盘</a>&nbsp;
+                            <a href="/tags/%E5%8D%9A%E5%AE%A2/">#博客</a>&nbsp;
                         </li>
                     
                         <li class="tag-item">
-                            <a href="/tags/BUG/">#BUG</a>&nbsp;
-                        </li>
-                    
-                        <li class="tag-item">
-                            <a href="/tags/%E6%B5%8B%E8%AF%95/">#测试</a>&nbsp;
+                            <a href="/tags/%E9%95%9C%E5%83%8F/">#镜像</a>&nbsp;
                         </li>
                     
                 </ul>
@@ -332,29 +323,14 @@
             
                 <div class="article-nav">
                     
-                        <div class="article-prev">
-                            <a class="prev"
-                               rel="prev"
-                               href="/2024/09/25/22/"
-                            >
-                            <span class="left arrow-icon flex-center">
-                              <i class="fas fa-chevron-left"></i>
-                            </span>
-                                <span class="title flex-center">
-                                <span class="post-nav-title-item">关于博客被恶意镜像这件事</span>
-                                <span class="post-nav-item">上一篇</span>
-                            </span>
-                            </a>
-                        </div>
-                    
                     
                         <div class="article-next">
                             <a class="next"
                                rel="next"
-                               href="/2024/04/01/20/"
+                               href="/2024/09/17/21/"
                             >
                             <span class="title flex-center">
-                                <span class="post-nav-title-item">Hexo Keep主题修改首页文章展示时间 version&lt; 4.1.0</span>
+                                <span class="post-nav-title-item">忽然想说说阿里云盘的BUG</span>
                                 <span class="post-nav-item">下一篇</span>
                             </span>
                                 <span class="right arrow-icon flex-center">
@@ -431,7 +407,7 @@
             <div class="toc-content-container">
                 <div class="post-toc-wrap">
     <div class="post-toc">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BUG%E7%8C%9C%E6%83%B3"><span class="nav-text">BUG猜想</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E5%AF%B9%E7%AD%96%E7%95%A5"><span class="nav-text">应对策略</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%90%BD%E5%9C%B0%E8%BF%87%E7%A8%8B"><span class="nav-text">落地过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%A2%9E%E5%8A%A0%E8%B7%B3%E8%BD%AC%E4%BB%A3%E7%A0%81"><span class="nav-text">1. 增加跳转代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%90%91Google%E6%8A%95%E8%AF%89"><span class="nav-text">2. 向Google投诉</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%90%AF%E7%94%A8%E9%98%B2%E7%9B%97%E9%93%BE"><span class="nav-text">3. 启用防盗链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E9%94%81%E5%AE%9AIP%EF%BC%8C%E6%8B%89%E9%BB%91%E5%A4%84%E7%90%86"><span class="nav-text">4. 锁定IP，拉黑处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9C%80%E5%90%8E%E7%9A%84%E6%9C%80%E5%90%8E"><span class="nav-text">5. 最后的最后</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol>
     </div>
 </div>
 
