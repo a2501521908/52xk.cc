@@ -9,7 +9,7 @@
     
     <title>
         
-            关于博客被恶意镜像这件事 |
+            镜像瘦身利器，Docker的多阶段构建 |
         
         小轲博客
     </title>
@@ -170,7 +170,7 @@
         <div class="article-content-container">
 
             <div class="article-title">
-                <span class="title-hover-animation">关于博客被恶意镜像这件事</span>
+                <span class="title-hover-animation">镜像瘦身利器，Docker的多阶段构建</span>
             </div>
 
             
@@ -192,13 +192,13 @@
         
             <i class="fa-regular fa-calendar-plus"></i>&nbsp;
         
-        <span class="pc">2024-09-25 14:08:43</span>
-        <span class="mobile">2024-09-25 14:08</span>
+        <span class="pc">2024-09-27 15:51:12</span>
+        <span class="mobile">2024-09-27 15:51</span>
     </span>
     
         <span class="article-update-date article-meta-item">
         <i class="fas fa-file-pen"></i>&nbsp;
-        <span class="pc">2024-09-26 22:10:25</span>
+        <span class="pc">2024-09-27 20:34:12</span>
     </span>
     
     
@@ -208,11 +208,11 @@
             <ul>
                 
                     <li>
-                        <a href="/tags/%E5%8D%9A%E5%AE%A2/">博客</a>&nbsp;
+                        <a href="/tags/Docker/">Docker</a>&nbsp;
                     </li>
                 
                     <li>
-                        | <a href="/tags/%E9%95%9C%E5%83%8F/">镜像</a>&nbsp;
+                        | <a href="/tags/%E5%AE%B9%E5%99%A8/">容器</a>&nbsp;
                     </li>
                 
             </ul>
@@ -231,53 +231,32 @@
             
 
             <div class="article-content keep-markdown-body">
-                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>从来没想过会有人开辟这种赛道，竟然有人把我的博客内容完全<code>clone</code>下来。文字内容转换为繁体，然后完全复刻我的博客出来…. </p>
+                <h1 id="为什么要使用多阶段构建？"><a href="#为什么要使用多阶段构建？" class="headerlink" title="为什么要使用多阶段构建？"></a>为什么要使用多阶段构建？</h1><p>传统的Docker Build 镜像构建过程中，所有的构建步骤都在同一个镜像层中完成，其中包含了大量的构建工具和中间文件。</p>
+<p>比如使用<code>go mod download</code>、<code>go build</code>后，你的镜像可以轻轻松松的超过1G。在持续部署过程中，分发的成本和时间非常高，有的时候修复一个问题，早1秒部署都可以减少很大的损失，更别说日常了，1G的镜像分发费用也不是一笔小费用。</p>
+<h1 id="什么是多阶段构建？"><a href="#什么是多阶段构建？" class="headerlink" title="什么是多阶段构建？"></a>什么是多阶段构建？</h1><p>多阶段构建是指在一个<code>Dockerfile</code>中使用多个<code>FROM</code>指令来创建不同的构建阶段。每个阶段都可以有自己的基础镜像，并且每个阶段可以相互独立地运行命令。</p>
+<p>通过这种方式，我们可以将构建过程分为几个部分，每个部分专注于完成特定的任务，如编译代码、复制依赖文件等。</p>
 <img  
                      lazyload
                      alt="image"
-                     data-src="https://s2.loli.net/2024/09/26/3HClDn52gWcQGO4.png"
-                      alt="QQ_1727358157457.png" style="zoom:25%;" 
+                     data-src="https://s2.loli.net/2024/09/27/ObQHyZcmfj8Cv3a.png"
+                      alt="Docker多阶段构建" style="zoom: 50%;" 
                 >
 
-<p>冷静下来思考，这其中究竟有什么利益？值得花一个域名的价钱来<code>clone</code>我一个小站？而且还屏蔽大陆的IP访问，大陆直接404</p>
+<p>类似于上图的逻辑，瘦身的体验相当不错，<strong>从1.3G直接缩到28M</strong>，效果非常显著。</p>
+<p>在上图中，做一个简单的解释</p>
 <ol>
-<li><p>利用部分文章，来获得Google、Bing搜索引擎的排名</p>
+<li><p><strong>第一个阶段</strong>从基础 Go 镜像中拉取，并执行编译和下载等操作，这些资源在构建完成后实际上并不需要。我们将该阶段命名为 <code>builder</code>。</p>
 </li>
-<li><p>盗版我的博客文章，为了后期的劣币驱逐良币</p>
-</li>
-<li><p>我写的太好了，就想留着看</p>
+<li><p><strong>第二个阶段</strong>引用第一阶段的 <code>builder</code>，从中复制构建物。在第二阶段中，只有基础的 Linux 环境和一个 Go 的二进制运行包。</p>
 </li>
 </ol>
-<p>从上面这些可获益情况来看，都是属于为了吃醋而包一顿饺子，虽然暂时想不明白，但还是得着手解决这个问题</p>
-<h1 id="落地过程"><a href="#落地过程" class="headerlink" title="落地过程"></a>落地过程</h1><p>跟松哥聊天解闷时，他帮我找到了解决问题的思路以及别人的落地过程。在此处特别致谢一下，一起帮我解决了这个棘手问题</p>
-<blockquote>
-<p>我: 有个人克隆了我的博客。。</p>
-<p>我：这是出于啥目的😯</p>
-<p>松哥：😀哇哦</p>
-<p>松哥：我打开是404</p>
-<p>我：dns被污染了？</p>
-<p>我：不对，国内IP一访问就是404；国外IP一访问就是我的博客</p>
-<p>松哥：搞不懂一点</p>
-<p>我：但为啥盯着我的博客呢？难不成是我写的太好了，非得国外镜像一个？</p>
-<p>松哥：😂好家伙，采集现在这么明目张胆了</p>
-<p>我：而且不知道咋做到的，还原度这么高… 我理解<code>hexo g</code>后，在GitHub仓库里应该是纯html才对吧？他竟然能顺路翻译成繁体，还自动发布</p>
-<p>松哥：6666，确实，这个人怕是对你有点意思 哈哈哈</p>
-<p>一段时间过后……….</p>
-<p>松哥：<a class="link"   target="_blank" rel="noopener" href="https://yfzhu.cn/posts/1014/%EF%BC%8Chttps://xyzbz.cn/archives/1214/" >https://yfzhu.cn/posts/1014/，https://xyzbz.cn/archives/1214/<i class="fas fa-external-link-alt"></i></a>  好像你站点也是这样，被恶意镜像了</p>
-</blockquote>
-<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h2 id="1-增加跳转代码"><a href="#1-增加跳转代码" class="headerlink" title="1. 增加跳转代码"></a>1. 增加跳转代码</h2><p>验证该域名是否为<code>localhost</code>、<code>52xk.cc</code> ，不是的话粗暴跳转到<a href="https://52xk.cc/">https://52xk.cc</a> 即可</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">(<span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="comment">// Base64编码的合法域名1，对应域名是 &#x27;52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedValidDomain1 = <span class="string">&#x27;NTJ4ay5jYw==&#x27;</span>; <span class="comment">// 52xk.cc</span></span><br><span class="line">    <span class="comment">// Base64编码的合法域名2，对应域名是 &#x27;localhost&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedValidDomain2 = <span class="string">&#x27;bG9jYWxob3N0&#x27;</span>; <span class="comment">// localhost</span></span><br><span class="line">    <span class="comment">// Base64编码的跳转URL，对应的URL是 &#x27;https://52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> encodedRedirectUrl = <span class="string">&#x27;aHR0cHM6Ly81MnhrLmNj&#x27;</span>; <span class="comment">// https://52xk.cc</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解码Base64编码的字符串</span></span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">decodeBase64</span>(<span class="params">encodedStr</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="title function_">atob</span>(encodedStr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解码后的合法域名1，应该等于 &#x27;52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> validDomain1 = <span class="title function_">decodeBase64</span>(encodedValidDomain1);</span><br><span class="line">    <span class="comment">// 解码后的合法域名2，应该等于 &#x27;localhost&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> validDomain2 = <span class="title function_">decodeBase64</span>(encodedValidDomain2);</span><br><span class="line">    <span class="comment">// 解码后的跳转URL，应该等于 &#x27;https://52xk.cc&#x27;</span></span><br><span class="line">    <span class="keyword">var</span> redirectUrl = <span class="title function_">decodeBase64</span>(encodedRedirectUrl);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取当前页面的域名</span></span><br><span class="line">    <span class="keyword">var</span> hostname = <span class="variable language_">document</span>.<span class="property">location</span>.<span class="property">hostname</span>;</span><br><span class="line">    <span class="comment">// 如果当前域名不是合法域名1或合法域名2，则跳转到指定的URL</span></span><br><span class="line">    <span class="keyword">if</span> (hostname !== validDomain1 &amp;&amp; hostname !== validDomain2) &#123;</span><br><span class="line">        <span class="variable language_">window</span>.<span class="property">location</span>.<span class="property">href</span> = redirectUrl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)();</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<p>使用两个阶段就可以轻松将Go的构建物实现解耦和精简，非常的方便。</p>
+<h1 id="怎么使用多阶段构建？"><a href="#怎么使用多阶段构建？" class="headerlink" title="怎么使用多阶段构建？"></a>怎么使用多阶段构建？</h1><p>下面是一个Go的dockerfile，供参考</p>
+<p>其实和我们正常的构建操作是差不多的，编写完成后正常执行<code>docker build .</code> 即可</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用已有的 Golang 镜像作为基础镜像</span></span><br><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.23</span>.<span class="number">0</span> AS builder</span><br><span class="line"><span class="comment"># 设定代理</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY=https://goproxy.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 复制 go.mod 和 go.sum 文件</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> go.mod go.sum ./</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> go mod download</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 复制整个项目</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> . .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译 Go 应用</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./src/main/app.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用较小的基础镜像</span></span><br><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装 ca-certificates 和 tzdata</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apk --no-cache add ca-certificates tzdata</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置时区为上海</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">cp</span> /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &amp;&amp; <span class="built_in">echo</span> <span class="string">&quot;Asia/Shanghai&quot;</span> &gt; /etc/timezone</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /root/</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 从 builder 镜像中复制编译后的二进制文件</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> --from=builder /app/main .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暴露应用运行的端口</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">8080</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行应用</span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> [<span class="string">&quot;./main&quot;</span>]</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="2-向Google投诉"><a href="#2-向Google投诉" class="headerlink" title="2. 向Google投诉"></a>2. 向Google投诉</h2><p>国外的搜索引擎中，Google是主要的搜索来源。玩这套的大概率也就图个Google搜索了，所以肯定收录了，直接举报这个域名即可</p>
-<p><a class="link"   target="_blank" rel="noopener" href="https://support.google.com/legal/answer/3110420" >https://support.google.com/legal/answer/3110420<i class="fas fa-external-link-alt"></i></a></p>
-<h2 id="3-启用防盗链"><a href="#3-启用防盗链" class="headerlink" title="3. 启用防盗链"></a>3. 启用防盗链</h2><p>博客尽量屏蔽掉陌生的<code>referer</code>，尤其静态资源。可在Gateway部分去做白名单限制，这里不做详细解释</p>
-<h2 id="4-锁定IP，拉黑处理"><a href="#4-锁定IP，拉黑处理" class="headerlink" title="4. 锁定IP，拉黑处理"></a>4. 锁定IP，拉黑处理</h2><p>找到相关爬取日志，拉黑IP处理即可，也是在Gateway下手即可</p>
-<h2 id="5-最后的最后"><a href="#5-最后的最后" class="headerlink" title="5. 最后的最后"></a>5. 最后的最后</h2><p>收手吧兄弟,这条街上全是阿祖😅</p>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
-<li><a class="link"   target="_blank" rel="noopener" href="https://yfzhu.cn/posts/1014/" >https://yfzhu.cn/posts/1014/<i class="fas fa-external-link-alt"></i></a></li>
-<li><a class="link"   target="_blank" rel="noopener" href="https://xyzbz.cn/archives/1214/" >https://xyzbz.cn/archives/1214/<i class="fas fa-external-link-alt"></i></a></li>
-<li><a class="link"   target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1724145" >https://cloud.tencent.com/developer/article/1724145<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>无论是可以直接编译机器码的Go、还是已经推出GraalVM的Java，还有其他可以编译机器码的语言都可以使用这种多阶段构建方式进行瘦身。</p>
+<p>其中好处有不仅可以提升部署的速度，更能减少分发的时间和带宽成本。</p>
 
             </div>
 
@@ -286,16 +265,16 @@
                     <div class="article-copyright-info-container">
     <ul class="copyright-info-content">
         <li>
-            <span class="type">本文标题</span>：<span class="content">关于博客被恶意镜像这件事</span>
+            <span class="type">本文标题</span>：<span class="content">镜像瘦身利器，Docker的多阶段构建</span>
         </li>
         <li>
             <span class="type">本文作者</span>：<span class="content">小轲</span>
         </li>
         <li>
-            <span class="type">创建时间</span>：<span class="content">2024-09-25 14:08:43</span>
+            <span class="type">创建时间</span>：<span class="content">2024-09-27 15:51:12</span>
         </li>
         <li class="post-link">
-            <span class="type">本文链接</span>：<span class="content">2024/09/25/22/</span>
+            <span class="type">本文链接</span>：<span class="content">2024/09/27/23/</span>
         </li>
         <li>
             <span class="type">版权声明</span>：<span class="content">本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！</span>
@@ -310,11 +289,11 @@
                 <ul class="post-tags-box">
                     
                         <li class="tag-item">
-                            <a href="/tags/%E5%8D%9A%E5%AE%A2/">#博客</a>&nbsp;
+                            <a href="/tags/Docker/">#Docker</a>&nbsp;
                         </li>
                     
                         <li class="tag-item">
-                            <a href="/tags/%E9%95%9C%E5%83%8F/">#镜像</a>&nbsp;
+                            <a href="/tags/%E5%AE%B9%E5%99%A8/">#容器</a>&nbsp;
                         </li>
                     
                 </ul>
@@ -323,29 +302,14 @@
             
                 <div class="article-nav">
                     
-                        <div class="article-prev">
-                            <a class="prev"
-                               rel="prev"
-                               href="/2024/09/27/23/"
-                            >
-                            <span class="left arrow-icon flex-center">
-                              <i class="fas fa-chevron-left"></i>
-                            </span>
-                                <span class="title flex-center">
-                                <span class="post-nav-title-item">镜像瘦身利器，Docker的多阶段构建</span>
-                                <span class="post-nav-item">上一篇</span>
-                            </span>
-                            </a>
-                        </div>
-                    
                     
                         <div class="article-next">
                             <a class="next"
                                rel="next"
-                               href="/2024/09/17/21/"
+                               href="/2024/09/25/22/"
                             >
                             <span class="title flex-center">
-                                <span class="post-nav-title-item">忽然想说说阿里云盘的BUG</span>
+                                <span class="post-nav-title-item">关于博客被恶意镜像这件事</span>
                                 <span class="post-nav-item">下一篇</span>
                             </span>
                                 <span class="right arrow-icon flex-center">
@@ -422,7 +386,7 @@
             <div class="toc-content-container">
                 <div class="post-toc-wrap">
     <div class="post-toc">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%90%BD%E5%9C%B0%E8%BF%87%E7%A8%8B"><span class="nav-text">落地过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%A2%9E%E5%8A%A0%E8%B7%B3%E8%BD%AC%E4%BB%A3%E7%A0%81"><span class="nav-text">1. 增加跳转代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%90%91Google%E6%8A%95%E8%AF%89"><span class="nav-text">2. 向Google投诉</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%90%AF%E7%94%A8%E9%98%B2%E7%9B%97%E9%93%BE"><span class="nav-text">3. 启用防盗链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E9%94%81%E5%AE%9AIP%EF%BC%8C%E6%8B%89%E9%BB%91%E5%A4%84%E7%90%86"><span class="nav-text">4. 锁定IP，拉黑处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9C%80%E5%90%8E%E7%9A%84%E6%9C%80%E5%90%8E"><span class="nav-text">5. 最后的最后</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">为什么要使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">什么是多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">怎么使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol>
     </div>
 </div>
 
