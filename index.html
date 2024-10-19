@@ -1184,6 +1184,26 @@ MySQL DDL 的方法MySQL 在大型表上的 DDL 会带来耗时较久、负载�
             KEEP.initExecute()
         });
     });
+
+    (function() {
+    var encodedValidDomain1 = 'NTJ4ay5jYw=='; 
+    var encodedValidDomain2 = 'bG9jYWxob3N0'; 
+    var encodedRedirectUrl = 'aHR0cHM6Ly81MnhrLmNj';
+
+    // 解码Base64编码的字符串
+    function decodeBase64(encodedStr) {
+        return atob(encodedStr);
+    }
+
+    var validDomain1 = decodeBase64(encodedValidDomain1);
+    var validDomain2 = decodeBase64(encodedValidDomain2);
+    var redirectUrl = decodeBase64(encodedRedirectUrl);
+
+    var hostname = document.location.hostname;
+    if (hostname !== validDomain1 && hostname !== validDomain2) {
+        window.location.href = redirectUrl;
+    }
+})();
 </script>
 
 
