@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+    <meta name="description" content="小轲博客，是小轲的个人博客！更新个人教程，网站程序等。当然会更新小轲自己的生活等">
+    <meta name="author" content="小轲">
+    
+    <title>
+        
+            insert SQL并发插入导致的阻塞问题 |
+        
+        小轲博客
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+        <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/regular.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/brands.min.css">
+    
+    <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN","path":"search.json"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.2.3"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+    
+</div>
+
+
+
+<main class="page-container border-box">
+    <!-- home first screen  -->
+    
+
+    <!-- page content -->
+    <div class="page-main-content border-box">
+        <div class="page-main-content-top">
+            
+<header class="header-wrapper">
+
+    <div class="border-box header-content">
+        <div class="left flex-start border-box">
+            
+            <a class="site-name border-box" href="/">
+               小轲博客
+            </a>
+        </div>
+
+        <div class="right border-box">
+            <div class="pc border-box">
+                <ul class="menu-list border-box">
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/">
+                                
+                                首页
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/archives">
+                                
+                                归档
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/tags">
+                                
+                                标签
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/links">
+                                
+                                友链
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/about">
+                                
+                                关于
+                                
+                            </a>
+                            
+                        </li>
+                    
+                    
+                        <li class="menu-item search search-popup-trigger">
+                            <i class="menu-text-color fas search fa-search"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <div class="mobile border-box flex-start">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list border-box">
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+                            
+                            首页
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+                            
+                            归档
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+                            
+                            标签
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+                            
+                            友链
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+                            
+                            关于
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle border-box">
+
+            <div class="main-content border-box">
+                
+
+                    
+<div class="fade-in-down-animation">
+    <div class="post-page-container border-box">
+        <div class="post-content-container border-box">
+            
+
+            <div class="post-content-bottom border-box">
+                
+                    <div class="post-title">
+                        insert SQL并发插入导致的阻塞问题
+                    </div>
+                
+
+                
+                    <div class="post-header border-box">
+                        
+                            <div class="avatar-box border-box">
+                                <img src="/images/head-img.jpg">
+                            </div>
+                        
+                        <div class="info-box">
+                            <div class="author border-box">
+                                <span class="name">小轲</span>
+                                
+                            </div>
+                            <div class="meta-info border-box">
+                                
+
+<div class="post-meta-info-container border-box post">
+    <div class="post-meta-info border-box">
+        
+
+        
+            <span class="meta-info-item post-create-date">
+                <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+                <span class="datetime">2025-03-01 13:31:08</span>
+            </span>
+
+            <span class="meta-info-item post-update-date">
+                <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+                <span class="datetime" data-updated="Sat Mar 01 2025 15:02:36 GMT+0800">2025-03-01 15:02:36</span>
+            </span>
+        
+
+        
+
+        
+            <span class="post-tag meta-info-item border-box">
+                <ul class="post-tag-ul">
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/MySQL/">MySQL</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%B9%82%E7%AD%89%E6%80%A7/">幂等性</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E6%AD%BB%E9%94%81/">死锁</a></li>
+                        
+                    
+                </ul>
+            </span>
+        
+
+        
+        
+        
+        
+    </div>
+
+    
+</div>
+
+                            </div>
+                        </div>
+                    </div>
+                
+
+                <div class="post-content keep-markdown-body ">
+                    
+
+                    
+                         <p>在一个正常的业务中，MySQL报错了阻塞。第一反应是死锁，但是发现是一条insert语句，语句如下:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> make_card_info (</span><br><span class="line">  id,</span><br><span class="line">  open_id,</span><br><span class="line">  md_order_no,</span><br><span class="line">  apollo_user_id,</span><br><span class="line">  project_name,</span><br><span class="line">  task_type,</span><br><span class="line">  task_pass_time,</span><br><span class="line">  amount,</span><br><span class="line">  app_mark</span><br><span class="line">) <span class="keyword">VALUES</span> (</span><br><span class="line">  <span class="number">1876546101549854799</span>,</span><br><span class="line">  <span class="string">&#x27;1851452288917311489&#x27;</span>,</span><br><span class="line">  <span class="number">1870999825732784129</span>,</span><br><span class="line">  <span class="string">&#x27;1859075883175706625&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;模糊处理&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;模糊处理&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;2025-01-07 16:27:09.737&#x27;</span>,</span><br><span class="line">  <span class="number">10</span>,</span><br><span class="line">  <span class="string">&#x27;mark-cloud&#x27;</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>此时有点懵圈，手动执行了下这条SQL，发现确实被阻塞了。思路步骤如下</p>
+<ol>
+<li>分析表结构</li>
+<li>查看MySQL状态</li>
+<li>查看代码,分析调用链</li>
+</ol>
+<p>现在咱们挨个分析一下</p>
+<h1 id="分析表结构"><a href="#分析表结构" class="headerlink" title="分析表结构"></a>分析表结构</h1><p>一般出现这种问题，要么就是ID重复，要么就是索引里面存在唯一索引。ID重复倒是可以排除了，这个表的id是自增的，那么就是唯一索引的问题</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/03/01/1IXKxlgebvcdJtw.png"
+                        alt="create table"
+                 ></p>
+<p>看完这个表结构，猜想大概率是唯一索引问题，造成阻塞的想必也一定是这个唯一索引。</p>
+<p>我的思路是<code>mk_order_no</code>字段难道重复了吗？走了一个这个sql，发现并没有查询出来</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> make_card_info <span class="keyword">where</span> mk_order_no<span class="operator">=</span><span class="number">1870999825732784129</span></span><br></pre></td></tr></table></figure>
+
+<p>问题已经出来了，应该是并发插了。这时候去看看MySQL的状态就行了，看看可不可以kill掉它</p>
+<h1 id="查看MySQL状态"><a href="#查看MySQL状态" class="headerlink" title="查看MySQL状态"></a>查看MySQL状态</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> PROCESSLIST;</span><br><span class="line">#这将显示当前所有连接的状态，包括正在运行的 <span class="keyword">SQL</span> 语句。</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> information_schema.innodb_trx;</span><br><span class="line">#这个查询将返回当前所有活动的 InnoDB 事务，包括事务 ID、开始时间、状态等信息。</span><br></pre></td></tr></table></figure>
+
+<h1 id="查看代码-分析调用链"><a href="#查看代码-分析调用链" class="headerlink" title="查看代码,分析调用链"></a>查看代码,分析调用链</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">uploadChain</span><span class="params">(MakeCardInfoDTO dto)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(dto.getMdOrderNo() == <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;订单id不能为空&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//查看用户是否创建过钱包</span></span><br><span class="line">    <span class="type">UserWalletDTO</span> <span class="variable">userWalletDTO</span> <span class="operator">=</span> ConvertUtils.sourceToTarget(dto, UserWalletDTO.class);</span><br><span class="line">    dto.setApolloUserId(createUserWallet(userWalletDTO).getUserId());</span><br><span class="line"></span><br><span class="line">    <span class="comment">//防重查看制卡任务是否存在</span></span><br><span class="line">    <span class="type">MakeCardInfoEntity</span> <span class="variable">makeCardInfoEntity</span> <span class="operator">=</span> makeCardInfoDao.selectOne(<span class="keyword">new</span> <span class="title class_">QueryWrapper</span>&lt;MakeCardInfoEntity&gt;()</span><br><span class="line">            .lambda()</span><br><span class="line">            .eq(MakeCardInfoEntity::getMdOrderNo, dto.getMdOrderNo()));</span><br><span class="line">    <span class="keyword">if</span>(makeCardInfoEntity != <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(makeCardInfoEntity.getTradeStatus().compareTo(WalletStatusEnum.SUCCESS.getStatus()) == <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> makeCardInfoEntity.getTaskId();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="keyword">return</span> StringUtils.EMPTY;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//构建上链请求体</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">uploadChainBody</span> <span class="operator">=</span> getUploadChainBody(dto);</span><br><span class="line">    <span class="comment">//先落库</span></span><br><span class="line">    <span class="type">MakeCardInfoEntity</span> <span class="variable">entity</span> <span class="operator">=</span> ConvertUtils.sourceToTarget(dto, MakeCardInfoEntity.class);</span><br><span class="line">    makeCardInfoDao.insert(entity);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//请求上链</span></span><br><span class="line">    <span class="type">JSONObject</span> <span class="variable">userWallet</span> <span class="operator">=</span> walletRequestInfo.uploadChain(uploadChainBody);</span><br><span class="line">    <span class="comment">//上链任务ID</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">taskId</span> <span class="operator">=</span> userWallet.getStr(<span class="string">&quot;taskId&quot;</span>);</span><br><span class="line">    entity.setTaskId(taskId);</span><br><span class="line">    entity.setReqBody(uploadChainBody);</span><br><span class="line">    makeCardInfoDao.updateById(entity);</span><br><span class="line">    <span class="keyword">return</span> taskId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大概能猜出来了，该方法问题点如下:</p>
+<ol>
+<li>该方法开启了事务，未手动提交，交给spring进行管理</li>
+<li>该方法的执行流程为，先insert拿到id，后http请求一个接口，得到结果后再进行修改<ol>
+<li>注意: 该步骤也是在事务下进行的，会有可能出现A事务没提交，B事务又开启的情况</li>
+</ol>
+</li>
+<li>该接口未做任何幂等性的限制</li>
+</ol>
+<p>综上所述，做个复盘，从请求侧确实能看出来两次请求（MQ重试）</p>
+<p>也就是A线程在执行未提交事务前的逻辑，已经insert。B线程又进来请求insert，两个线程虽主键不冲突，但有唯一索引限制，A事务无法提交update SQL，B事务则被insert SQL阻塞，故出现死锁。</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/03/01/87psOGL6Cvin4Qf.png"
+                        alt="流程"
+                 ></p>
+<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h2 id="kill掉，让业务正常运转"><a href="#kill掉，让业务正常运转" class="headerlink" title="kill掉，让业务正常运转"></a>kill掉，让业务正常运转</h2><p>找到阻塞的SQL，kill掉就ok了。kill掉后通知业务方进行重试  and 人工介入处理</p>
+<blockquote>
+<p>trx_id	trx_state	trx_started	trx_requested_lock_id	trx_wait_started	trx_weight	trx_mysql_thread_id	trx_query	trx_operation_state	trx_tables_in_use	trx_tables_locked	trx_lock_structs	trx_lock_memory_bytes	trx_rows_locked	trx_rows_modified	trx_concurrency_tickets	trx_isolation_level	trx_unique_checks	trx_foreign_key_checks	trx_last_foreign_key_error	trx_adaptive_hash_latched	trx_adaptive_hash_timeout	trx_is_read_only	trx_autocommit_non_locking<br>19739684</p>
+<p>RUNNING</p>
+<p>2025-01-07 14:41:15</p>
+<p>(NULL)	(NULL)<br>3</p>
+<p>269085273</p>
+<p>(NULL)	(NULL)<br>0</p>
+<p>1</p>
+<p>2</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">KILL <span class="number">269085273</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="改造代码"><a href="#改造代码" class="headerlink" title="改造代码"></a>改造代码</h2><p>改造代码的落地方式分为多种，简单说下两种比较实用的思路</p>
+<ol>
+<li>给订单号做分布式锁，防止单订单号重复提交，也就是单订单号串行化处理</li>
+<li>这段代码核心就是需要得到insert的id，后修改造成的。 可以改造为不需要数据库返回id，使用雪花等id的分配方式，这样还可以减少一次修改</li>
+</ol>
+
+                    
+                </div>
+
+                
+
+                <div class="post-bottom-tags-and-share border-box">
+                    <div>
+                        
+                            <ul class="post-tags-box border-box">
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/MySQL/">MySQL</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%B9%82%E7%AD%89%E6%80%A7/">幂等性</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E6%AD%BB%E9%94%81/">死锁</a>
+                                    </li>
+                                
+                            </ul>
+                        
+                    </div>
+                    <div>
+                        
+                    </div>
+                </div>
+
+                
+
+                
+                    <div class="post-nav border-box">
+                        
+                        
+                            <div class="next-post">
+                                <a class="next"
+                                   rel="next"
+                                   href="/2024/11/10/24/"
+                                   title="状态设计模式的实践"
+                                >
+                                    <span class="title flex-center">
+                                        <span class="post-nav-title-item text-ellipsis">状态设计模式的实践</span>
+                                        <span class="post-nav-item">下一篇</span>
+                                    </span>
+                                    <span class="right arrow-icon flex-center">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </span>
+                                </a>
+                            </div>
+                        
+                    </div>
+                
+
+                
+                    
+
+
+    <div class="comments-container border-box">
+        <div id="comments-anchor" class="comment-area-title border-box">
+            <i class="fas fa-comments"></i>&nbsp;评论
+        </div>
+        <div class="comment-plugin-fail border-box">
+    <span class="fail-tip">评论插件加载失败</span>
+    <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+    <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+    <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+        
+            
+
+    <div class="gitalk-comment-container">
+        <div id="gitalk-container"></div>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+        <script data-pjax
+                src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+                async
+                onerror="window.KeepCommentPlugin.loadFailHandle()"
+        ></script>
+        <script data-pjax
+                async
+                onerror="window.KeepCommentPlugin.loadFailHandle()"
+        >
+          window.KeepCommentPlugin.initGitalk = () => {
+            let gitalkPathname = decodeURI(location.pathname)
+            const gitalkPathnameLength = gitalkPathname.length
+            const gitalkPathnameMaxLength = 50
+            if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+              gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+            }
+
+            if (window?.Gitalk) {
+              new Gitalk({
+                clientID: '98dcf7e70682aab74e7d',
+                clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+                repo: 'blog-comment',
+                owner: 'a2501521908',
+                admin: 'a2501521908',
+                id: gitalkPathname,
+                proxy: '',
+                language: 'zh-CN'
+              }).render('gitalk-container')
+              window.KeepCommentPlugin.hideLoading()
+            } else {
+              setTimeout(() => {
+                window.KeepCommentPlugin.initGitalk()
+              }, 1000)
+            }
+          }
+
+          if ('true' === 'true') {
+            setTimeout(() => {
+              window.KeepCommentPlugin.initGitalk()
+            }, 1200)
+          } else {
+            window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+          }
+        </script>
+    </div>
+
+
+        
+    </div>
+
+
+
+
+
+                
+            </div>
+        </div>
+
+        
+            <div class="pc-post-toc right-toc">
+                <div class="post-toc-wrap border-box">
+    <div class="post-toc border-box">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-text">分析表结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BMySQL%E7%8A%B6%E6%80%81"><span class="nav-text">查看MySQL状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%A0%81-%E5%88%86%E6%9E%90%E8%B0%83%E7%94%A8%E9%93%BE"><span class="nav-text">查看代码,分析调用链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill%E6%8E%89%EF%BC%8C%E8%AE%A9%E4%B8%9A%E5%8A%A1%E6%AD%A3%E5%B8%B8%E8%BF%90%E8%BD%AC"><span class="nav-text">kill掉，让业务正常运转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E4%BB%A3%E7%A0%81"><span class="nav-text">改造代码</span></a></li></ol></li></ol>
+    </div>
+</div>
+
+            </div>
+        
+    </div>
+</div>
+
+
+                
+            </div>
+        </div>
+
+        <div class="page-main-content-bottom border-box">
+            
+<footer class="footer border-box">
+    <div class="copyright-info info-item">
+        &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2025
+        
+            &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+        
+    </div>
+
+    <div class="theme-info info-item">
+        由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+    </div>
+
+    
+
+    
+
+    
+</footer>
+
+        </div>
+    </div>
+
+    <!-- post tools -->
+    
+        <div class="post-tools right-toc">
+            <div class="post-tools-container border-box">
+    <ul class="post-tools-list border-box">
+        <!-- PC encrypt again -->
+        
+
+        <!-- PC TOC show toggle -->
+        
+            <li class="tools-item flex-center toggle-show-toc">
+                <i class="fas fa-list"></i>
+            </li>
+        
+
+        <!-- PC go comment -->
+        
+            <li class="tools-item flex-center go-to-comments">
+                <i class="fas fa-comment"></i>
+                <span class="post-comments-count"></span>
+            </li>
+        
+
+        <!-- PC full screen -->
+        <li class="tools-item flex-center full-screen">
+            <i class="fa-solid fa-expand"></i>
+        </li>
+    </ul>
+</div>
+
+        </div>
+    
+
+    <!-- side tools -->
+    <div class="side-tools">
+        <div class="side-tools-container border-box ">
+    <ul class="side-tools-list side-tools-show-handle border-box">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <!-- toggle mode -->
+        
+            <li class="tools-item tool-toggle-theme-mode flex-center">
+                <i class="fas fa-moon"></i>
+            </li>
+        
+
+        <!-- rss -->
+        
+
+        <!-- to bottom -->
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list border-box">
+        
+            <li class="tools-item toggle-show-toc-tablet flex-center">
+                <i class="fas fa-list"></i>
+            </li>
+        
+
+        
+            <li class="tools-item go-to-comments-tablet flex-center">
+                <i class="fas fa-comment"></i>
+            </li>
+        
+
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+
+        <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+            <i class="arrow fas fa-arrow-up"></i>
+            <span class="percent"></span>
+        </li>
+    </ul>
+</div>
+
+    </div>
+
+    <!-- image mask -->
+    <div class="zoom-in-image-mask">
+    <img class="zoom-in-image">
+</div>
+
+
+    <!-- local search -->
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fas fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="close-popup-btn">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+    <!-- tablet toc -->
+    
+        <div class="tablet-post-toc-mask">
+            <div class="tablet-post-toc">
+                <div class="post-toc-wrap border-box">
+    <div class="post-toc border-box">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-text">分析表结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BMySQL%E7%8A%B6%E6%80%81"><span class="nav-text">查看MySQL状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%A0%81-%E5%88%86%E6%9E%90%E8%B0%83%E7%94%A8%E9%93%BE"><span class="nav-text">查看代码,分析调用链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill%E6%8E%89%EF%BC%8C%E8%AE%A9%E4%B8%9A%E5%8A%A1%E6%AD%A3%E5%B8%B8%E8%BF%90%E8%BD%AC"><span class="nav-text">kill掉，让业务正常运转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E4%BB%A3%E7%A0%81"><span class="nav-text">改造代码</span></a></li></ol></li></ol>
+    </div>
+</div>
+
+            </div>
+        </div>
+    
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+    <!-- home page -->
+    
+
+    <!-- post page -->
+    
+        <!-- post-helper -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/post/post-helper.min.js"></script>
+
+        <!-- toc -->
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/post/toc.min.js"></script>
+        
+
+        <!-- copyright-info -->
+        
+
+        <!-- share -->
+        
+    
+
+    <!-- categories page -->
+    
+
+    <!-- links page -->
+    
+
+    <!-- photos page -->
+    
+
+    <!-- tools page -->
+    
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/libs/pjax.min.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            KEEP.utils.pjaxProgressBarStart()
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            KEEP.utils.pjaxProgressBarEnd()
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'))
+            KEEP.initExecute()
+        });
+    });
+
+    (function() {
+    var encodedValidDomain1 = 'NTJ4ay5jYw=='; 
+    var encodedValidDomain2 = 'bG9jYWxob3N0'; 
+    var encodedRedirectUrl = 'aHR0cHM6Ly81MnhrLmNj';
+
+    // 解码Base64编码的字符串
+    function decodeBase64(encodedStr) {
+        return atob(encodedStr);
+    }
+
+    var validDomain1 = decodeBase64(encodedValidDomain1);
+    var validDomain2 = decodeBase64(encodedValidDomain2);
+    var redirectUrl = decodeBase64(encodedRedirectUrl);
+
+    var hostname = document.location.hostname;
+    if (hostname !== validDomain1 && hostname !== validDomain2) {
+        window.location.href = redirectUrl;
+    }
+})();
+</script>
+
+
+
+
+</body>
+</html>
