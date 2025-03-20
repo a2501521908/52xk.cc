@@ -9,7 +9,7 @@
     
     <title>
         
-            insert SQL并发插入导致的阻塞问题 |
+            Using filesort 还是Using index condition？ |
         
         小轲博客
     </title>
@@ -224,7 +224,7 @@
             <div class="post-content-bottom border-box">
                 
                     <div class="post-title">
-                        insert SQL并发插入导致的阻塞问题
+                        Using filesort 还是Using index condition？
                     </div>
                 
 
@@ -250,12 +250,12 @@
         
             <span class="meta-info-item post-create-date">
                 <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
-                <span class="datetime">2025-03-01 13:31:08</span>
+                <span class="datetime">2025-03-18 13:31:08</span>
             </span>
 
             <span class="meta-info-item post-update-date">
                 <i class="icon fa-solid fa-file-pen"></i>&nbsp;
-                <span class="datetime" data-updated="Sat Mar 01 2025 15:02:36 GMT+0800">2025-03-01 15:02:36</span>
+                <span class="datetime" data-updated="Thu Mar 20 2025 22:01:04 GMT+0800">2025-03-20 22:01:04</span>
             </span>
         
 
@@ -268,16 +268,10 @@
                             <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/MySQL/">MySQL</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Arthas/">Arthas</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a></li>
-                        
-                    
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%B9%82%E7%AD%89%E6%80%A7/">幂等性</a></li>
-                        
-                    
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E6%AD%BB%E9%94%81/">死锁</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E6%85%A2%E6%9F%A5%E8%AF%A2/">慢查询</a></li>
                         
                     
                 </ul>
@@ -302,66 +296,166 @@
                     
 
                     
-                         <p>在一个正常的业务中，MySQL报错了阻塞。第一反应是死锁，但是发现是一条insert语句，语句如下:</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> make_card_info (</span><br><span class="line">  id,</span><br><span class="line">  open_id,</span><br><span class="line">  md_order_no,</span><br><span class="line">  apollo_user_id,</span><br><span class="line">  project_name,</span><br><span class="line">  task_type,</span><br><span class="line">  task_pass_time,</span><br><span class="line">  amount,</span><br><span class="line">  app_mark</span><br><span class="line">) <span class="keyword">VALUES</span> (</span><br><span class="line">  <span class="number">1876546101549854799</span>,</span><br><span class="line">  <span class="string">&#x27;1851452288917311489&#x27;</span>,</span><br><span class="line">  <span class="number">1870999825732784129</span>,</span><br><span class="line">  <span class="string">&#x27;1859075883175706625&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;模糊处理&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;模糊处理&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;2025-01-07 16:27:09.737&#x27;</span>,</span><br><span class="line">  <span class="number">10</span>,</span><br><span class="line">  <span class="string">&#x27;mark-cloud&#x27;</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<p>此时有点懵圈，手动执行了下这条SQL，发现确实被阻塞了。思路步骤如下</p>
-<ol>
-<li>分析表结构</li>
-<li>查看MySQL状态</li>
-<li>查看代码,分析调用链</li>
-</ol>
-<p>现在咱们挨个分析一下</p>
-<h1 id="分析表结构"><a href="#分析表结构" class="headerlink" title="分析表结构"></a>分析表结构</h1><p>一般出现这种问题，要么就是ID重复，要么就是索引里面存在唯一索引。ID重复倒是可以排除了，这个表的id是自增的，那么就是唯一索引的问题</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/03/01/1IXKxlgebvcdJtw.png"
-                        alt="create table"
-                 ></p>
-<p>看完这个表结构，猜想大概率是唯一索引问题，造成阻塞的想必也一定是这个唯一索引。</p>
-<p>我的思路是<code>mk_order_no</code>字段难道重复了吗？走了一个这个sql，发现并没有查询出来</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> make_card_info <span class="keyword">where</span> mk_order_no<span class="operator">=</span><span class="number">1870999825732784129</span></span><br></pre></td></tr></table></figure>
-
-<p>问题已经出来了，应该是并发插了。这时候去看看MySQL的状态就行了，看看可不可以kill掉它</p>
-<h1 id="查看MySQL状态"><a href="#查看MySQL状态" class="headerlink" title="查看MySQL状态"></a>查看MySQL状态</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> PROCESSLIST;</span><br><span class="line">#这将显示当前所有连接的状态，包括正在运行的 <span class="keyword">SQL</span> 语句。</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> information_schema.innodb_trx;</span><br><span class="line">#这个查询将返回当前所有活动的 InnoDB 事务，包括事务 ID、开始时间、状态等信息。</span><br></pre></td></tr></table></figure>
-
-<h1 id="查看代码-分析调用链"><a href="#查看代码-分析调用链" class="headerlink" title="查看代码,分析调用链"></a>查看代码,分析调用链</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">uploadChain</span><span class="params">(MakeCardInfoDTO dto)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(dto.getMdOrderNo() == <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;订单id不能为空&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//查看用户是否创建过钱包</span></span><br><span class="line">    <span class="type">UserWalletDTO</span> <span class="variable">userWalletDTO</span> <span class="operator">=</span> ConvertUtils.sourceToTarget(dto, UserWalletDTO.class);</span><br><span class="line">    dto.setApolloUserId(createUserWallet(userWalletDTO).getUserId());</span><br><span class="line"></span><br><span class="line">    <span class="comment">//防重查看制卡任务是否存在</span></span><br><span class="line">    <span class="type">MakeCardInfoEntity</span> <span class="variable">makeCardInfoEntity</span> <span class="operator">=</span> makeCardInfoDao.selectOne(<span class="keyword">new</span> <span class="title class_">QueryWrapper</span>&lt;MakeCardInfoEntity&gt;()</span><br><span class="line">            .lambda()</span><br><span class="line">            .eq(MakeCardInfoEntity::getMdOrderNo, dto.getMdOrderNo()));</span><br><span class="line">    <span class="keyword">if</span>(makeCardInfoEntity != <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(makeCardInfoEntity.getTradeStatus().compareTo(WalletStatusEnum.SUCCESS.getStatus()) == <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> makeCardInfoEntity.getTaskId();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="keyword">return</span> StringUtils.EMPTY;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//构建上链请求体</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">uploadChainBody</span> <span class="operator">=</span> getUploadChainBody(dto);</span><br><span class="line">    <span class="comment">//先落库</span></span><br><span class="line">    <span class="type">MakeCardInfoEntity</span> <span class="variable">entity</span> <span class="operator">=</span> ConvertUtils.sourceToTarget(dto, MakeCardInfoEntity.class);</span><br><span class="line">    makeCardInfoDao.insert(entity);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//请求上链</span></span><br><span class="line">    <span class="type">JSONObject</span> <span class="variable">userWallet</span> <span class="operator">=</span> walletRequestInfo.uploadChain(uploadChainBody);</span><br><span class="line">    <span class="comment">//上链任务ID</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">taskId</span> <span class="operator">=</span> userWallet.getStr(<span class="string">&quot;taskId&quot;</span>);</span><br><span class="line">    entity.setTaskId(taskId);</span><br><span class="line">    entity.setReqBody(uploadChainBody);</span><br><span class="line">    makeCardInfoDao.updateById(entity);</span><br><span class="line">    <span class="keyword">return</span> taskId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>大概能猜出来了，该方法问题点如下:</p>
-<ol>
-<li>该方法开启了事务，未手动提交，交给spring进行管理</li>
-<li>该方法的执行流程为，先insert拿到id，后http请求一个接口，得到结果后再进行修改<ol>
-<li>注意: 该步骤也是在事务下进行的，会有可能出现A事务没提交，B事务又开启的情况</li>
-</ol>
-</li>
-<li>该接口未做任何幂等性的限制</li>
-</ol>
-<p>综上所述，做个复盘，从请求侧确实能看出来两次请求（MQ重试）</p>
-<p>也就是A线程在执行未提交事务前的逻辑，已经insert。B线程又进来请求insert，两个线程虽主键不冲突，但有唯一索引限制，A事务无法提交update SQL，B事务则被insert SQL阻塞，故出现死锁。</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/03/01/87psOGL6Cvin4Qf.png"
-                        alt="流程"
-                 ></p>
-<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h2 id="kill掉，让业务正常运转"><a href="#kill掉，让业务正常运转" class="headerlink" title="kill掉，让业务正常运转"></a>kill掉，让业务正常运转</h2><p>找到阻塞的SQL，kill掉就ok了。kill掉后通知业务方进行重试  and 人工介入处理</p>
-<blockquote>
-<p>trx_id	trx_state	trx_started	trx_requested_lock_id	trx_wait_started	trx_weight	trx_mysql_thread_id	trx_query	trx_operation_state	trx_tables_in_use	trx_tables_locked	trx_lock_structs	trx_lock_memory_bytes	trx_rows_locked	trx_rows_modified	trx_concurrency_tickets	trx_isolation_level	trx_unique_checks	trx_foreign_key_checks	trx_last_foreign_key_error	trx_adaptive_hash_latched	trx_adaptive_hash_timeout	trx_is_read_only	trx_autocommit_non_locking<br>19739684</p>
-<p>RUNNING</p>
-<p>2025-01-07 14:41:15</p>
-<p>(NULL)	(NULL)<br>3</p>
-<p>269085273</p>
-<p>(NULL)	(NULL)<br>0</p>
-<p>1</p>
-<p>2</p>
+                         <h1 id="开篇"><a href="#开篇" class="headerlink" title="开篇"></a>开篇</h1><blockquote>
+<p>是一个弱智的操作产生了下面的分析，如果一会最后忍不住喷还是先行<code>ctrl+w</code>为上</p>
 </blockquote>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">KILL <span class="number">269085273</span>;</span><br></pre></td></tr></table></figure>
+<p>在看运营提的需求池时，发现有一个列表接口检索过慢。但实际未使用任何条件检索，也就是说一个普通的百万级表，查询需要10s+，激起了我的好奇心</p>
+<p>在使用<code>Arthas</code>的<code>Trace</code>分析后，发现竟然是真的，原本以为是数据后处理过多的判断逻辑导致。。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">trace com.demo.modules.mk.service.impl.QuestionnaireAnswerServiceImpl page</span></span><br><span class="line"></span><br><span class="line">Press Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 90 ms, listenerId: 1</span><br><span class="line"></span><br><span class="line">`---ts=2025-03-19 16:08:45;thread_name=main-thread;id=1;is_daemon=false;priority=5;TCCL=sun.misc.Launcher$AppClassLoader@18b4aac2</span><br><span class="line">    `---[99960ms] com.demo.modules.mk.service.impl.QuestionnaireAnswerServiceImpl#page()</span><br><span class="line">        `---[91101ms] com.demo.modules.mk.service.dao.BaseDao#selectPage()</span><br></pre></td></tr></table></figure>
 
-<h2 id="改造代码"><a href="#改造代码" class="headerlink" title="改造代码"></a>改造代码</h2><p>改造代码的落地方式分为多种，简单说下两种比较实用的思路</p>
+<p><font style="color:rgb(64, 64, 64);">显然，慢查询是罪魁祸首。接下来深入分析具体原因。</font></p>
+<h1 id="分析过程"><a href="#分析过程" class="headerlink" title="分析过程"></a>分析过程</h1><h2 id="SQL"><a href="#SQL" class="headerlink" title="SQL"></a>SQL</h2><p>下面是具体执行出的SQL</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line"> id,</span><br><span class="line"> #........此处省略<span class="number">10</span><span class="operator">+</span>字段</span><br><span class="line"> is_deleted </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line"> mk_questionnaire_answer </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line"> is_deleted <span class="operator">=</span> <span class="number">0</span> </span><br><span class="line"> <span class="keyword">AND</span> (</span><br><span class="line">   approve_status <span class="keyword">not</span> <span class="keyword">IN</span> (<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>)) </span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span></span><br><span class="line"> approve_status <span class="keyword">ASC</span>,</span><br><span class="line"> commit_date <span class="keyword">ASC</span> </span><br><span class="line"> LIMIT <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Explan执行计划分析"><a href="#Explan执行计划分析" class="headerlink" title="Explan执行计划分析"></a>Explan执行计划分析</h2><table>
+<thead>
+<tr>
+<th><strong>列名</strong></th>
+<th><strong>值</strong></th>
+<th><strong>备注或说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>1</td>
+<td>查询的序列号，简单查询通常为 1。</td>
+</tr>
+<tr>
+<td><code>select_type</code></td>
+<td>SIMPLE</td>
+<td>查询类型，表示这是一个简单查询，没有子查询或联合查询。</td>
+</tr>
+<tr>
+<td><code>table</code></td>
+<td>mk_questionnaire_answer</td>
+<td>目标查询的表名。</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>range</td>
+<td>访问类型，<code>range</code><br/>表示基于索引的范围扫描。</td>
+</tr>
+<tr>
+<td><code>possible_keys</code></td>
+<td>index_6</td>
+<td>查询可能用到的索引名称。</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td>index_6</td>
+<td>实际使用的索引名称。</td>
+</tr>
+<tr>
+<td><code>key_len</code></td>
+<td>2</td>
+<td>表示索引中实际参与查询的字段长度，单位为字节。</td>
+</tr>
+<tr>
+<td><code>rows</code></td>
+<td>294439</td>
+<td>估算需要扫描的行数，行数较高表明查询范围较大。</td>
+</tr>
+<tr>
+<td><code>filtered</code></td>
+<td>10.00</td>
+<td>查询条件的过滤率，表示约 10% 的行符合查询条件。</td>
+</tr>
+<tr>
+<td><code>Extra</code></td>
+<td>Using index condition; Using MRR; Using filesort</td>
+<td><strong>Using index condition</strong>：使用了索引下推优化。<br/><strong>Using MRR</strong>（多范围读取）：优化范围查询的 I&#x2F;O。<br/><strong>Using filesort</strong>：使用文件排序（可能带来性能影响）。</td>
+</tr>
+</tbody></table>
+<p>看这个执行计划，是走了索引的。仅是排序时使用了 <code>Using filesort</code>这个内存大户，所以看看能不能使用索引优化即可，先去掉<code>order by</code>看看。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line"> id,</span><br><span class="line"> #........此处省略<span class="number">10</span><span class="operator">+</span>字段</span><br><span class="line"> is_deleted </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line"> mk_questionnaire_answer </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line"> is_deleted <span class="operator">=</span> <span class="number">0</span> </span><br><span class="line"> <span class="keyword">AND</span> (</span><br><span class="line">   approve_status <span class="keyword">not</span> <span class="keyword">IN</span> (<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>)) </span><br><span class="line"> LIMIT <span class="number">10</span></span><br><span class="line"> #执行时间：<span class="number">0.3</span>s</span><br></pre></td></tr></table></figure>
+
+<p>从执行时间上看，绝对是排序打乱了索引的有序性，被迫把数据拉到<code>sort buffer</code>中重新计算了。换句话说，查询部分使用了索引，但排序部分没有走索引。</p>
+<p>看下这个表的index6索引有什么东西</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `mk_questionnaire_answer`  (</span><br><span class="line">  `id` <span class="type">bigint</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="operator">/</span><span class="operator">/</span>忽略部分创建表信息</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`) <span class="keyword">USING</span> BTREE,</span><br><span class="line">  <span class="operator">/</span><span class="operator">/</span>这里就是关键的index6</span><br><span class="line">  INDEX `index_6`(`approve_status`, `is_deleted`, `type`, `gmt_create`, `commit_date`) <span class="keyword">USING</span> BTREE</span><br><span class="line">) </span><br></pre></td></tr></table></figure>
+
+<h2 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h2><p>好吧。。。索引竟然不是按照最左前缀去加的，把索引换成严格的最左前缀匹配</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">INDEX `index_6`(`approve_status`, `commit_date`, `is_deleted`, `type`, `gmt_create`) <span class="keyword">USING</span> BTREE</span><br></pre></td></tr></table></figure>
+
+<p>再执行这个SQL看看，最后仅需要0.73s。<del>优化</del> <u>改BUG成功</u>，是的 就是这么的丝滑</p>
+<h2 id="再Explan执行计划分析"><a href="#再Explan执行计划分析" class="headerlink" title="再Explan执行计划分析"></a>再Explan执行计划分析</h2><p>最后再看下这个优化后的执行计划，<code>Extra</code>字段中提示不再使用<code>sort buffer</code>了，速度也快了起来</p>
+<table>
+<thead>
+<tr>
+<th><strong>列名</strong></th>
+<th><strong>值</strong></th>
+<th><strong>备注或说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>1</td>
+<td>查询的序列号，简单查询通常为 1。</td>
+</tr>
+<tr>
+<td><code>select_type</code></td>
+<td>SIMPLE</td>
+<td>查询类型，表示这是一个简单查询，没有子查询或联合查询。</td>
+</tr>
+<tr>
+<td><code>table</code></td>
+<td>mk_questionnaire_answer</td>
+<td>目标查询的表名。</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>range</td>
+<td>访问类型，<code>range</code><br/> 表示基于索引的范围扫描。</td>
+</tr>
+<tr>
+<td><code>possible_keys</code></td>
+<td>index_6</td>
+<td>查询可能用到的索引名称。</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td>index_6</td>
+<td>实际使用的索引名称。</td>
+</tr>
+<tr>
+<td><code>key_len</code></td>
+<td>2</td>
+<td>表示索引中实际参与查询的字段长度，单位为字节。</td>
+</tr>
+<tr>
+<td><code>rows</code></td>
+<td>294423</td>
+<td>估算需要扫描的行数，行数略微减少，可能因查询条件优化所致。</td>
+</tr>
+<tr>
+<td><code>filtered</code></td>
+<td>10.00</td>
+<td>查询条件的过滤率，表示约 10% 的行符合查询条件。</td>
+</tr>
+<tr>
+<td><code>Extra</code></td>
+<td>Using index condition</td>
+<td><strong>Using index condition</strong>：使用了索引下推优化。<br />文件排序 filesort 已优化掉，性能提升。</td>
+</tr>
+</tbody></table>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="为什么会慢？"><a href="#为什么会慢？" class="headerlink" title="为什么会慢？"></a>为什么会慢？</h2><p>简单理解就是要不要再次排序的问题，正常的<code>asc</code>、<code>desc</code> 排序，从索引结构上用不着单独进行排序。发生上边的<code>filesort</code>后，会出现索引检索数据几乎无意义的情况，数据会慢很多。</p>
+<p>上面情况是使用了两个字段同时进行参照排序，所以需要使用复合索引才能做到使用索引排列，前面<code>index6</code>虽然把字段都加上了，<u>因顺序不同，所以MySQL无法按照最左原则去匹配</u>，这时候我们只需要调换下索引顺序，等MySQL去重建索引就好了。</p>
+<blockquote>
+<p>小声BB：大家之后建索引还是要看一下顺序~~</p>
+</blockquote>
+<h2 id="什么是sort-buffer"><a href="#什么是sort-buffer" class="headerlink" title="什么是sort buffer?"></a>什么是sort buffer?</h2><p>mysql的排序用到了sort buffer，sort buffer是一个内存块。</p>
+<p>mysql会先取出需要排序的数据，然后把数据放入sort buffer，当所有数据都放入sort buffer或者sort buffer满了就开始排序，然后将排序好的结果返回给客户端。</p>
+<p>参数<code>sort_buffer_size</code>显示的就是sort buffer的大小。</p>
+<p>如果数据量超过sort buffer，那么就会通过磁盘临时文件辅助进行排序，如果数据量比较小，则可以直接在内存中进行。</p>
+<p>在内存中排序会使用<code>快排算法</code>，而通过磁盘临时文件则会使用<code>归并排序算法</code>。</p>
+<p>排序步骤可以分为以下几步：</p>
 <ol>
-<li>给订单号做分布式锁，防止单订单号重复提交，也就是单订单号串行化处理</li>
-<li>这段代码核心就是需要得到insert的id，后修改造成的。 可以改造为不需要数据库返回id，使用雪花等id的分配方式，这样还可以减少一次修改</li>
+<li>取出select的数据存入sort buffer。</li>
+<li>在sort buffer中进行快排或者归并排序算法。</li>
+<li>如果有limit按照limit取相应的结果集进行返回。</li>
+</ol>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><ol>
+<li><a class="link"   target="_blank" rel="noopener" href="https://blog.csdn.net/zhoujianhui008/article/details/142258058" >MySQL 查询性能优化：处理“Using index condition； Using temporary； Using filesort”-CSDN博客<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://juejin.cn/post/7144911491454468103" >https://juejin.cn/post/7144911491454468103<i class="fas fa-external-link-alt"></i></a></li>
 </ol>
 
                     
@@ -379,19 +473,11 @@
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Arthas/">Arthas</a>
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a>
-                                    </li>
-                                
-                                    <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%B9%82%E7%AD%89%E6%80%A7/">幂等性</a>
-                                    </li>
-                                
-                                    <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E6%AD%BB%E9%94%81/">死锁</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E6%85%A2%E6%9F%A5%E8%AF%A2/">慢查询</a>
                                     </li>
                                 
                             </ul>
@@ -407,31 +493,15 @@
                 
                     <div class="post-nav border-box">
                         
-                            <div class="prev-post">
-                                <a class="prev"
-                                   rel="prev"
-                                   href="/2025/03/18/26/"
-                                   title="Using filesort 还是Using index condition？"
-                                >
-                                    <span class="left arrow-icon flex-center">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </span>
-                                    <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">Using filesort 还是Using index condition？</span>
-                                        <span class="post-nav-item">上一篇</span>
-                                    </span>
-                                </a>
-                            </div>
-                        
                         
                             <div class="next-post">
                                 <a class="next"
                                    rel="next"
-                                   href="/2024/11/10/24/"
-                                   title="状态设计模式的实践"
+                                   href="/2025/03/01/25/"
+                                   title="insert SQL并发插入导致的阻塞问题"
                                 >
                                     <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">状态设计模式的实践</span>
+                                        <span class="post-nav-title-item text-ellipsis">insert SQL并发插入导致的阻塞问题</span>
                                         <span class="post-nav-item">下一篇</span>
                                     </span>
                                     <span class="right arrow-icon flex-center">
@@ -543,7 +613,7 @@
             <div class="pc-post-toc right-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-text">分析表结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BMySQL%E7%8A%B6%E6%80%81"><span class="nav-text">查看MySQL状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%A0%81-%E5%88%86%E6%9E%90%E8%B0%83%E7%94%A8%E9%93%BE"><span class="nav-text">查看代码,分析调用链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill%E6%8E%89%EF%BC%8C%E8%AE%A9%E4%B8%9A%E5%8A%A1%E6%AD%A3%E5%B8%B8%E8%BF%90%E8%BD%AC"><span class="nav-text">kill掉，让业务正常运转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E4%BB%A3%E7%A0%81"><span class="nav-text">改造代码</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E7%AF%87"><span class="nav-text">开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL"><span class="nav-text">SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Explan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">Explan执行计划分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%8DExplan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">再Explan执行计划分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%85%A2%EF%BC%9F"><span class="nav-text">为什么会慢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFsort-buffer"><span class="nav-text">什么是sort buffer?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
     </div>
 </div>
 
@@ -712,7 +782,7 @@
             <div class="tablet-post-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-text">分析表结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BMySQL%E7%8A%B6%E6%80%81"><span class="nav-text">查看MySQL状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%A0%81-%E5%88%86%E6%9E%90%E8%B0%83%E7%94%A8%E9%93%BE"><span class="nav-text">查看代码,分析调用链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill%E6%8E%89%EF%BC%8C%E8%AE%A9%E4%B8%9A%E5%8A%A1%E6%AD%A3%E5%B8%B8%E8%BF%90%E8%BD%AC"><span class="nav-text">kill掉，让业务正常运转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E4%BB%A3%E7%A0%81"><span class="nav-text">改造代码</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E7%AF%87"><span class="nav-text">开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL"><span class="nav-text">SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Explan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">Explan执行计划分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%8DExplan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">再Explan执行计划分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%85%A2%EF%BC%9F"><span class="nav-text">为什么会慢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFsort-buffer"><span class="nav-text">什么是sort buffer?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
     </div>
 </div>
 
