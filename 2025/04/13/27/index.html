@@ -9,7 +9,7 @@
     
     <title>
         
-            Using filesort 还是Using index condition？ |
+            FastThreadLocal是不是真的快？ |
         
         小轲博客
     </title>
@@ -224,7 +224,7 @@
             <div class="post-content-bottom border-box">
                 
                     <div class="post-title">
-                        Using filesort 还是Using index condition？
+                        FastThreadLocal是不是真的快？
                     </div>
                 
 
@@ -250,12 +250,12 @@
         
             <span class="meta-info-item post-create-date">
                 <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
-                <span class="datetime">2025-03-18 13:31:08</span>
+                <span class="datetime">2025-04-13 11:31:08</span>
             </span>
 
             <span class="meta-info-item post-update-date">
                 <i class="icon fa-solid fa-file-pen"></i>&nbsp;
-                <span class="datetime" data-updated="Thu Mar 20 2025 22:01:04 GMT+0800">2025-03-20 22:01:04</span>
+                <span class="datetime" data-updated="Sun Apr 13 2025 12:31:26 GMT+0800">2025-04-13 12:31:26</span>
             </span>
         
 
@@ -265,13 +265,16 @@
             <span class="post-tag meta-info-item border-box">
                 <ul class="post-tag-ul">
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/MySQL/">MySQL</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Java/">Java</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Arthas/">Arthas</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E6%85%A2%E6%9F%A5%E8%AF%A2/">慢查询</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/ThreadLocal/">ThreadLocal</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/FastThreadLocal/">FastThreadLocal</a></li>
                         
                     
                 </ul>
@@ -296,167 +299,142 @@
                     
 
                     
-                         <h1 id="开篇"><a href="#开篇" class="headerlink" title="开篇"></a>开篇</h1><blockquote>
-<p>是一个弱智的操作产生了下面的分析，如果一会最后忍不住喷还是先行<code>ctrl+w</code>为上</p>
-</blockquote>
-<p>在看运营提的需求池时，发现有一个列表接口检索过慢。但实际未使用任何条件检索，也就是说一个普通的百万级表，查询需要10s+，激起了我的好奇心</p>
-<p>在使用<code>Arthas</code>的<code>Trace</code>分析后，发现竟然是真的，原本以为是数据后处理过多的判断逻辑导致。。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">trace com.demo.modules.mk.service.impl.QuestionnaireAnswerServiceImpl page</span></span><br><span class="line"></span><br><span class="line">Press Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 90 ms, listenerId: 1</span><br><span class="line"></span><br><span class="line">`---ts=2025-03-19 16:08:45;thread_name=main-thread;id=1;is_daemon=false;priority=5;TCCL=sun.misc.Launcher$AppClassLoader@18b4aac2</span><br><span class="line">    `---[99960ms] com.demo.modules.mk.service.impl.QuestionnaireAnswerServiceImpl#page()</span><br><span class="line">        `---[91101ms] com.demo.modules.mk.service.dao.BaseDao#selectPage()</span><br></pre></td></tr></table></figure>
-
-<p><font style="color:rgb(64, 64, 64);">显然，慢查询是罪魁祸首。接下来深入分析具体原因。</font></p>
-<h1 id="分析过程"><a href="#分析过程" class="headerlink" title="分析过程"></a>分析过程</h1><h2 id="SQL"><a href="#SQL" class="headerlink" title="SQL"></a>SQL</h2><p>下面是具体执行出的SQL</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line"> id,</span><br><span class="line"> #........此处省略<span class="number">10</span><span class="operator">+</span>字段</span><br><span class="line"> is_deleted </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line"> mk_questionnaire_answer </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line"> is_deleted <span class="operator">=</span> <span class="number">0</span> </span><br><span class="line"> <span class="keyword">AND</span> (</span><br><span class="line">   approve_status <span class="keyword">not</span> <span class="keyword">IN</span> (<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>)) </span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span></span><br><span class="line"> approve_status <span class="keyword">ASC</span>,</span><br><span class="line"> commit_date <span class="keyword">ASC</span> </span><br><span class="line"> LIMIT <span class="number">10</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Explan执行计划分析"><a href="#Explan执行计划分析" class="headerlink" title="Explan执行计划分析"></a>Explan执行计划分析</h2><table>
-<thead>
-<tr>
-<th><strong>列名</strong></th>
-<th><strong>值</strong></th>
-<th><strong>备注或说明</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>id</code></td>
-<td>1</td>
-<td>查询的序列号，简单查询通常为 1。</td>
-</tr>
-<tr>
-<td><code>select_type</code></td>
-<td>SIMPLE</td>
-<td>查询类型，表示这是一个简单查询，没有子查询或联合查询。</td>
-</tr>
-<tr>
-<td><code>table</code></td>
-<td>mk_questionnaire_answer</td>
-<td>目标查询的表名。</td>
-</tr>
-<tr>
-<td><code>type</code></td>
-<td>range</td>
-<td>访问类型，<code>range</code><br/>表示基于索引的范围扫描。</td>
-</tr>
-<tr>
-<td><code>possible_keys</code></td>
-<td>index_6</td>
-<td>查询可能用到的索引名称。</td>
-</tr>
-<tr>
-<td><code>key</code></td>
-<td>index_6</td>
-<td>实际使用的索引名称。</td>
-</tr>
-<tr>
-<td><code>key_len</code></td>
-<td>2</td>
-<td>表示索引中实际参与查询的字段长度，单位为字节。</td>
-</tr>
-<tr>
-<td><code>rows</code></td>
-<td>294439</td>
-<td>估算需要扫描的行数，行数较高表明查询范围较大。</td>
-</tr>
-<tr>
-<td><code>filtered</code></td>
-<td>10.00</td>
-<td>查询条件的过滤率，表示约 10% 的行符合查询条件。</td>
-</tr>
-<tr>
-<td><code>Extra</code></td>
-<td>Using index condition; Using MRR; Using filesort</td>
-<td><strong>Using index condition</strong>：使用了索引下推优化。<br/><strong>Using MRR</strong>（多范围读取）：优化范围查询的 I&#x2F;O。<br/><strong>Using filesort</strong>：使用文件排序（可能带来性能影响）。</td>
-</tr>
-</tbody></table>
-<p>看这个执行计划，是走了索引的。仅是排序时使用了 <code>Using filesort</code>这个内存大户，所以看看能不能使用索引优化即可，先去掉<code>order by</code>看看。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line"> id,</span><br><span class="line"> #........此处省略<span class="number">10</span><span class="operator">+</span>字段</span><br><span class="line"> is_deleted </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line"> mk_questionnaire_answer </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line"> is_deleted <span class="operator">=</span> <span class="number">0</span> </span><br><span class="line"> <span class="keyword">AND</span> (</span><br><span class="line">   approve_status <span class="keyword">not</span> <span class="keyword">IN</span> (<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>)) </span><br><span class="line"> LIMIT <span class="number">10</span></span><br><span class="line"> #执行时间：<span class="number">0.3</span>s</span><br></pre></td></tr></table></figure>
-
-<p>从执行时间上看，绝对是排序打乱了索引的有序性，被迫把数据拉到<code>sort buffer</code>中重新计算了。换句话说，查询部分使用了索引，但排序部分没有走索引。</p>
-<p>看下这个表的index6索引有什么东西</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `mk_questionnaire_answer`  (</span><br><span class="line">  `id` <span class="type">bigint</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="operator">/</span><span class="operator">/</span>忽略部分创建表信息</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`) <span class="keyword">USING</span> BTREE,</span><br><span class="line">  <span class="operator">/</span><span class="operator">/</span>这里就是关键的index6</span><br><span class="line">  INDEX `index_6`(`approve_status`, `is_deleted`, `type`, `gmt_create`, `commit_date`) <span class="keyword">USING</span> BTREE</span><br><span class="line">) </span><br></pre></td></tr></table></figure>
-
-<h2 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h2><p>好吧。。。索引竟然不是按照最左前缀去加的，把索引换成严格的最左前缀匹配</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">INDEX `index_6`(`approve_status`, `commit_date`, `is_deleted`, `type`, `gmt_create`) <span class="keyword">USING</span> BTREE</span><br></pre></td></tr></table></figure>
-
-<p>再执行这个SQL看看，最后仅需要0.73s。<del>优化</del> <u>改BUG成功</u>，是的 就是这么的丝滑</p>
-<h2 id="再Explan执行计划分析"><a href="#再Explan执行计划分析" class="headerlink" title="再Explan执行计划分析"></a>再Explan执行计划分析</h2><p>最后再看下这个优化后的执行计划，<code>Extra</code>字段中提示不再使用<code>sort buffer</code>了，速度也快了起来</p>
-<table>
-<thead>
-<tr>
-<th><strong>列名</strong></th>
-<th><strong>值</strong></th>
-<th><strong>备注或说明</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>id</code></td>
-<td>1</td>
-<td>查询的序列号，简单查询通常为 1。</td>
-</tr>
-<tr>
-<td><code>select_type</code></td>
-<td>SIMPLE</td>
-<td>查询类型，表示这是一个简单查询，没有子查询或联合查询。</td>
-</tr>
-<tr>
-<td><code>table</code></td>
-<td>mk_questionnaire_answer</td>
-<td>目标查询的表名。</td>
-</tr>
-<tr>
-<td><code>type</code></td>
-<td>range</td>
-<td>访问类型，<code>range</code><br/> 表示基于索引的范围扫描。</td>
-</tr>
-<tr>
-<td><code>possible_keys</code></td>
-<td>index_6</td>
-<td>查询可能用到的索引名称。</td>
-</tr>
-<tr>
-<td><code>key</code></td>
-<td>index_6</td>
-<td>实际使用的索引名称。</td>
-</tr>
-<tr>
-<td><code>key_len</code></td>
-<td>2</td>
-<td>表示索引中实际参与查询的字段长度，单位为字节。</td>
-</tr>
-<tr>
-<td><code>rows</code></td>
-<td>294423</td>
-<td>估算需要扫描的行数，行数略微减少，可能因查询条件优化所致。</td>
-</tr>
-<tr>
-<td><code>filtered</code></td>
-<td>10.00</td>
-<td>查询条件的过滤率，表示约 10% 的行符合查询条件。</td>
-</tr>
-<tr>
-<td><code>Extra</code></td>
-<td>Using index condition</td>
-<td><strong>Using index condition</strong>：使用了索引下推优化。<br />文件排序 filesort 已优化掉，性能提升。</td>
-</tr>
-</tbody></table>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="为什么会慢？"><a href="#为什么会慢？" class="headerlink" title="为什么会慢？"></a>为什么会慢？</h2><p>简单理解就是要不要再次排序的问题，正常的<code>asc</code>、<code>desc</code> 排序，从索引结构上用不着单独进行排序。发生上边的<code>filesort</code>后，会出现索引检索数据几乎无意义的情况，数据会慢很多。</p>
-<p>上面情况是使用了两个字段同时进行参照排序，所以需要使用复合索引才能做到使用索引排列，前面<code>index6</code>虽然把字段都加上了，<u>因顺序不同，所以MySQL无法按照最左原则去匹配</u>，这时候我们只需要调换下索引顺序，等MySQL去重建索引就好了。</p>
+                         <h1 id="什么是FastThreadLocal？"><a href="#什么是FastThreadLocal？" class="headerlink" title="什么是FastThreadLocal？"></a>什么是FastThreadLocal？</h1><p><font style="color:rgb(59, 67, 81);">FastThreadLocal是Netty中对JDK提供的ThreadLocal优化改造版本，从名称上来看，它应该比ThreadLocal更快了，以应对Netty处理并发量大、数据吞吐量大的场景。</font></p>
+<p>FastThreadLocal 是 ThreadLocal 的一种特殊变体，只有在使用 FastThreadLocalThread 线程类访问时，才能获得更高的访问性能。  </p>
 <blockquote>
-<p>小声BB：大家之后建索引还是要看一下顺序~~</p>
+<p> 体现了程序员的一种极致“Geek精神”，连多循环几次都不愿意，必须做到最快。  </p>
 </blockquote>
-<h2 id="什么是sort-buffer"><a href="#什么是sort-buffer" class="headerlink" title="什么是sort buffer?"></a>什么是sort buffer?</h2><p>mysql的排序用到了sort buffer，sort buffer是一个内存块。</p>
-<p>mysql会先取出需要排序的数据，然后把数据放入sort buffer，当所有数据都放入sort buffer或者sort buffer满了就开始排序，然后将排序好的结果返回给客户端。</p>
-<p>参数<code>sort_buffer_size</code>显示的就是sort buffer的大小。</p>
-<p>如果数据量超过sort buffer，那么就会通过磁盘临时文件辅助进行排序，如果数据量比较小，则可以直接在内存中进行。</p>
-<p>在内存中排序会使用<code>快排算法</code>，而通过磁盘临时文件则会使用<code>归并排序算法</code>。</p>
-<p>排序步骤可以分为以下几步：</p>
-<ol>
-<li>取出select的数据存入sort buffer。</li>
-<li>在sort buffer中进行快排或者归并排序算法。</li>
-<li>如果有limit按照limit取相应的结果集进行返回。</li>
-</ol>
-<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><ol>
-<li><a class="link"   target="_blank" rel="noopener" href="https://blog.csdn.net/zhoujianhui008/article/details/142258058" >MySQL 查询性能优化：处理“Using index condition； Using temporary； Using filesort”-CSDN博客<i class="fas fa-external-link-alt"></i></a></li>
-<li><a class="link"   target="_blank" rel="noopener" href="https://juejin.cn/post/7144911491454468103" >https://juejin.cn/post/7144911491454468103<i class="fas fa-external-link-alt"></i></a></li>
-</ol>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/Udif2XwnT3tGOYy.png"
+                        alt="1.png"
+                 ></p>
+<p><font style="color:rgb(25, 27, 31);">概括来讲，FastThreadLocal快的核心其实是一个index。有了这个index，在get和remove方法的时候，就直接通过下标获取。可以看到下图中的get方法，拿对象是直接通过index获取的。</font></p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a><font style="color:rgb(25, 27, 31);">源码分析</font></h1><p>源码分析从三个地方进行分析,new FastThreadLocal() 、fastThreadLocal.get()、fastThreadLocal.set(value)来进行分析，从增删改查来看它的实现。</p>
+<h2 id="new-分配当前对象的index索引"><a href="#new-分配当前对象的index索引" class="headerlink" title="new() -分配当前对象的index索引"></a>new() -分配当前对象的index索引</h2><h3 id="FastThreadLocal-函数"><a href="#FastThreadLocal-函数" class="headerlink" title="FastThreadLocal() 函数"></a>FastThreadLocal() 函数</h3><p>其实这一步，是为这个对象申请<code>InternalThreadLocalMap</code><font style="color:#080808;background-color:#ffffff;">索引的过程，相当于注册当前对象，得到一个唯一id</font></p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/1iErUCbatm9spnz.png"
+                        alt="2.png"
+                 ></p>
+<h3 id="nextVariableIndex-申请索引"><a href="#nextVariableIndex-申请索引" class="headerlink" title="nextVariableIndex() 申请索引"></a><font style="color:#080808;background-color:#ffffff;">nextVariableIndex() 申请索引</font></h3><p>单线程中都存在一个InternalThreadLocalMap实例，用来区分线程变量。这一步跟ThreadLocal很像。</p>
+<p>但是要保证绝对的线程安全，所以使用了CAS来进行比较并交换，保证了可靠性</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/aONgMFeLn6dzSqB.png"
+                        alt="3.png"
+                 ></p>
+<h2 id="get-从FastThreadLocal中获取值"><a href="#get-从FastThreadLocal中获取值" class="headerlink" title="get() - 从FastThreadLocal中获取值"></a><font style="color:rgb(25, 27, 31);">get() - 从FastThreadLocal中获取值</font></h2><p>get这一步看起来也比较简单，就是在new这个对象时获得这个索引，去用这个index查找数据</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/gYtoVGrkUR3faus.png"
+                        alt="4.png"
+                 ></p>
+<h3 id="InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap"><a href="#InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap" class="headerlink" title="InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap"></a>InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</h3><p> 这一步存在一个关键限制：必须使用 Netty 封装的线程类，普通 Thread 无法使用 <code>FastThreadLocal </code> </p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/XgtjeEWyICQq9K5.png"
+                        alt="5.png"
+                 ></p>
+<h3 id="InternalThreadLocalMap-indexedVariable-通过下标索引读取内容"><a href="#InternalThreadLocalMap-indexedVariable-通过下标索引读取内容" class="headerlink" title="InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容"></a>InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</h3><p>这一步其实更明了，就是通过先前new对象出来的index，来get这个InternalThreadLocalMap中数组的值，O(1)的时间复杂度即可</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/Tr7BGPeIquAhpxU.png"
+                        alt="6.png"
+                 ></p>
+<h2 id="set-按照分配索引，放入该线程的数组中"><a href="#set-按照分配索引，放入该线程的数组中" class="headerlink" title="set() 按照分配索引，放入该线程的数组中"></a><font style="color:rgb(25, 27, 31);">set() 按照分配索引，放入该线程的数组中</font></h2><p>set 操作其实就是根据分配好的 index，将值存入当前线程的数组中。下面的remove（）逻辑其实是netty自己的清理逻辑，不需要我们处理</p>
+<h3 id=""><a href="#" class="headerlink" title=""></a><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/cK9Ft8S6faM5CnO.png"
+                        alt="7.png"
+                 ><font style="color:rgb(25, 27, 31);"></h3><p></font><font style="color:#080808;background-color:#ffffff;">setKnownNotUnset(threadLocalMap, value) 往数组中放入值</font><br>这一步其实就是拿当前被分配到的index，去调用当前线程内<code>InternalThreadLocalMap</code>的数组直接赋值。</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/yKxeq97PUGboFdE.png"
+                        alt="8.png"
+                 ></p>
+<h3 id="threadLocalMap-setIndexedVariable-index-value-真正执行的地方"><a href="#threadLocalMap-setIndexedVariable-index-value-真正执行的地方" class="headerlink" title="threadLocalMap.setIndexedVariable(index, value) 真正执行的地方"></a><font style="color:#080808;background-color:#ffffff;">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</font></h3><p>到这，进行一个可能会有old值替换过程，这一步是netty自己的业务逻辑，我们无需关注。</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/04/13/yoXjdiHrbTYhtVP.png"
+                        alt="9.png"
+                 ></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="为啥说是个噱头？"><a href="#为啥说是个噱头？" class="headerlink" title="为啥说是个噱头？"></a>为啥说是个噱头？</h2><ul>
+<li>✅ 在 Netty 这种 IO 框架里，它是真的快。</li>
+<li>❌ 自己搞不合适</li>
+<li>为什么？<ul>
+<li>线程是自己控制的（全用 <code>FastThreadLocalThread</code>）</li>
+<li>用到的变量多，访问频率高</li>
+<li>线程复用频繁，GC 敏感</li>
+</ul>
+</li>
+</ul>
+<h2 id="是否真的变快了"><a href="#是否真的变快了" class="headerlink" title="是否真的变快了?"></a>是否真的变快了?</h2><ul>
+<li>变快肯定是变快的，因为并不需要有ThreadLocalMap的线性探测，直接O(1)就可以取到数据</li>
+<li>实现方式总结一下就是<ul>
+<li>每个 <code>FastThreadLocal</code> 实例会分配一个全局唯一的 index（自增）</li>
+<li>每个线程维护一个 <code>InternalThreadLocalMap</code>，本质上是个 <code>Object[]</code></li>
+<li>每个变量都直接按 index 存到 <code>values[index]</code> 上</li>
+</ul>
+</li>
+<li>老的实现方式就是<ul>
+<li>每一个线程都有一个ThreadLocalMap</li>
+<li>在get、set时，这个Map就根据当前key来往map中放入值<ul>
+<li>当前key就是这个<code>ThreadLocal</code>对象，例<code>UserThreadLocal</code>、<code>TraceThreadLocal</code></li>
+</ul>
+</li>
+<li>如果遇到hash冲突了怎么办<ul>
+<li>会进行线性查找，这也就是netty不满意的地方，怕万一线程中有几十个ThreadLocal的情况下，会有hash撞槽的可能，带来额外的性能开销。（其实就是多循环几次）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>本质上，就是一个是数组，一个是map。一个遇到冲突会线性的从头找到尾，另一个天然隔绝了这种问题的存在。只是用起来比较费劲，需要是专门的<code>FastThreadLocalThread</code>对象</li>
+</ul>
+<h2 id="是否真的存在自动清理？"><a href="#是否真的存在自动清理？" class="headerlink" title="是否真的存在自动清理？"></a>是否真的存在自动清理？</h2><p>没有，在Netty框架内确实实现了自动清理，但是我们自己使用的话还是老样子要调用<code>remove()</code>函数</p>
+<h2 id="对照"><a href="#对照" class="headerlink" title="对照"></a>对照</h2><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>ThreadLocal</th>
+<th>FastThreadLocal</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存储结构</td>
+<td>ThreadLocalMap（哈希表）</td>
+<td>数组（按 index 存取）</td>
+</tr>
+<tr>
+<td>是否有冲突</td>
+<td>有，线性探测</td>
+<td>无，直接数组定位</td>
+</tr>
+<tr>
+<td>清理机制</td>
+<td>没有自动清理</td>
+<td>支持 removeAll()，但需手动调用</td>
+</tr>
+<tr>
+<td>性能（变量多时）</td>
+<td>探测成本高，容易卡</td>
+<td>始终 O(1)，访问极快</td>
+</tr>
+<tr>
+<td>使用门槛</td>
+<td>低，开箱即用</td>
+<td>高，需要特殊线程配合</td>
+</tr>
+</tbody></table>
 
                     
                 </div>
@@ -469,15 +447,19 @@
                             <ul class="post-tags-box border-box">
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/MySQL/">MySQL</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Java/">Java</a>
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Arthas/">Arthas</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E6%85%A2%E6%9F%A5%E8%AF%A2/">慢查询</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/ThreadLocal/">ThreadLocal</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/FastThreadLocal/">FastThreadLocal</a>
                                     </li>
                                 
                             </ul>
@@ -493,31 +475,15 @@
                 
                     <div class="post-nav border-box">
                         
-                            <div class="prev-post">
-                                <a class="prev"
-                                   rel="prev"
-                                   href="/2025/04/13/27/"
-                                   title="FastThreadLocal是不是真的快？"
-                                >
-                                    <span class="left arrow-icon flex-center">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </span>
-                                    <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">FastThreadLocal是不是真的快？</span>
-                                        <span class="post-nav-item">上一篇</span>
-                                    </span>
-                                </a>
-                            </div>
-                        
                         
                             <div class="next-post">
                                 <a class="next"
                                    rel="next"
-                                   href="/2025/03/01/25/"
-                                   title="insert SQL并发插入导致的阻塞问题"
+                                   href="/2025/03/18/26/"
+                                   title="Using filesort 还是Using index condition？"
                                 >
                                     <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">insert SQL并发插入导致的阻塞问题</span>
+                                        <span class="post-nav-title-item text-ellipsis">Using filesort 还是Using index condition？</span>
                                         <span class="post-nav-item">下一篇</span>
                                     </span>
                                     <span class="right arrow-icon flex-center">
@@ -629,7 +595,7 @@
             <div class="pc-post-toc right-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E7%AF%87"><span class="nav-text">开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL"><span class="nav-text">SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Explan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">Explan执行计划分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%8DExplan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">再Explan执行计划分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%85%A2%EF%BC%9F"><span class="nav-text">为什么会慢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFsort-buffer"><span class="nav-text">什么是sort buffer?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-text"></span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
     </div>
 </div>
 
@@ -798,7 +764,7 @@
             <div class="tablet-post-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E7%AF%87"><span class="nav-text">开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL"><span class="nav-text">SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Explan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">Explan执行计划分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="nav-text">解决问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%8DExplan%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-text">再Explan执行计划分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E6%85%A2%EF%BC%9F"><span class="nav-text">为什么会慢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFsort-buffer"><span class="nav-text">什么是sort buffer?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-text"></span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
     </div>
 </div>
 
