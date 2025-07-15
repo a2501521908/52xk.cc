@@ -9,7 +9,7 @@
     
     <title>
         
-            FastThreadLocal是不是真的快？ |
+            Nginx http_secure_link模块使用 |
         
         小轲博客
     </title>
@@ -224,7 +224,7 @@
             <div class="post-content-bottom border-box">
                 
                     <div class="post-title">
-                        FastThreadLocal是不是真的快？
+                        Nginx http_secure_link模块使用
                     </div>
                 
 
@@ -250,12 +250,12 @@
         
             <span class="meta-info-item post-create-date">
                 <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
-                <span class="datetime">2025-04-13 11:31:08</span>
+                <span class="datetime">2025-07-15 12:31:08</span>
             </span>
 
             <span class="meta-info-item post-update-date">
                 <i class="icon fa-solid fa-file-pen"></i>&nbsp;
-                <span class="datetime" data-updated="Sun Apr 13 2025 22:03:59 GMT+0800">2025-04-13 22:03:59</span>
+                <span class="datetime" data-updated="Tue Jul 15 2025 16:24:47 GMT+0800">2025-07-15 16:24:47</span>
             </span>
         
 
@@ -265,16 +265,13 @@
             <span class="post-tag meta-info-item border-box">
                 <ul class="post-tag-ul">
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Java/">Java</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Nginx/">Nginx</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/GO/">GO</a></li>
                         
                     
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/ThreadLocal/">ThreadLocal</a></li>
-                        
-                    
-                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/FastThreadLocal/">FastThreadLocal</a></li>
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E9%98%B2%E7%9B%97%E9%93%BE/">防盗链</a></li>
                         
                     
                 </ul>
@@ -299,142 +296,47 @@
                     
 
                     
-                         <h1 id="什么是FastThreadLocal？"><a href="#什么是FastThreadLocal？" class="headerlink" title="什么是FastThreadLocal？"></a>什么是FastThreadLocal？</h1><p><font style="color:rgb(59, 67, 81);">FastThreadLocal是Netty中对JDK提供的ThreadLocal优化改造版本，从名称上来看，它应该比ThreadLocal更快了，以应对Netty处理并发量大、数据吞吐量大的场景。</font></p>
-<p>FastThreadLocal 是 ThreadLocal 的一种特殊变体，只有在使用 FastThreadLocalThread 线程类访问时，才能获得更高的访问性能。  </p>
-<blockquote>
-<p> 体现了程序员的一种极致“Geek精神”，连多循环几次都不愿意，必须做到最快。  </p>
-</blockquote>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/Udif2XwnT3tGOYy.png"
-                        alt="1.png"
-                 ></p>
-<p><font style="color:rgb(25, 27, 31);">概括来讲，FastThreadLocal快的核心其实是一个index。有了这个index，在get和remove方法的时候，就直接通过下标获取。可以看到下图中的get方法，拿对象是直接通过index获取的。</font></p>
-<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a><font style="color:rgb(25, 27, 31);">源码分析</font></h1><p>源码分析从三个地方进行分析,new FastThreadLocal() 、fastThreadLocal.get()、fastThreadLocal.set(value)来进行分析，从增删改查来看它的实现。</p>
-<h2 id="new-分配当前对象的index索引"><a href="#new-分配当前对象的index索引" class="headerlink" title="new() -分配当前对象的index索引"></a>new() -分配当前对象的index索引</h2><h3 id="FastThreadLocal-函数"><a href="#FastThreadLocal-函数" class="headerlink" title="FastThreadLocal() 函数"></a>FastThreadLocal() 函数</h3><p>其实这一步，是为这个对象申请<code>InternalThreadLocalMap</code><font style="color:#080808;background-color:#ffffff;">索引的过程，相当于注册当前对象，得到一个唯一id</font></p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/1iErUCbatm9spnz.png"
-                        alt="2.png"
-                 ></p>
-<h3 id="nextVariableIndex-申请索引"><a href="#nextVariableIndex-申请索引" class="headerlink" title="nextVariableIndex() 申请索引"></a><font style="color:#080808;background-color:#ffffff;">nextVariableIndex() 申请索引</font></h3><p>单线程中都存在一个InternalThreadLocalMap实例，用来区分线程变量。这一步跟ThreadLocal很像。</p>
-<p>但是要保证绝对的线程安全，所以使用了CAS来进行比较并交换，保证了可靠性</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/aONgMFeLn6dzSqB.png"
-                        alt="3.png"
-                 ></p>
-<h2 id="get-从FastThreadLocal中获取值"><a href="#get-从FastThreadLocal中获取值" class="headerlink" title="get() - 从FastThreadLocal中获取值"></a><font style="color:rgb(25, 27, 31);">get() - 从FastThreadLocal中获取值</font></h2><p>get这一步看起来也比较简单，就是在new这个对象时获得这个索引，去用这个index查找数据</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/gYtoVGrkUR3faus.png"
-                        alt="4.png"
-                 ></p>
-<h3 id="InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap"><a href="#InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap" class="headerlink" title="InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap"></a>InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</h3><p> 这一步存在一个关键限制：必须使用 Netty 封装的线程类，普通 Thread 无法使用 <code>FastThreadLocal </code> </p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/XgtjeEWyICQq9K5.png"
-                        alt="5.png"
-                 ></p>
-<h3 id="InternalThreadLocalMap-indexedVariable-通过下标索引读取内容"><a href="#InternalThreadLocalMap-indexedVariable-通过下标索引读取内容" class="headerlink" title="InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容"></a>InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</h3><p>这一步其实更明了，就是通过先前new对象出来的index，来get这个InternalThreadLocalMap中数组的值，O(1)的时间复杂度即可</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/Tr7BGPeIquAhpxU.png"
-                        alt="6.png"
-                 ></p>
-<h2 id="set-按照分配索引，放入该线程的数组中"><a href="#set-按照分配索引，放入该线程的数组中" class="headerlink" title="set() 按照分配索引，放入该线程的数组中"></a><font style="color:rgb(25, 27, 31);">set() 按照分配索引，放入该线程的数组中</font></h2><p>set 操作其实就是根据分配好的 index，将值存入当前线程的数组中。下面的remove（）逻辑其实是netty自己的清理逻辑，不需要我们处理</p>
-<h3 id="setKnownNotUnset-threadLocalMap-value-往数组中放入值"><a href="#setKnownNotUnset-threadLocalMap-value-往数组中放入值" class="headerlink" title="setKnownNotUnset(threadLocalMap, value) 往数组中放入值"></a><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/cK9Ft8S6faM5CnO.png"
-                        alt="7.png"
-                 >setKnownNotUnset(threadLocalMap, value) 往数组中放入值</h3><p>这一步其实就是拿当前被分配到的index，去调用当前线程内<code>InternalThreadLocalMap</code>的数组直接赋值。</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/yKxeq97PUGboFdE.png"
-                        alt="8.png"
-                 ></p>
-<h3 id="threadLocalMap-setIndexedVariable-index-value-真正执行的地方"><a href="#threadLocalMap-setIndexedVariable-index-value-真正执行的地方" class="headerlink" title="threadLocalMap.setIndexedVariable(index, value) 真正执行的地方"></a><font style="color:#080808;background-color:#ffffff;">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</font></h3><p>到这，进行一个可能会有old值替换过程，这一步是netty自己的业务逻辑，我们无需关注。</p>
-<p><img  
-                       lazyload
-                       alt="image"
-                       data-src="https://s2.loli.net/2025/04/13/yoXjdiHrbTYhtVP.png"
-                        alt="9.png"
-                 ></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="为啥说是个噱头？"><a href="#为啥说是个噱头？" class="headerlink" title="为啥说是个噱头？"></a>为啥说是个噱头？</h2><ul>
-<li>✅ 在 Netty 这种 IO 框架里，它是真的快。</li>
-<li>❌ 自己搞不合适</li>
-<li>为什么？<ul>
-<li>线程是自己控制的（全用 <code>FastThreadLocalThread</code>）</li>
-<li>用到的变量多，访问频率高</li>
-<li>线程复用频繁，GC 敏感</li>
-</ul>
+                         <h1 id="什么是http-secure-link模块？"><a href="#什么是http-secure-link模块？" class="headerlink" title="什么是http_secure_link模块？"></a>什么是http_secure_link模块？</h1><p>secure_link机制简单来说就是来保护你的http资源被受控访问的，类似于防盗链、http授权访问的Token。假如你有一些私有化的、需验证身份才能访问的资源，就可以使用这个机制。</p>
+<p>下面是一个简单的流程，分为两步</p>
+<ol>
+<li>请求授权：携带目标uri，在后端鉴权通过后计算签名。<ol>
+<li>签名的规则通常是<code>uri+secret+expire</code>来生成</li>
+</ol>
 </li>
-</ul>
-<h2 id="是否真的变快了"><a href="#是否真的变快了" class="headerlink" title="是否真的变快了?"></a>是否真的变快了?</h2><ul>
-<li>变快肯定是变快的，因为并不需要有ThreadLocalMap的线性探测，直接O(1)就可以取到数据</li>
-<li>实现方式总结一下就是<ul>
-<li>每个 <code>FastThreadLocal</code> 实例会分配一个全局唯一的 index（自增）</li>
-<li>每个线程维护一个 <code>InternalThreadLocalMap</code>，本质上是个 <code>Object[]</code></li>
-<li>每个变量都直接按 index 存到 <code>values[index]</code> 上</li>
-</ul>
+<li>携签名访问资源： 携带<code>url?sign=xxxx&amp;expire=1731313131</code>来访问<ol>
+<li>参数说明：<ol>
+<li>sign携带API返回的签名</li>
+<li>expire 过期时间戳</li>
+</ol>
 </li>
-<li>老的实现方式就是<ul>
-<li>每一个线程都有一个ThreadLocalMap</li>
-<li>在get、set时，这个Map就根据当前key来往map中放入值<ul>
-<li>当前key就是这个<code>ThreadLocal</code>对象，例<code>UserThreadLocal</code>、<code>TraceThreadLocal</code></li>
-</ul>
+</ol>
 </li>
-<li>如果遇到hash冲突了怎么办<ul>
-<li>会进行线性查找，这也就是netty不满意的地方，怕万一线程中有几十个ThreadLocal的情况下，会有hash撞槽的可能，带来额外的性能开销。（其实就是多循环几次）</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>本质上，就是一个是数组，一个是map。一个遇到冲突会线性的从头找到尾，另一个天然隔绝了这种问题的存在。只是用起来比较费劲，需要是专门的<code>FastThreadLocalThread</code>对象</li>
-</ul>
-<h2 id="是否真的存在自动清理？"><a href="#是否真的存在自动清理？" class="headerlink" title="是否真的存在自动清理？"></a>是否真的存在自动清理？</h2><p>没有，在Netty框架内确实实现了自动清理，但是我们自己使用的话还是老样子要调用<code>remove()</code>函数</p>
-<h2 id="对照"><a href="#对照" class="headerlink" title="对照"></a>对照</h2><table>
-<thead>
-<tr>
-<th>对比点</th>
-<th>ThreadLocal</th>
-<th>FastThreadLocal</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>存储结构</td>
-<td>ThreadLocalMap（哈希表）</td>
-<td>数组（按 index 存取）</td>
-</tr>
-<tr>
-<td>是否有冲突</td>
-<td>有，线性探测</td>
-<td>无，直接数组定位</td>
-</tr>
-<tr>
-<td>清理机制</td>
-<td>没有自动清理</td>
-<td>支持 removeAll()，但需手动调用</td>
-</tr>
-<tr>
-<td>性能（变量多时）</td>
-<td>探测成本高，容易卡</td>
-<td>始终 O(1)，访问极快</td>
-</tr>
-<tr>
-<td>使用门槛</td>
-<td>低，开箱即用</td>
-<td>高，需要特殊线程配合</td>
-</tr>
-</tbody></table>
+</ol>
+<p>下面是简单的流程图</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2025/07/15/3ogvjupV9seP8Uc.png"
+                        alt="流程图"
+                 ></p>
+<h1 id="核心代码"><a href="#核心代码" class="headerlink" title="核心代码"></a>核心代码</h1><p>代码涉及两个部分，一个是nginx网关部分。另一部分则为核心的API。</p>
+<h2 id="API"><a href="#API" class="headerlink" title="API"></a>API</h2><p>代码使用Go语言，出入参非常简单。</p>
+<p>注意：sign在全链路下是无状态的，也就是泄漏后依然会有风险，推荐expire时间设置为分钟级，过期后拒绝请求可再签来实现安全性。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> service</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;crypto/md5&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/base64&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;strings&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// GenerateSignature 生成URI访问签名</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 参数:</span></span><br><span class="line"><span class="comment">//   uri    - 请求的URI路径</span></span><br><span class="line"><span class="comment">//   expire - 签名过期时间戳（秒）</span></span><br><span class="line"><span class="comment">//   secret - 签名密钥</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 返回值:</span></span><br><span class="line"><span class="comment">//   string - 生成的签名字符串</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 实现原理:</span></span><br><span class="line"><span class="comment">// 1. 按照Nginx兼容格式拼接expire、uri和secret</span></span><br><span class="line"><span class="comment">// 2. 对拼接字符串进行MD5哈希计算</span></span><br><span class="line"><span class="comment">// 3. 哈希结果进行Base64 URL编码并去除末尾等号</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GenerateSignature</span><span class="params">(uri <span class="type">string</span>, expire <span class="type">int64</span>, secret <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">	<span class="comment">// 严格匹配 Nginx 的字符串格式：$&#123;expire&#125;$&#123;</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">//uri&#125; $&#123;secret&#125;</span></span><br><span class="line">	raw := fmt.Sprintf(<span class="string">&quot;%d%s %s&quot;</span>, expire, uri, secret)</span><br><span class="line">	hash := md5.Sum([]<span class="type">byte</span>(raw))</span><br><span class="line">	<span class="comment">// Base64 编码 + 替换特殊字符（与 Nginx 兼容）</span></span><br><span class="line">	<span class="keyword">return</span> strings.TrimRight(</span><br><span class="line">		base64.URLEncoding.EncodeToString(hash[:]), <span class="string">&quot;=&quot;</span>,</span><br><span class="line">	)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h2><p>nginx无需任何插件即可实现该功能，而且<code>http_secure_link</code>是nginx的<code>worker</code>内特性。还是无状态check，所以不存在太多的性能问题，不会拖慢nginx的响应速度。</p>
+<ol>
+<li><code>secret</code> 必须与 <code>GenerateSignature</code> 函数中的secret参数完全一致，否则无法过签名</li>
+</ol>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_processes</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">1024</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">include</span>       mime.types;</span><br><span class="line">    <span class="attribute">default_type</span>  application/octet-stream;</span><br><span class="line">    <span class="attribute">sendfile</span>      <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">keepalive_timeout</span> <span class="number">65</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> localhost;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /protected/ &#123;</span><br><span class="line">            <span class="attribute">secure_link</span> <span class="variable">$arg_st</span>,<span class="variable">$arg_exp</span>;</span><br><span class="line">            <span class="comment"># secret 记得更换 </span></span><br><span class="line">            <span class="attribute">secure_link_md5</span> <span class="string">&quot;<span class="variable">$arg_exp</span><span class="variable">$uri</span> secret&quot;</span>;</span><br><span class="line"></span><br><span class="line">            <span class="attribute">if</span> (<span class="variable">$secure_link</span> = <span class="string">&quot;&quot;</span>) &#123;</span><br><span class="line">                <span class="attribute">return</span> <span class="number">403</span>; <span class="comment"># Bad hash</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="attribute">if</span> (<span class="variable">$secure_link</span> = <span class="string">&quot;0&quot;</span>) &#123;</span><br><span class="line">                <span class="attribute">return</span> <span class="number">410</span>; <span class="comment"># Expired</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 明确指定文件物理路径别名</span></span><br><span class="line">            <span class="attribute">alias</span> /usr/share/nginx/static/;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">root</span> /usr/share/nginx/html;</span><br><span class="line">            <span class="attribute">index</span> index.html;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该场景下可以实现部分api、static、html的保护访问，可以做到http访问保护。但是一定要注意时间问题，尽量保证泄露的风险最小。</p>
+<p>本例如有demo、技术支持需求，欢迎在下面评论～</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><ol>
+<li><a class="link"   target="_blank" rel="noopener" href="https://nginx.org/en/docs/http/ngx_http_secure_link_module.html" >https://nginx.org/en/docs/http/ngx_http_secure_link_module.html<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://nginx.ac.cn/en/docs/http/ngx_http_secure_link_module.html" >https://nginx.ac.cn/en/docs/http/ngx_http_secure_link_module.html<i class="fas fa-external-link-alt"></i></a></li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://www.cnblogs.com/panwenbin-logs/p/8728327.html" >https://www.cnblogs.com/panwenbin-logs/p/8728327.html<i class="fas fa-external-link-alt"></i></a></li>
+</ol>
 
                     
                 </div>
@@ -447,19 +349,15 @@
                             <ul class="post-tags-box border-box">
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Java/">Java</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Nginx/">Nginx</a>
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/GO/">GO</a>
                                     </li>
                                 
                                     <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/ThreadLocal/">ThreadLocal</a>
-                                    </li>
-                                
-                                    <li class="tag-item border-box">
-                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/FastThreadLocal/">FastThreadLocal</a>
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E9%98%B2%E7%9B%97%E9%93%BE/">防盗链</a>
                                     </li>
                                 
                             </ul>
@@ -475,31 +373,15 @@
                 
                     <div class="post-nav border-box">
                         
-                            <div class="prev-post">
-                                <a class="prev"
-                                   rel="prev"
-                                   href="/2025/07/15/28/"
-                                   title="Nginx http_secure_link模块使用"
-                                >
-                                    <span class="left arrow-icon flex-center">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </span>
-                                    <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">Nginx http_secure_link模块使用</span>
-                                        <span class="post-nav-item">上一篇</span>
-                                    </span>
-                                </a>
-                            </div>
-                        
                         
                             <div class="next-post">
                                 <a class="next"
                                    rel="next"
-                                   href="/2025/03/18/26/"
-                                   title="Using filesort 还是Using index condition？"
+                                   href="/2025/04/13/27/"
+                                   title="FastThreadLocal是不是真的快？"
                                 >
                                     <span class="title flex-center">
-                                        <span class="post-nav-title-item text-ellipsis">Using filesort 还是Using index condition？</span>
+                                        <span class="post-nav-title-item text-ellipsis">FastThreadLocal是不是真的快？</span>
                                         <span class="post-nav-item">下一篇</span>
                                     </span>
                                     <span class="right arrow-icon flex-center">
@@ -611,7 +493,7 @@
             <div class="pc-post-toc right-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setKnownNotUnset-threadLocalMap-value-%E5%BE%80%E6%95%B0%E7%BB%84%E4%B8%AD%E6%94%BE%E5%85%A5%E5%80%BC"><span class="nav-text">setKnownNotUnset(threadLocalMap, value) 往数组中放入值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFhttp-secure-link%E6%A8%A1%E5%9D%97%EF%BC%9F"><span class="nav-text">什么是http_secure_link模块？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81"><span class="nav-text">核心代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#API"><span class="nav-text">API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx"><span class="nav-text">Nginx</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
     </div>
 </div>
 
@@ -780,7 +662,7 @@
             <div class="tablet-post-toc">
                 <div class="post-toc-wrap border-box">
     <div class="post-toc border-box">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setKnownNotUnset-threadLocalMap-value-%E5%BE%80%E6%95%B0%E7%BB%84%E4%B8%AD%E6%94%BE%E5%85%A5%E5%80%BC"><span class="nav-text">setKnownNotUnset(threadLocalMap, value) 往数组中放入值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFhttp-secure-link%E6%A8%A1%E5%9D%97%EF%BC%9F"><span class="nav-text">什么是http_secure_link模块？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81"><span class="nav-text">核心代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#API"><span class="nav-text">API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx"><span class="nav-text">Nginx</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-text">参考文章</span></a></li></ol>
     </div>
 </div>
 
