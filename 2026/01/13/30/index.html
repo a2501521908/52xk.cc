@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+    <meta name="description" content="小轲博客，是小轲的个人博客！更新个人教程，网站程序等。当然会更新小轲自己的生活等">
+    <meta name="author" content="小轲">
+    
+    <title>
+        
+            Java 协程（虚拟线程） |
+        
+        小轲博客
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+        <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/regular.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/font/css/brands.min.css">
+    
+    <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN","path":"search.json"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.2.3"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+    
+</div>
+
+
+
+<main class="page-container border-box">
+    <!-- home first screen  -->
+    
+
+    <!-- page content -->
+    <div class="page-main-content border-box">
+        <div class="page-main-content-top">
+            
+<header class="header-wrapper">
+
+    <div class="border-box header-content">
+        <div class="left flex-start border-box">
+            
+            <a class="site-name border-box" href="/">
+               小轲博客
+            </a>
+        </div>
+
+        <div class="right border-box">
+            <div class="pc border-box">
+                <ul class="menu-list border-box">
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/">
+                                
+                                首页
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/archives">
+                                
+                                归档
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/tags">
+                                
+                                标签
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/links">
+                                
+                                友链
+                                
+                            </a>
+                            
+                        </li>
+                    
+                        
+                        <li class="menu-item flex-start border-box">
+                            <a class="menu-text-color border-box" href="/about">
+                                
+                                关于
+                                
+                            </a>
+                            
+                        </li>
+                    
+                    
+                        <li class="menu-item search search-popup-trigger">
+                            <i class="menu-text-color fas search fa-search"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <div class="mobile border-box flex-start">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list border-box">
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+                            
+                            首页
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+                            
+                            归档
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+                            
+                            标签
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+                            
+                            友链
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+                
+                <li class="drawer-menu-item border-box not-sub-menu">
+                    <label class="drawer-menu-label border-box">
+                        <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+                            
+                            关于
+                        </a>
+                        
+                    </label>
+                    
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle border-box">
+
+            <div class="main-content border-box">
+                
+
+                    
+<div class="fade-in-down-animation">
+    <div class="post-page-container border-box">
+        <div class="post-content-container border-box">
+            
+
+            <div class="post-content-bottom border-box">
+                
+                    <div class="post-title">
+                        Java 协程（虚拟线程）
+                    </div>
+                
+
+                
+                    <div class="post-header border-box">
+                        
+                            <div class="avatar-box border-box">
+                                <img src="/images/head-img.jpg">
+                            </div>
+                        
+                        <div class="info-box">
+                            <div class="author border-box">
+                                <span class="name">小轲</span>
+                                
+                            </div>
+                            <div class="meta-info border-box">
+                                
+
+<div class="post-meta-info-container border-box post">
+    <div class="post-meta-info border-box">
+        
+
+        
+            <span class="meta-info-item post-create-date">
+                <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+                <span class="datetime">2026-01-13 12:31:08</span>
+            </span>
+
+            <span class="meta-info-item post-update-date">
+                <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+                <span class="datetime" data-updated="Tue Jan 13 2026 22:48:14 GMT+0800">2026-01-13 22:48:14</span>
+            </span>
+        
+
+        
+
+        
+            <span class="post-tag meta-info-item border-box">
+                <ul class="post-tag-ul">
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Java/">Java</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%8D%8F%E7%A8%8B/">协程</a></li>
+                        
+                    
+                            <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a></li>
+                        
+                    
+                </ul>
+            </span>
+        
+
+        
+        
+        
+        
+    </div>
+
+    
+</div>
+
+                            </div>
+                        </div>
+                    </div>
+                
+
+                <div class="post-content keep-markdown-body ">
+                    
+
+                    
+                         <h1 id="Java-虚拟协程是什么"><a href="#Java-虚拟协程是什么" class="headerlink" title="Java 虚拟协程是什么"></a>Java 虚拟协程是什么</h1><ul>
+<li>平台线程：传统 Java 线程是和操作系统线程 1:1 映射的，平台线程由操作系统负责调度。平台线程是一种重量级资源，受限于创建销毁线程的成本、内存、线程切换带来的影响，我们无法在单机上运行大量的线程</li>
+<li>虚拟线程：虚拟线程是由 Java 实现的，也是由 Java 来调度的，<u>虚拟线程的执行会被挂载到平台线程上</u>。Java 21 中用了一个固定大小（大小等于CPU核数）的 ForkJoinPool 来调度、运行虚拟线程。虚拟线程属于轻量级资源，我们可以在 JVM 中启动大量的虚拟线程</li>
+</ul>
+<p>下面是虚拟线程的调度图：</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://s2.loli.net/2026/01/13/3NS1qisuQxI5EWa.png"
+                        alt="image.png"
+                 ></p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><h2 id="使用须知"><a href="#使用须知" class="headerlink" title="使用须知"></a>使用须知</h2><ol>
+<li>要在io 密集型的场景下使用虚拟线程，阻塞后可以立即调度其他虚拟线程，cpu 计算型没有平台线程快</li>
+<li>多线程传递需求，依旧可以使用阿里的 ttl 工具，使用装饰器模型进行装饰即可<ol>
+<li>问题如下：<a class="link"   target="_blank" rel="noopener" href="https://github.com/alibaba/transmittable-thread-local/issues/599" >https://github.com/alibaba/transmittable-thread-local/issues/599<i class="fas fa-external-link-alt"></i></a></li>
+<li><code>TtlExecutors.getTtlExecutorService</code></li>
+</ol>
+</li>
+<li>不要在虚拟线程上使用 <code>synchronized</code>，要使用 java 官方优化过的<code>Lock</code> 接口 api，如申请阻塞后则会调度其他线程<ol>
+<li>synchronized 将虚拟线程固定到了平台线程上，平台线程无法在发生 IO 阻塞时切换到其他虚拟线程上，<strong>因为synchronized 会导致虚拟线程pin 到平台线程</strong></li>
+</ol>
+</li>
+<li>创建成本很低，无需池化虚拟线程，因为你没办法获取数量，池化完全没意义</li>
+</ol>
+<h2 id="demo-code"><a href="#demo-code" class="headerlink" title="demo code"></a>demo code</h2><h3 id="创建虚拟线程调度器（forkjoinpool）"><a href="#创建虚拟线程调度器（forkjoinpool）" class="headerlink" title="创建虚拟线程调度器（forkjoinpool）"></a>创建虚拟线程调度器（forkjoinpool）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 虚拟线程执行器（类级别单例，支持 TTL 上下文传递）</span></span><br><span class="line"><span class="comment"> * 虚拟线程池本身设计就是可以重用的，无需每次创建</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">ExecutorService</span> <span class="variable">VIRTUAL_THREAD_EXECUTOR</span> <span class="operator">=</span></span><br><span class="line">        TtlExecutors.getTtlExecutorService(Executors.newVirtualThreadPerTaskExecutor());</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>推荐与 ttl 一起使用，保证 threadlocal 的使用，如果不引用可以删除</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.alibaba&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;transmittable-thread-local&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;<span class="number">2.2</span><span class="number">.0</span>&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="有返回值的使用"><a href="#有返回值的使用" class="headerlink" title="有返回值的使用"></a>有返回值的使用</h3><ul>
+<li>使用CompletableFuture相关 api 来调度线程顺序，并且可以使用Future的有返回值 api</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ExtLearningVO <span class="title function_">buildExtLearningData</span><span class="params">(Long studentId, Long parentId)</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;buildExtLearningData, studentId=&#123;&#125;, parentId=&#123;&#125;&quot;</span>, studentId, parentId);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 使用类级别的虚拟线程执行器并行执行三个独立的 build 方法</span></span><br><span class="line">            CompletableFuture&lt;ExtLearningVO.CTDataVO&gt; ctFuture = CompletableFuture.supplyAsync(</span><br><span class="line">                    () -&gt; buildCTData(studentId), VIRTUAL_THREAD_EXECUTOR);</span><br><span class="line"></span><br><span class="line">            CompletableFuture&lt;ExtLearningVO.BookDataVO&gt; bookFuture = CompletableFuture.supplyAsync(</span><br><span class="line">                    () -&gt; buildBookData(studentId), VIRTUAL_THREAD_EXECUTOR);</span><br><span class="line"></span><br><span class="line">            CompletableFuture&lt;ExtLearningVO.LexileDataVO&gt; lexileFuture = CompletableFuture.supplyAsync(</span><br><span class="line">                    () -&gt; buildLexileData(studentId, parentId), VIRTUAL_THREAD_EXECUTOR);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 等待所有任务完成并聚合结果</span></span><br><span class="line">            CompletableFuture&lt;Void&gt; allFutures = CompletableFuture.allOf(ctFuture, bookFuture, lexileFuture);</span><br><span class="line">            allFutures.join();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 构建聚合返回数据</span></span><br><span class="line">            <span class="keyword">return</span> ExtLearningVO.builder()</span><br><span class="line">                    .ct(ctFuture.join())</span><br><span class="line">                    .book(bookFuture.join())</span><br><span class="line">                    .lexile(lexileFuture.join())</span><br><span class="line">                    .build();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            log.error(<span class="string">&quot;buildExtLearningData error, studentId=&#123;&#125;&quot;</span>, studentId, e);</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="无返回值怎么用？"><a href="#无返回值怎么用？" class="headerlink" title="无返回值怎么用？"></a>无返回值怎么用？</h3><ul>
+<li>直接使用<code>execute()</code> 的API即可</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">fireAndForget</span><span class="params">(Long studentId, Long parentId)</span> &#123;</span><br><span class="line">    VIRTUAL_THREAD_EXECUTOR.execute(() -&gt; buildCTSideEffect(studentId));</span><br><span class="line">    VIRTUAL_THREAD_EXECUTOR.execute(() -&gt; buildBookSideEffect(studentId));</span><br><span class="line">    VIRTUAL_THREAD_EXECUTOR.execute(() -&gt; buildLexileSideEffect(studentId, parentId));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h2><h3 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h3><ol>
+<li>性能测试代码使用 Apple M3 16g 的机器进行测试</li>
+<li>对比为虚拟线程+线程池（8核心线程）</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br><span class="line">469</span><br><span class="line">470</span><br><span class="line">471</span><br><span class="line">472</span><br><span class="line">473</span><br><span class="line">474</span><br><span class="line">475</span><br><span class="line">476</span><br><span class="line">477</span><br><span class="line">478</span><br><span class="line">479</span><br><span class="line">480</span><br><span class="line">481</span><br><span class="line">482</span><br><span class="line">483</span><br><span class="line">484</span><br><span class="line">485</span><br><span class="line">486</span><br><span class="line">487</span><br><span class="line">488</span><br><span class="line">489</span><br><span class="line">490</span><br><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br><span class="line">496</span><br><span class="line">497</span><br><span class="line">498</span><br><span class="line">499</span><br><span class="line">500</span><br><span class="line">501</span><br><span class="line">502</span><br><span class="line">503</span><br><span class="line">504</span><br><span class="line">505</span><br><span class="line">506</span><br><span class="line">507</span><br><span class="line">508</span><br><span class="line">509</span><br><span class="line">510</span><br><span class="line">511</span><br><span class="line">512</span><br><span class="line">513</span><br><span class="line">514</span><br><span class="line">515</span><br><span class="line">516</span><br><span class="line">517</span><br><span class="line">518</span><br><span class="line">519</span><br><span class="line">520</span><br><span class="line">521</span><br><span class="line">522</span><br><span class="line">523</span><br><span class="line">524</span><br><span class="line">525</span><br><span class="line">526</span><br><span class="line">527</span><br><span class="line">528</span><br><span class="line">529</span><br><span class="line">530</span><br><span class="line">531</span><br><span class="line">532</span><br><span class="line">533</span><br><span class="line">534</span><br><span class="line">535</span><br><span class="line">536</span><br><span class="line">537</span><br><span class="line">538</span><br><span class="line">539</span><br><span class="line">540</span><br><span class="line">541</span><br><span class="line">542</span><br><span class="line">543</span><br><span class="line">544</span><br><span class="line">545</span><br><span class="line">546</span><br><span class="line">547</span><br><span class="line">548</span><br><span class="line">549</span><br><span class="line">550</span><br><span class="line">551</span><br><span class="line">552</span><br><span class="line">553</span><br><span class="line">554</span><br><span class="line">555</span><br><span class="line">556</span><br><span class="line">557</span><br><span class="line">558</span><br><span class="line">559</span><br><span class="line">560</span><br><span class="line">561</span><br><span class="line">562</span><br><span class="line">563</span><br><span class="line">564</span><br><span class="line">565</span><br><span class="line">566</span><br><span class="line">567</span><br><span class="line">568</span><br><span class="line">569</span><br><span class="line">570</span><br><span class="line">571</span><br><span class="line">572</span><br><span class="line">573</span><br><span class="line">574</span><br><span class="line">575</span><br><span class="line">576</span><br><span class="line">577</span><br><span class="line">578</span><br><span class="line">579</span><br><span class="line">580</span><br><span class="line">581</span><br><span class="line">582</span><br><span class="line">583</span><br><span class="line">584</span><br><span class="line">585</span><br><span class="line">586</span><br><span class="line">587</span><br><span class="line">588</span><br><span class="line">589</span><br><span class="line">590</span><br><span class="line">591</span><br><span class="line">592</span><br><span class="line">593</span><br><span class="line">594</span><br><span class="line">595</span><br><span class="line">596</span><br><span class="line">597</span><br><span class="line">598</span><br><span class="line">599</span><br><span class="line">600</span><br><span class="line">601</span><br><span class="line">602</span><br><span class="line">603</span><br><span class="line">604</span><br><span class="line">605</span><br><span class="line">606</span><br><span class="line">607</span><br><span class="line">608</span><br><span class="line">609</span><br><span class="line">610</span><br><span class="line">611</span><br><span class="line">612</span><br><span class="line">613</span><br><span class="line">614</span><br><span class="line">615</span><br><span class="line">616</span><br><span class="line">617</span><br><span class="line">618</span><br><span class="line">619</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.vipkid.international.web.hub.test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> lombok.AllArgsConstructor;</span><br><span class="line"><span class="keyword">import</span> lombok.Data;</span><br><span class="line"><span class="keyword">import</span> lombok.extern.slf4j.Slf4j;</span><br><span class="line"><span class="keyword">import</span> org.junit.jupiter.api.AfterAll;</span><br><span class="line"><span class="keyword">import</span> org.junit.jupiter.api.BeforeAll;</span><br><span class="line"><span class="keyword">import</span> org.junit.jupiter.api.Test;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.*;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.AtomicInteger;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 虚拟线程 vs 普通线程池性能对比测试</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 测试场景：</span></span><br><span class="line"><span class="comment"> * 1. I/O密集型任务（模拟网络请求、数据库查询）</span></span><br><span class="line"><span class="comment"> * 2. CPU密集型任务（计算密集操作）</span></span><br><span class="line"><span class="comment"> * 3. 混合任务（I/O + CPU）</span></span><br><span class="line"><span class="comment"> * 4. 大量并发任务</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">VirtualThreadVsThreadPoolPerformanceTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 虚拟线程执行器</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ExecutorService virtualThreadExecutor;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 普通线程池执行器（核心线程8个）</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ExecutorService threadPoolExecutor;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@BeforeAll</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setup</span><span class="params">()</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;===============================================&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;初始化测试环境&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;===============================================&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建虚拟线程执行器</span></span><br><span class="line">        virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建普通线程池（核心线程8个，最大线程100个，队列容量1000）</span></span><br><span class="line">        threadPoolExecutor = <span class="keyword">new</span> <span class="title class_">ThreadPoolExecutor</span>(</span><br><span class="line">            <span class="number">8</span>,                          <span class="comment">// 核心线程数</span></span><br><span class="line">            <span class="number">100</span>,                        <span class="comment">// 最大线程数</span></span><br><span class="line">            <span class="number">60L</span>,                        <span class="comment">// 线程空闲存活时间</span></span><br><span class="line">            TimeUnit.SECONDS,           <span class="comment">// 时间单位</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">LinkedBlockingQueue</span>&lt;&gt;(<span class="number">1000</span>), <span class="comment">// 阻塞队列</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ThreadFactory</span>() &#123;</span><br><span class="line">                <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">threadNumber</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">1</span>);</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="keyword">public</span> Thread <span class="title function_">newThread</span><span class="params">(Runnable r)</span> &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(r, <span class="string">&quot;pool-thread-&quot;</span> + threadNumber.getAndIncrement());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ThreadPoolExecutor</span>.CallerRunsPolicy() <span class="comment">// 拒绝策略</span></span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;虚拟线程执行器：已创建&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;普通线程池配置：核心线程数=8, 最大线程数=100, 队列容量=1000&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@AfterAll</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">teardown</span><span class="params">()</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;===============================================&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;清理测试环境&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;===============================================&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (virtualThreadExecutor != <span class="literal">null</span>) &#123;</span><br><span class="line">            virtualThreadExecutor.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (threadPoolExecutor != <span class="literal">null</span>) &#123;</span><br><span class="line">            threadPoolExecutor.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 测试1：I/O密集型任务性能对比</span></span><br><span class="line"><span class="comment">     * 模拟场景：大量的网络请求、数据库查询等需要等待的操作</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testIOIntensiveTasks</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;  测试1：I/O密集型任务性能对比&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">taskCount</span> <span class="operator">=</span> <span class="number">1000</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">ioDelayMs</span> <span class="operator">=</span> <span class="number">100</span>; <span class="comment">// 模拟100ms的I/O延迟</span></span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;测试参数：任务数量=&#123;&#125;, 每个任务I/O延迟=&#123;&#125;ms&quot;</span>, taskCount, ioDelayMs);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试虚拟线程</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">virtualResult</span> <span class="operator">=</span> executeIOTasks(</span><br><span class="line">            virtualThreadExecutor,</span><br><span class="line">            <span class="string">&quot;虚拟线程&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待一下，让系统稳定</span></span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试普通线程池</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">threadPoolResult</span> <span class="operator">=</span> executeIOTasks(</span><br><span class="line">            threadPoolExecutor,</span><br><span class="line">            <span class="string">&quot;普通线程池&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比结果</span></span><br><span class="line">        printComparisonResult(virtualResult, threadPoolResult, <span class="string">&quot;I/O密集型&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 测试2：CPU密集型任务性能对比</span></span><br><span class="line"><span class="comment">     * 模拟场景：大量计算操作</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testCPUIntensiveTasks</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;  测试2：CPU密集型任务性能对比&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">taskCount</span> <span class="operator">=</span> <span class="number">100</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">computeIterations</span> <span class="operator">=</span> <span class="number">1000000</span>; <span class="comment">// 计算迭代次数</span></span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;测试参数：任务数量=&#123;&#125;, 每个任务计算迭代次数=&#123;&#125;&quot;</span>, taskCount, computeIterations);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试虚拟线程</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">virtualResult</span> <span class="operator">=</span> executeCPUTasks(</span><br><span class="line">            virtualThreadExecutor,</span><br><span class="line">            <span class="string">&quot;虚拟线程&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            computeIterations</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待一下</span></span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试普通线程池</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">threadPoolResult</span> <span class="operator">=</span> executeCPUTasks(</span><br><span class="line">            threadPoolExecutor,</span><br><span class="line">            <span class="string">&quot;普通线程池&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            computeIterations</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比结果</span></span><br><span class="line">        printComparisonResult(virtualResult, threadPoolResult, <span class="string">&quot;CPU密集型&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 测试3：混合任务性能对比</span></span><br><span class="line"><span class="comment">     * 模拟场景：既有I/O等待，又有CPU计算</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testMixedTasks</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;  测试3：混合任务性能对比&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">taskCount</span> <span class="operator">=</span> <span class="number">500</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">ioDelayMs</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">computeIterations</span> <span class="operator">=</span> <span class="number">500000</span>;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;测试参数：任务数量=&#123;&#125;, I/O延迟=&#123;&#125;ms, 计算迭代=&#123;&#125;&quot;</span>,</span><br><span class="line">            taskCount, ioDelayMs, computeIterations);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试虚拟线程</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">virtualResult</span> <span class="operator">=</span> executeMixedTasks(</span><br><span class="line">            virtualThreadExecutor,</span><br><span class="line">            <span class="string">&quot;虚拟线程&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs,</span><br><span class="line">            computeIterations</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待一下</span></span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试普通线程池</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">threadPoolResult</span> <span class="operator">=</span> executeMixedTasks(</span><br><span class="line">            threadPoolExecutor,</span><br><span class="line">            <span class="string">&quot;普通线程池&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs,</span><br><span class="line">            computeIterations</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比结果</span></span><br><span class="line">        printComparisonResult(virtualResult, threadPoolResult, <span class="string">&quot;混合任务&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 测试4：大量并发任务性能对比</span></span><br><span class="line"><span class="comment">     * 测试在高并发场景下的表现</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testHighConcurrency</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;  测试4：大量并发任务性能对比&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">taskCount</span> <span class="operator">=</span> <span class="number">10000</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">ioDelayMs</span> <span class="operator">=</span> <span class="number">50</span>;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;测试参数：任务数量=&#123;&#125;, I/O延迟=&#123;&#125;ms&quot;</span>, taskCount, ioDelayMs);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试虚拟线程</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">virtualResult</span> <span class="operator">=</span> executeIOTasks(</span><br><span class="line">            virtualThreadExecutor,</span><br><span class="line">            <span class="string">&quot;虚拟线程&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待一下</span></span><br><span class="line">        Thread.sleep(<span class="number">2000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试普通线程池</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">threadPoolResult</span> <span class="operator">=</span> executeIOTasks(</span><br><span class="line">            threadPoolExecutor,</span><br><span class="line">            <span class="string">&quot;普通线程池&quot;</span>,</span><br><span class="line">            taskCount,</span><br><span class="line">            ioDelayMs</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比结果</span></span><br><span class="line">        printComparisonResult(virtualResult, threadPoolResult, <span class="string">&quot;高并发场景&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 测试5：实际业务场景模拟</span></span><br><span class="line"><span class="comment">     * 模拟一个请求需要调用3个外部接口（耗时80ms、100ms、120ms）</span></span><br><span class="line"><span class="comment">     * 并发调用的总耗时为最长接口的耗时，即120ms</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">testRealWorldScenario</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;  测试5：实际业务场景模拟（每个请求调用3个接口）&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;═══════════════════════════════════════════════&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">requestCount</span> <span class="operator">=</span> <span class="number">500</span>;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;测试参数：请求数量=&#123;&#125;, 每个请求并发调用3个接口(耗时120ms)&quot;</span>, requestCount);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试虚拟线程</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">virtualResult</span> <span class="operator">=</span> executeRealWorldScenario(</span><br><span class="line">            virtualThreadExecutor,</span><br><span class="line">            <span class="string">&quot;虚拟线程&quot;</span>,</span><br><span class="line">            requestCount</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待一下</span></span><br><span class="line">        Thread.sleep(<span class="number">2000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 测试普通线程池</span></span><br><span class="line">        <span class="type">PerformanceResult</span> <span class="variable">threadPoolResult</span> <span class="operator">=</span> executeRealWorldScenario(</span><br><span class="line">            threadPoolExecutor,</span><br><span class="line">            <span class="string">&quot;普通线程池&quot;</span>,</span><br><span class="line">            requestCount</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比结果</span></span><br><span class="line">        printComparisonResult(virtualResult, threadPoolResult, <span class="string">&quot;业务场景&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ==================== 执行方法 ====================</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行I/O密集型任务</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> PerformanceResult <span class="title function_">executeIOTasks</span><span class="params">(ExecutorService executor, String executorName,</span></span><br><span class="line"><span class="params">                                             <span class="type">int</span> taskCount, <span class="type">int</span> ioDelayMs)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n--- &#123;&#125; 开始执行 ---&quot;</span>, executorName);</span><br><span class="line"></span><br><span class="line">        <span class="type">CountDownLatch</span> <span class="variable">latch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(taskCount);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">successCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">errorCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">startTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 提交所有任务</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; taskCount; i++) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">taskId</span> <span class="operator">=</span> i;</span><br><span class="line">            executor.submit(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 模拟I/O操作（网络请求、数据库查询等）</span></span><br><span class="line">                    Thread.sleep(ioDelayMs);</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 简单的业务逻辑</span></span><br><span class="line">                    <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;Task-&quot;</span> + taskId + <span class="string">&quot; completed&quot;</span>;</span><br><span class="line"></span><br><span class="line">                    successCount.incrementAndGet();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    errorCount.incrementAndGet();</span><br><span class="line">                    log.error(<span class="string">&quot;任务执行失败: &#123;&#125;&quot;</span>, taskId, e);</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    latch.countDown();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待所有任务完成</span></span><br><span class="line">        <span class="type">boolean</span> <span class="variable">completed</span> <span class="operator">=</span> latch.await(<span class="number">120</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">endTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">endMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line">        <span class="type">long</span> <span class="variable">duration</span> <span class="operator">=</span> endTime - startTime;</span><br><span class="line">        <span class="type">long</span> <span class="variable">memoryUsed</span> <span class="operator">=</span> endMemory - startMemory;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;--- &#123;&#125; 执行完成 ---&quot;</span>, executorName);</span><br><span class="line">        log.info(<span class="string">&quot;总耗时: &#123;&#125;ms&quot;</span>, duration);</span><br><span class="line">        log.info(<span class="string">&quot;成功任务数: &#123;&#125;&quot;</span>, successCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;失败任务数: &#123;&#125;&quot;</span>, errorCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;吞吐量: &#123;&#125; 任务/秒&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, (taskCount * <span class="number">1000.0</span>) / duration));</span><br><span class="line">        log.info(<span class="string">&quot;内存使用: &#123;&#125; MB&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, memoryUsed / <span class="number">1024.0</span> / <span class="number">1024.0</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PerformanceResult</span>(</span><br><span class="line">            executorName,</span><br><span class="line">            taskCount,</span><br><span class="line">            duration,</span><br><span class="line">            successCount.get(),</span><br><span class="line">            errorCount.get(),</span><br><span class="line">            memoryUsed</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行CPU密集型任务</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> PerformanceResult <span class="title function_">executeCPUTasks</span><span class="params">(ExecutorService executor, String executorName,</span></span><br><span class="line"><span class="params">                                              <span class="type">int</span> taskCount, <span class="type">int</span> computeIterations)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n--- &#123;&#125; 开始执行 ---&quot;</span>, executorName);</span><br><span class="line"></span><br><span class="line">        <span class="type">CountDownLatch</span> <span class="variable">latch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(taskCount);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">successCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">errorCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">startTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 提交所有任务</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; taskCount; i++) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">taskId</span> <span class="operator">=</span> i;</span><br><span class="line">            executor.submit(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 模拟CPU密集型计算</span></span><br><span class="line">                    <span class="type">double</span> <span class="variable">result</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; computeIterations; j++) &#123;</span><br><span class="line">                        result += Math.sqrt(j) * Math.sin(j) + Math.cos(j);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    successCount.incrementAndGet();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    errorCount.incrementAndGet();</span><br><span class="line">                    log.error(<span class="string">&quot;任务执行失败: &#123;&#125;&quot;</span>, taskId, e);</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    latch.countDown();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待所有任务完成</span></span><br><span class="line">        <span class="type">boolean</span> <span class="variable">completed</span> <span class="operator">=</span> latch.await(<span class="number">120</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">endTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">endMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line">        <span class="type">long</span> <span class="variable">duration</span> <span class="operator">=</span> endTime - startTime;</span><br><span class="line">        <span class="type">long</span> <span class="variable">memoryUsed</span> <span class="operator">=</span> endMemory - startMemory;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;--- &#123;&#125; 执行完成 ---&quot;</span>, executorName);</span><br><span class="line">        log.info(<span class="string">&quot;总耗时: &#123;&#125;ms&quot;</span>, duration);</span><br><span class="line">        log.info(<span class="string">&quot;成功任务数: &#123;&#125;&quot;</span>, successCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;失败任务数: &#123;&#125;&quot;</span>, errorCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;吞吐量: &#123;&#125; 任务/秒&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, (taskCount * <span class="number">1000.0</span>) / duration));</span><br><span class="line">        log.info(<span class="string">&quot;内存使用: &#123;&#125; MB&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, memoryUsed / <span class="number">1024.0</span> / <span class="number">1024.0</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PerformanceResult</span>(</span><br><span class="line">            executorName,</span><br><span class="line">            taskCount,</span><br><span class="line">            duration,</span><br><span class="line">            successCount.get(),</span><br><span class="line">            errorCount.get(),</span><br><span class="line">            memoryUsed</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行混合任务</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> PerformanceResult <span class="title function_">executeMixedTasks</span><span class="params">(ExecutorService executor, String executorName,</span></span><br><span class="line"><span class="params">                                                <span class="type">int</span> taskCount, <span class="type">int</span> ioDelayMs,</span></span><br><span class="line"><span class="params">                                                <span class="type">int</span> computeIterations)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n--- &#123;&#125; 开始执行 ---&quot;</span>, executorName);</span><br><span class="line"></span><br><span class="line">        <span class="type">CountDownLatch</span> <span class="variable">latch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(taskCount);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">successCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">errorCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">startTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 提交所有任务</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; taskCount; i++) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">taskId</span> <span class="operator">=</span> i;</span><br><span class="line">            executor.submit(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 1. 模拟I/O操作</span></span><br><span class="line">                    Thread.sleep(ioDelayMs);</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 2. 模拟CPU计算</span></span><br><span class="line">                    <span class="type">double</span> <span class="variable">result</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; computeIterations; j++) &#123;</span><br><span class="line">                        result += Math.sqrt(j) * Math.sin(j);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 3. 再次I/O操作</span></span><br><span class="line">                    Thread.sleep(ioDelayMs / <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">                    successCount.incrementAndGet();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    errorCount.incrementAndGet();</span><br><span class="line">                    log.error(<span class="string">&quot;任务执行失败: &#123;&#125;&quot;</span>, taskId, e);</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    latch.countDown();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待所有任务完成</span></span><br><span class="line">        <span class="type">boolean</span> <span class="variable">completed</span> <span class="operator">=</span> latch.await(<span class="number">120</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">endTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">endMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line">        <span class="type">long</span> <span class="variable">duration</span> <span class="operator">=</span> endTime - startTime;</span><br><span class="line">        <span class="type">long</span> <span class="variable">memoryUsed</span> <span class="operator">=</span> endMemory - startMemory;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;--- &#123;&#125; 执行完成 ---&quot;</span>, executorName);</span><br><span class="line">        log.info(<span class="string">&quot;总耗时: &#123;&#125;ms&quot;</span>, duration);</span><br><span class="line">        log.info(<span class="string">&quot;成功任务数: &#123;&#125;&quot;</span>, successCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;失败任务数: &#123;&#125;&quot;</span>, errorCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;吞吐量: &#123;&#125; 任务/秒&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, (taskCount * <span class="number">1000.0</span>) / duration));</span><br><span class="line">        log.info(<span class="string">&quot;内存使用: &#123;&#125; MB&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, memoryUsed / <span class="number">1024.0</span> / <span class="number">1024.0</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PerformanceResult</span>(</span><br><span class="line">            executorName,</span><br><span class="line">            taskCount,</span><br><span class="line">            duration,</span><br><span class="line">            successCount.get(),</span><br><span class="line">            errorCount.get(),</span><br><span class="line">            memoryUsed</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行真实业务场景</span></span><br><span class="line"><span class="comment">     * 模拟每个请求需要并发调用3个外部接口</span></span><br><span class="line"><span class="comment">     * 3个接口分别耗时80ms、100ms、120ms，并发调用总耗时120ms</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> PerformanceResult <span class="title function_">executeRealWorldScenario</span><span class="params">(ExecutorService executor,</span></span><br><span class="line"><span class="params">                                                       String executorName,</span></span><br><span class="line"><span class="params">                                                       <span class="type">int</span> requestCount)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n--- &#123;&#125; 开始执行 ---&quot;</span>, executorName);</span><br><span class="line"></span><br><span class="line">        <span class="type">CountDownLatch</span> <span class="variable">latch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(requestCount);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">successCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="type">AtomicInteger</span> <span class="variable">errorCount</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">startTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 每个请求</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; requestCount; i++) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">requestId</span> <span class="operator">=</span> i;</span><br><span class="line"></span><br><span class="line">            executor.submit(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 模拟并发调用3个接口</span></span><br><span class="line">                    <span class="comment">// 实际业务中是并发的，总耗时=max(80,100,120)=120ms</span></span><br><span class="line">                    Thread.sleep(<span class="number">120</span>);</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 模拟合并结果的业务逻辑</span></span><br><span class="line">                    <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;API1-Result,API2-Result,API3-Result&quot;</span>;</span><br><span class="line"></span><br><span class="line">                    successCount.incrementAndGet();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    errorCount.incrementAndGet();</span><br><span class="line">                    log.error(<span class="string">&quot;请求执行失败: &#123;&#125;&quot;</span>, requestId, e);</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    latch.countDown();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待所有请求完成</span></span><br><span class="line">        <span class="type">boolean</span> <span class="variable">completed</span> <span class="operator">=</span> latch.await(<span class="number">180</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">endTime</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">endMemory</span> <span class="operator">=</span> getUsedMemory();</span><br><span class="line">        <span class="type">long</span> <span class="variable">duration</span> <span class="operator">=</span> endTime - startTime;</span><br><span class="line">        <span class="type">long</span> <span class="variable">memoryUsed</span> <span class="operator">=</span> endMemory - startMemory;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;--- &#123;&#125; 执行完成 ---&quot;</span>, executorName);</span><br><span class="line">        log.info(<span class="string">&quot;总耗时: &#123;&#125;ms&quot;</span>, duration);</span><br><span class="line">        log.info(<span class="string">&quot;成功请求数: &#123;&#125;&quot;</span>, successCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;失败请求数: &#123;&#125;&quot;</span>, errorCount.get());</span><br><span class="line">        log.info(<span class="string">&quot;吞吐量: &#123;&#125; 请求/秒&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, (requestCount * <span class="number">1000.0</span>) / duration));</span><br><span class="line">        log.info(<span class="string">&quot;内存使用: &#123;&#125; MB&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, memoryUsed / <span class="number">1024.0</span> / <span class="number">1024.0</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PerformanceResult</span>(</span><br><span class="line">            executorName,</span><br><span class="line">            requestCount,</span><br><span class="line">            duration,</span><br><span class="line">            successCount.get(),</span><br><span class="line">            errorCount.get(),</span><br><span class="line">            memoryUsed</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ==================== 辅助方法 ====================</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取当前使用的内存（字节）</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> <span class="title function_">getUsedMemory</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">Runtime</span> <span class="variable">runtime</span> <span class="operator">=</span> Runtime.getRuntime();</span><br><span class="line">        <span class="keyword">return</span> runtime.totalMemory() - runtime.freeMemory();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 打印对比结果</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">printComparisonResult</span><span class="params">(PerformanceResult virtualResult,</span></span><br><span class="line"><span class="params">                                       PerformanceResult threadPoolResult,</span></span><br><span class="line"><span class="params">                                       String testType)</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;╔═══════════════════════════════════════════════╗&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;║          &#123;&#125; 性能对比结果                    &quot;</span>, testType);</span><br><span class="line">        log.info(<span class="string">&quot;╠═══════════════════════════════════════════════╣&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;║  指标                  虚拟线程         普通线程池&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;╟───────────────────────────────────────────────╢&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;║  总耗时(ms)          &#123;&#125;      &#123;&#125;&quot;</span>,</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, virtualResult.duration),</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, threadPoolResult.duration));</span><br><span class="line">        log.info(<span class="string">&quot;║  吞吐量(任务/秒)      &#123;&#125;      &#123;&#125;&quot;</span>,</span><br><span class="line">            String.format(<span class="string">&quot;%10.2f&quot;</span>, virtualResult.getThroughput()),</span><br><span class="line">            String.format(<span class="string">&quot;%10.2f&quot;</span>, threadPoolResult.getThroughput()));</span><br><span class="line">        log.info(<span class="string">&quot;║  成功任务数           &#123;&#125;      &#123;&#125;&quot;</span>,</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, virtualResult.successCount),</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, threadPoolResult.successCount));</span><br><span class="line">        log.info(<span class="string">&quot;║  失败任务数           &#123;&#125;      &#123;&#125;&quot;</span>,</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, virtualResult.errorCount),</span><br><span class="line">            String.format(<span class="string">&quot;%10d&quot;</span>, threadPoolResult.errorCount));</span><br><span class="line">        log.info(<span class="string">&quot;║  内存使用(MB)         &#123;&#125;      &#123;&#125;&quot;</span>,</span><br><span class="line">            String.format(<span class="string">&quot;%10.2f&quot;</span>, virtualResult.getMemoryUsedMB()),</span><br><span class="line">            String.format(<span class="string">&quot;%10.2f&quot;</span>, threadPoolResult.getMemoryUsedMB()));</span><br><span class="line">        log.info(<span class="string">&quot;╠═══════════════════════════════════════════════╣&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 计算性能提升百分比</span></span><br><span class="line">        <span class="type">double</span> <span class="variable">timeImprovement</span> <span class="operator">=</span> ((threadPoolResult.duration - virtualResult.duration) * <span class="number">100.0</span>)</span><br><span class="line">            / threadPoolResult.duration;</span><br><span class="line">        <span class="type">double</span> <span class="variable">throughputImprovement</span> <span class="operator">=</span> ((virtualResult.getThroughput() - threadPoolResult.getThroughput()) * <span class="number">100.0</span>)</span><br><span class="line">            / threadPoolResult.getThroughput();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (timeImprovement &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;║  虚拟线程耗时减少：&#123;&#125;%&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, timeImprovement));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;║  虚拟线程耗时增加：&#123;&#125;%&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, Math.abs(timeImprovement)));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (throughputImprovement &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;║  虚拟线程吞吐量提升：&#123;&#125;%&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, throughputImprovement));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;║  虚拟线程吞吐量降低：&#123;&#125;%&quot;</span>, String.format(<span class="string">&quot;%.2f&quot;</span>, Math.abs(throughputImprovement)));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        log.info(<span class="string">&quot;╚═══════════════════════════════════════════════╝&quot;</span>);</span><br><span class="line">        log.info(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ==================== 数据类 ====================</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 性能测试结果</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Data</span></span><br><span class="line">    <span class="meta">@AllArgsConstructor</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">PerformanceResult</span> &#123;</span><br><span class="line">        <span class="keyword">private</span> String executorName;</span><br><span class="line">        <span class="keyword">private</span> <span class="type">int</span> taskCount;</span><br><span class="line">        <span class="keyword">private</span> <span class="type">long</span> duration;       <span class="comment">// 总耗时（毫秒）</span></span><br><span class="line">        <span class="keyword">private</span> <span class="type">int</span> successCount;    <span class="comment">// 成功任务数</span></span><br><span class="line">        <span class="keyword">private</span> <span class="type">int</span> errorCount;      <span class="comment">// 失败任务数</span></span><br><span class="line">        <span class="keyword">private</span> <span class="type">long</span> memoryUsed;     <span class="comment">// 内存使用（字节）</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 计算吞吐量（任务/秒）</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">public</span> <span class="type">double</span> <span class="title function_">getThroughput</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (duration == <span class="number">0</span>) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">return</span> (taskCount * <span class="number">1000.0</span>) / duration;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 获取内存使用（MB）</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">public</span> <span class="type">double</span> <span class="title function_">getMemoryUsedMB</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> memoryUsed / <span class="number">1024.0</span> / <span class="number">1024.0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="测试报告"><a href="#测试报告" class="headerlink" title="测试报告"></a>测试报告</h3><table>
+<thead>
+<tr>
+<th>测试场景</th>
+<th>执行器</th>
+<th>任务数</th>
+<th>总耗时(ms)</th>
+<th>吞吐量(任务&#x2F;秒)</th>
+<th>成功</th>
+<th>内存(MB)</th>
+<th>性能提升</th>
+<th>推荐场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>I&#x2F;O密集型(100ms)</strong></td>
+<td>虚拟线程</td>
+<td>1000</td>
+<td>105</td>
+<td>9,523.81</td>
+<td>1000</td>
+<td>1.32</td>
+<td>耗时↓89.91%</td>
+<td>✅ 数据库查询、HTTP请求</td>
+</tr>
+<tr>
+<td></td>
+<td>普通线程池</td>
+<td>1000</td>
+<td>1,041</td>
+<td>960.61</td>
+<td>1000</td>
+<td>0.00</td>
+<td>吞吐量↑891.43%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>CPU密集型(100万次)</strong></td>
+<td>虚拟线程</td>
+<td>100</td>
+<td>209</td>
+<td>478.47</td>
+<td>100</td>
+<td>0.36</td>
+<td>耗时↑4.50%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td></td>
+<td>普通线程池</td>
+<td>100</td>
+<td>200</td>
+<td>500.00</td>
+<td>100</td>
+<td>0.00</td>
+<td>吞吐量↓4.31%</td>
+<td>✅ 图像处理、加密计算</td>
+</tr>
+<tr>
+<td><strong>混合任务(I&#x2F;O+CPU)</strong></td>
+<td>虚拟线程</td>
+<td>500</td>
+<td>323</td>
+<td>1,547.99</td>
+<td>500</td>
+<td>2.22</td>
+<td>耗时↓94.15%</td>
+<td>✅ 查询后处理、分页查询</td>
+</tr>
+<tr>
+<td></td>
+<td>普通线程池</td>
+<td>500</td>
+<td>5,524</td>
+<td>90.51</td>
+<td>500</td>
+<td>0.88</td>
+<td>吞吐量↑1,610.22%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>高并发(10000任务)</strong></td>
+<td>虚拟线程</td>
+<td>10000</td>
+<td>83</td>
+<td>120,481.93</td>
+<td>10000</td>
+<td>14.24</td>
+<td>耗时↓98.45%</td>
+<td>✅ Web服务、消息队列消费</td>
+</tr>
+<tr>
+<td></td>
+<td>普通线程池</td>
+<td>10000</td>
+<td>5,350</td>
+<td>1,869.16</td>
+<td>10000</td>
+<td>10.76</td>
+<td>吞吐量↑6,345.78%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>业务场景(3接口)</strong></td>
+<td>虚拟线程</td>
+<td>500</td>
+<td>129</td>
+<td>3,875.97</td>
+<td>500</td>
+<td>1.19</td>
+<td>耗时↓79.36%</td>
+<td>✅ 微服务聚合、并行调用</td>
+</tr>
+<tr>
+<td></td>
+<td>普通线程池</td>
+<td>500</td>
+<td>625</td>
+<td>800.00</td>
+<td>500</td>
+<td>0.00</td>
+<td>吞吐量↑384.50%</td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<h1 id="结构化并发和作用域值"><a href="#结构化并发和作用域值" class="headerlink" title="结构化并发和作用域值"></a>结构化并发和作用域值</h1><p>在引入虚拟线程后，Java 的并发成本被大幅降低，但<strong>如何安全、清晰地组织多个并发任务</strong>，以及<strong>如何在并发任务之间传递上下文信息</strong>，仍然是工程实践中的难点。</p>
+<p>为此，JDK 21 进一步提供了 <strong>Structured Concurrency（结构化并发）</strong> 与 <strong>Scoped Values（作用域值）</strong> 两个预览特性，用于简化多任务并发编排模型（需通过 <code>--enable-preview</code> 启用）。以下内容仅用于理解 Java 并发模型的未来演进方向。</p>
+<ul>
+<li><strong>结构化并发</strong>：将一组并发任务组织在明确的作用域内，统一管理其生命周期和异常，使并发行为像普通代码块一样可控。</li>
+<li><strong>作用域（Scoped Values）</strong>：通过受限作用域显式传递只读上下文数据，避免 <code>ThreadLocal</code> 带来的隐式共享和生命周期失控问题</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义一个作用域级上下文变量，用于替代 ThreadLocal</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> ScopedValue&lt;String&gt; REQUEST_ID = ScopedValue.newInstance();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在当前作用域内绑定上下文值，作用范围仅限于 run 方法</span></span><br><span class="line">ScopedValue.where(REQUEST_ID, <span class="string">&quot;req-123&quot;</span>).run(() -&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建结构化并发作用域，任一子任务失败则整体失败</span></span><br><span class="line">    <span class="keyword">try</span> (<span class="type">var</span> <span class="variable">scope</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StructuredTaskScope</span>.ShutdownOnFailure()) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 启动子任务 A，自动继承当前作用域的 ScopedValue</span></span><br><span class="line">        <span class="type">var</span> <span class="variable">a</span> <span class="operator">=</span> scope.fork(() -&gt; &#123;</span><br><span class="line">            Thread.sleep(<span class="number">100</span>); <span class="comment">// 模拟 I/O 等待</span></span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;A(&quot;</span> + REQUEST_ID.get() + <span class="string">&quot;)&quot;</span>;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 启动子任务 B，同样可以安全获取上下文信息</span></span><br><span class="line">        <span class="type">var</span> <span class="variable">b</span> <span class="operator">=</span> scope.fork(() -&gt; &#123;</span><br><span class="line">            Thread.sleep(<span class="number">200</span>); <span class="comment">// 模拟 I/O 等待</span></span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;B(&quot;</span> + REQUEST_ID.get() + <span class="string">&quot;)&quot;</span>;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 等待所有子任务完成</span></span><br><span class="line">        scope.join();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 若任一子任务失败，则抛出异常并取消其他任务</span></span><br><span class="line">        scope.throwIfFailed();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 在作用域内安全地获取子任务结果</span></span><br><span class="line">        System.out.println(a.resultNow() + <span class="string">&quot;, &quot;</span> + b.resultNow());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li><a class="link"   target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/696243786" >https://zhuanlan.zhihu.com/p/696243786<i class="fas fa-external-link-alt"></i></a> （<font style="color:rgb(25, 27, 31);">聊聊 Java 21 虚拟线程</font>）</li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://liaoxuefeng.com/books/java/threading/virtual-thread/index.html" >https://liaoxuefeng.com/books/java/threading/virtual-thread/index.html<i class="fas fa-external-link-alt"></i></a> （使用虚拟线程）</li>
+<li><a class="link"   target="_blank" rel="noopener" href="https://www.cnblogs.com/echo1937/p/18969306" >https://www.cnblogs.com/echo1937/p/18969306<i class="fas fa-external-link-alt"></i></a> （Java 的作用域值（Scoped Values）和结构化并发（Structured Concurrency）</li>
+</ol>
+
+                    
+                </div>
+
+                
+
+                <div class="post-bottom-tags-and-share border-box">
+                    <div>
+                        
+                            <ul class="post-tags-box border-box">
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Java/">Java</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%8D%8F%E7%A8%8B/">协程</a>
+                                    </li>
+                                
+                                    <li class="tag-item border-box">
+                                        <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a>
+                                    </li>
+                                
+                            </ul>
+                        
+                    </div>
+                    <div>
+                        
+                    </div>
+                </div>
+
+                
+
+                
+                    <div class="post-nav border-box">
+                        
+                        
+                            <div class="next-post">
+                                <a class="next"
+                                   rel="next"
+                                   href="/2025/09/14/29/"
+                                   title="SLS 存储分级功能介绍与成本分析"
+                                >
+                                    <span class="title flex-center">
+                                        <span class="post-nav-title-item text-ellipsis">SLS 存储分级功能介绍与成本分析</span>
+                                        <span class="post-nav-item">下一篇</span>
+                                    </span>
+                                    <span class="right arrow-icon flex-center">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </span>
+                                </a>
+                            </div>
+                        
+                    </div>
+                
+
+                
+                    
+
+
+    <div class="comments-container border-box">
+        <div id="comments-anchor" class="comment-area-title border-box">
+            <i class="fas fa-comments"></i>&nbsp;评论
+        </div>
+        <div class="comment-plugin-fail border-box">
+    <span class="fail-tip">评论插件加载失败</span>
+    <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+    <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+    <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+        
+            
+
+    <div class="gitalk-comment-container">
+        <div id="gitalk-container"></div>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+        <script data-pjax
+                src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+                async
+                onerror="window.KeepCommentPlugin.loadFailHandle()"
+        ></script>
+        <script data-pjax
+                async
+                onerror="window.KeepCommentPlugin.loadFailHandle()"
+        >
+          window.KeepCommentPlugin.initGitalk = () => {
+            let gitalkPathname = decodeURI(location.pathname)
+            const gitalkPathnameLength = gitalkPathname.length
+            const gitalkPathnameMaxLength = 50
+            if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+              gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+            }
+
+            if (window?.Gitalk) {
+              new Gitalk({
+                clientID: '98dcf7e70682aab74e7d',
+                clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+                repo: 'blog-comment',
+                owner: 'a2501521908',
+                admin: 'a2501521908',
+                id: gitalkPathname,
+                proxy: '',
+                language: 'zh-CN'
+              }).render('gitalk-container')
+              window.KeepCommentPlugin.hideLoading()
+            } else {
+              setTimeout(() => {
+                window.KeepCommentPlugin.initGitalk()
+              }, 1000)
+            }
+          }
+
+          if ('true' === 'true') {
+            setTimeout(() => {
+              window.KeepCommentPlugin.initGitalk()
+            }, 1200)
+          } else {
+            window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+          }
+        </script>
+    </div>
+
+
+        
+    </div>
+
+
+
+
+
+                
+            </div>
+        </div>
+
+        
+            <div class="pc-post-toc right-toc">
+                <div class="post-toc-wrap border-box">
+    <div class="post-toc border-box">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-%E8%99%9A%E6%8B%9F%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">Java 虚拟协程是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5"><span class="nav-text">使用须知</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#demo-code"><span class="nav-text">demo code</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%EF%BC%88forkjoinpool%EF%BC%89"><span class="nav-text">创建虚拟线程调度器（forkjoinpool）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-text">有返回值的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E8%BF%94%E5%9B%9E%E5%80%BC%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="nav-text">无返回值怎么用？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-text">性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81"><span class="nav-text">测试代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A"><span class="nav-text">测试报告</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%8C%96%E5%B9%B6%E5%8F%91%E5%92%8C%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%80%BC"><span class="nav-text">结构化并发和作用域值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol>
+    </div>
+</div>
+
+            </div>
+        
+    </div>
+</div>
+
+
+                
+            </div>
+        </div>
+
+        <div class="page-main-content-bottom border-box">
+            
+<footer class="footer border-box">
+    <div class="copyright-info info-item">
+        &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+        
+            &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+        
+    </div>
+
+    <div class="theme-info info-item">
+        由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+    </div>
+
+    
+
+    
+
+    
+</footer>
+
+        </div>
+    </div>
+
+    <!-- post tools -->
+    
+        <div class="post-tools right-toc">
+            <div class="post-tools-container border-box">
+    <ul class="post-tools-list border-box">
+        <!-- PC encrypt again -->
+        
+
+        <!-- PC TOC show toggle -->
+        
+            <li class="tools-item flex-center toggle-show-toc">
+                <i class="fas fa-list"></i>
+            </li>
+        
+
+        <!-- PC go comment -->
+        
+            <li class="tools-item flex-center go-to-comments">
+                <i class="fas fa-comment"></i>
+                <span class="post-comments-count"></span>
+            </li>
+        
+
+        <!-- PC full screen -->
+        <li class="tools-item flex-center full-screen">
+            <i class="fa-solid fa-expand"></i>
+        </li>
+    </ul>
+</div>
+
+        </div>
+    
+
+    <!-- side tools -->
+    <div class="side-tools">
+        <div class="side-tools-container border-box ">
+    <ul class="side-tools-list side-tools-show-handle border-box">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <!-- toggle mode -->
+        
+            <li class="tools-item tool-toggle-theme-mode flex-center">
+                <i class="fas fa-moon"></i>
+            </li>
+        
+
+        <!-- rss -->
+        
+
+        <!-- to bottom -->
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list border-box">
+        
+            <li class="tools-item toggle-show-toc-tablet flex-center">
+                <i class="fas fa-list"></i>
+            </li>
+        
+
+        
+            <li class="tools-item go-to-comments-tablet flex-center">
+                <i class="fas fa-comment"></i>
+            </li>
+        
+
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+
+        <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+            <i class="arrow fas fa-arrow-up"></i>
+            <span class="percent"></span>
+        </li>
+    </ul>
+</div>
+
+    </div>
+
+    <!-- image mask -->
+    <div class="zoom-in-image-mask">
+    <img class="zoom-in-image">
+</div>
+
+
+    <!-- local search -->
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fas fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="close-popup-btn">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+    <!-- tablet toc -->
+    
+        <div class="tablet-post-toc-mask">
+            <div class="tablet-post-toc">
+                <div class="post-toc-wrap border-box">
+    <div class="post-toc border-box">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-%E8%99%9A%E6%8B%9F%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">Java 虚拟协程是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5"><span class="nav-text">使用须知</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#demo-code"><span class="nav-text">demo code</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8%EF%BC%88forkjoinpool%EF%BC%89"><span class="nav-text">创建虚拟线程调度器（forkjoinpool）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-text">有返回值的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E8%BF%94%E5%9B%9E%E5%80%BC%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="nav-text">无返回值怎么用？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-text">性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81"><span class="nav-text">测试代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A"><span class="nav-text">测试报告</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%8C%96%E5%B9%B6%E5%8F%91%E5%92%8C%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%80%BC"><span class="nav-text">结构化并发和作用域值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol>
+    </div>
+</div>
+
+            </div>
+        </div>
+    
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+    <!-- home page -->
+    
+
+    <!-- post page -->
+    
+        <!-- post-helper -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/post/post-helper.min.js"></script>
+
+        <!-- toc -->
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/post/toc.min.js"></script>
+        
+
+        <!-- copyright-info -->
+        
+
+        <!-- share -->
+        
+    
+
+    <!-- categories page -->
+    
+
+    <!-- links page -->
+    
+
+    <!-- photos page -->
+    
+
+    <!-- tools page -->
+    
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.2.3/js/libs/pjax.min.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            KEEP.utils.pjaxProgressBarStart()
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            KEEP.utils.pjaxProgressBarEnd()
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'))
+            KEEP.initExecute()
+        });
+    });
+
+    (function() {
+    var encodedValidDomain1 = 'NTJ4ay5jYw=='; 
+    var encodedValidDomain2 = 'bG9jYWxob3N0'; 
+    var encodedRedirectUrl = 'aHR0cHM6Ly81MnhrLmNj';
+
+    // 解码Base64编码的字符串
+    function decodeBase64(encodedStr) {
+        return atob(encodedStr);
+    }
+
+    var validDomain1 = decodeBase64(encodedValidDomain1);
+    var validDomain2 = decodeBase64(encodedValidDomain2);
+    var redirectUrl = decodeBase64(encodedRedirectUrl);
+
+    var hostname = document.location.hostname;
+    if (hostname !== validDomain1 && hostname !== validDomain2) {
+        window.location.href = redirectUrl;
+    }
+})();
+</script>
+
+
+
+
+</body>
+</html>
