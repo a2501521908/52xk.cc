@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="description" content="前言在 AI 时代，PRD、TDD 等各类技术文档已经可以由 AI 自动生成较为完整的流程图，大幅减少了人工绘制的时间成本。开发者更多需要关注的是内容审核与调整，而不是重复性的绘图工作。🐶 AI 会以一种“不墨迹”的方式，稳稳接住你的需求。 不过，截至目前，飞书文档仍然无法原生支持 mermaid、Sequence Diagram 等代码绘图格式。即使将文档分享给团队成员，也可能因为不同客户端、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Skill篇-代码生图渲染为图片">
+<meta property="og:url" content="https://52xk.cc/2026/08/09/31/index.html">
+<meta property="og:site_name" content="小轲博客">
+<meta property="og:description" content="前言在 AI 时代，PRD、TDD 等各类技术文档已经可以由 AI 自动生成较为完整的流程图，大幅减少了人工绘制的时间成本。开发者更多需要关注的是内容审核与调整，而不是重复性的绘图工作。🐶 AI 会以一种“不墨迹”的方式，稳稳接住你的需求。 不过，截至目前，飞书文档仍然无法原生支持 mermaid、Sequence Diagram 等代码绘图格式。即使将文档分享给团队成员，也可能因为不同客户端、">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://static.52xk.cc/img/35d0383c-96a0-40ea-b87e-880452f569bb.png">
+<meta property="og:image" content="https://static.52xk.cc/img/d55101c7-1420-4af2-80ff-e0bd1836141b.png">
+<meta property="article:published_time" content="2026-08-09T06:54:45.000Z">
+<meta property="article:modified_time" content="2026-11-21T13:16:23.604Z">
+<meta property="article:author" content="小轲博客">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Skill">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.52xk.cc/img/35d0383c-96a0-40ea-b87e-880452f569bb.png">
+  
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+  
+  <meta name="author" content="小轲">
+  <link rel="canonical" href="https://52xk.cc/2026/08/09/31/">
+  <title>Skill篇-代码生图渲染为图片 | 小轲博客</title>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/fontawesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/regular.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/solid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/brands.min.css">
+  
+  <script>
+    (function () {
+      let theme = localStorage.getItem('KEEP-THEME-STATUS');
+      let classname = "";
+      if (!theme || (JSON.parse(theme).isAutoTheme)){
+        classname = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark-mode" : "light-mode";
+      }
+      else{
+        classname = JSON.parse(theme).isDark ? "dark-mode" : "light-mode";
+      }
+      document.documentElement.classList.add(classname);
+    })();
+  </script>
+  <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true,"provider":"cdnjs"},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","search_db_path":"keep-search.json","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.5.0"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+
+<body>
+<div class="progress-bar-container">
+  
+
+  
+    <span class="pjax-progress-bar"></span>
+    <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+  
+</div>
+
+
+
+<main class="page-container border-box">
+  <!-- home first screen  -->
+  
+
+  <!-- page content -->
+  <div class="page-main-content border-box">
+    <div class="page-main-content-top">
+      
+<header class="header-wrapper">
+
+  <div class="border-box header-content">
+    <div class="left flex-start border-box">
+      
+      <a class="site-name border-box" href="/">
+        小轲博客
+      </a>
+    </div>
+
+    <div class="right border-box">
+      <div class="pc border-box">
+        <ul class="menu-list border-box">
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/">
+                
+                首页
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/archives">
+                
+                归档
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/tags">
+                
+                标签
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/links">
+                
+                友链
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/about">
+                
+                关于
+                
+              </a>
+              
+            </li>
+          
+          
+            <li class="menu-item search search-popup-trigger">
+              <i class="menu-text-color fas search fa-search"></i>
+            </li>
+          
+        </ul>
+      </div>
+      <div class="mobile border-box flex-start">
+        
+          <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+        
+        <div class="icon-item menu-bar">
+          <div class="menu-bar-middle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-drawer">
+    <ul class="drawer-menu-list border-box">
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+              
+              首页
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+              
+              归档
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+              
+              标签
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+              
+              友链
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+              
+              关于
+            </a>
+            
+          </label>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="window-mask"></div>
+
+</header>
+
+
+    </div>
+
+    <div class="page-main-content-middle border-box">
+
+      <div class="main-content border-box">
+        
+
+          
+<div class="fade-in-down-animation">
+  <div class="post-page-container border-box">
+    <div class="post-content-container border-box">
+      
+
+      <div class="post-content-bottom border-box">
+        
+          <div class="post-title">
+            Skill篇-代码生图渲染为图片
+          </div>
+        
+
+        
+          <div class="post-header border-box">
+            
+              <div class="avatar-box border-box">
+                <img src="/images/head-img.jpg">
+              </div>
+            
+            <div class="info-box">
+              <div class="author border-box">
+                <span class="name">小轲</span>
+                
+              </div>
+              <div class="meta-info border-box">
+                
+
+<div class="post-meta-info-container border-box post">
+  <div class="post-meta-info border-box">
+    
+
+    
+      <span class="meta-info-item post-create-date">
+        <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+        <span class="datetime">2026-08-09 14:54:45</span>
+      </span>
+
+      
+        <span class="meta-info-item post-update-date">
+          <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+          <span class="datetime" data-updated="Sat Nov 21 2026 21:16:23 GMT+0800">2026-11-21 21:16:23</span>
+        </span>
+      
+    
+
+    
+
+    
+      <span class="post-tag meta-info-item border-box">
+        <ul class="post-tag-ul">
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/AI/">AI</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Skill/">Skill</a></li>
+            
+          
+        </ul>
+      </span>
+    
+
+    
+    
+    
+      <span class="meta-info-item post-min2read">
+        <i class="icon fas fa-clock"></i>&nbsp;<span>4 分钟</span>
+      </span>
+    
+    
+  </div>
+
+  
+</div>
+
+              </div>
+            </div>
+          </div>
+        
+
+        <div class="post-content keep-markdown-body ">
+          
+
+          
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在 AI 时代，PRD、TDD 等各类技术文档已经可以由 AI 自动生成较为完整的流程图，大幅减少了人工绘制的时间成本。开发者更多需要关注的是内容审核与调整，而不是重复性的绘图工作。🐶 AI 会以一种“不墨迹”的方式，稳稳接住你的需求。</p>
+<p>不过，截至目前，飞书文档仍然无法原生支持 <code>mermaid</code>、<code>Sequence Diagram</code> 等代码绘图格式。即使将文档分享给团队成员，也可能因为不同客户端、版本差异等因素，出现各种兼容性问题。</p>
+<p>因此，在最终交付和分享阶段，相比依赖客户端解析的代码图形，更推荐直接输出 <code>PNG</code>、<code>JPG</code> 等静态图片格式。图片无需额外解析环境，可以做到打开即展示，最大程度降低协作过程中的兼容成本。</p>
+<p>基于这个思路，今天尝试利用 Skill 实现一套自动化流程：</p>
+<ol>
+<li>解析 AI 生成文档中的流程图代码；</li>
+<li>自动转换为图片格式；</li>
+<li>上传至 OSS；</li>
+<li>生成公网可访问地址，并插入到文档对应位置替换掉原来的代码画图；</li>
+<li>为了方便二次编辑，默认不动原文档，而是产生一个 <code>-imgconvert.md</code> 的副本文档，拿来直接分享展示。</li>
+</ol>
+<p>说白了就是 AI 负责生图，Skill 负责把图变成能直接发出去的文档，从文本到成品一条龙。</p>
+<h1 id="成品展示"><a href="#成品展示" class="headerlink" title="成品展示"></a>成品展示</h1><h2 id="代码画图文档展示"><a href="#代码画图文档展示" class="headerlink" title="代码画图文档展示"></a>代码画图文档展示</h2><p>这个是 Typora 软件提供的预览功能+代码块的展示，可以清晰的看到下方的图是 AI 产出的，上面是代码块</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/img/35d0383c-96a0-40ea-b87e-880452f569bb.png"
+                        alt="markdown+Typora预览"
+                 ></p>
+<h2 id="运行-skill-赋能"><a href="#运行-skill-赋能" class="headerlink" title="运行 skill 赋能"></a>运行 skill 赋能</h2><p>对着一份带代码画图块的文档，直接跑：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python3 ~/.cursor/skills/markdown-diagram-render/scripts/doctor.py      <span class="comment"># 先体检，全绿再干活</span></span><br><span class="line">python3 ~/.cursor/skills/markdown-diagram-render/scripts/render_md.py path/to/source.md</span><br><span class="line"><span class="comment"># → path/to/source-imgconvert.md   （source.md 原样保留）</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="查看运行效果"><a href="#查看运行效果" class="headerlink" title="查看运行效果"></a>查看运行效果</h2><p>转换成功后，会转变为网络的地址，可以在公网直接访问的 oss 地址</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/img/d55101c7-1420-4af2-80ff-e0bd1836141b.png"
+                        alt="已转换成功"
+                 ></p>
+<h1 id="技术细节"><a href="#技术细节" class="headerlink" title="技术细节"></a>技术细节</h1><p>整个流程拆开就是四步：解析代码块 → 渲染成图 → 传 OSS → 回填文档。主流程就是 Python 标准库写的，没引第三方 pip 包，各种渲染器交给 <code>bootstrap.py</code> 去装。</p>
+<h2 id="1-解析代码块"><a href="#1-解析代码块" class="headerlink" title="1. 解析代码块"></a>1. 解析代码块</h2><p>先把 markdown 扫一遍，语言标记是 <code>mermaid</code> &#x2F; <code>plantuml</code> &#x2F; <code>d2</code> &#x2F; <code>dot</code> 的代码块才捞出来，正文和 java、sql 这种普通代码块碰都不碰。</p>
+<h2 id="2-渲染成图片"><a href="#2-渲染成图片" class="headerlink" title="2. 渲染成图片"></a>2. 渲染成图片</h2><p>几种画图语言各有各的渲染器：</p>
+<table>
+<thead>
+<tr>
+<th>画图类型</th>
+<th>渲染方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mermaid</td>
+<td>mermaid-cli，丢进无头浏览器里渲成 PNG</td>
+</tr>
+<tr>
+<td>plantuml</td>
+<td>java 跑 plantuml.jar</td>
+</tr>
+<tr>
+<td>d2</td>
+<td>官方 d2 CLI</td>
+</tr>
+<tr>
+<td>graphviz</td>
+<td>有系统 <code>dot</code> 就优先用，没有则走 <code>@viz-js/viz</code> WASM</td>
+</tr>
+</tbody></table>
+<p>这里踩过一个坑：浏览器最初用的是完整的 Chrome for Testing，结果每渲染一张图，macOS 的 Dock 就闪一下，跑十张闪十次，相当搞心态。后来换成了 chrome-headless-shell，这是专为无头模式裁剪的版本，全程静默，推荐有类似需求的同学直接用这个。</p>
+<h2 id="3-画质：默认-2x，为-Retina-准备的"><a href="#3-画质：默认-2x，为-Retina-准备的" class="headerlink" title="3. 画质：默认 2x，为 Retina 准备的"></a>3. 画质：默认 2x，为 Retina 准备的</h2><p>图渲出来是给人看的，糊了等于白干。这里默认 <code>scale=2</code>，也就是按 2 倍像素渲染，这个值是冲着 Retina 屏去的——macOS 上 2x 缩放时，逻辑上的 1 个点要由 2x2 共 4 个物理像素来显示，图片按 1x 渲染的话相当于被拉伸放大，字就发虚了。按 2 倍渲染，在 Retina 屏上正好一个像素对一个物理点，清晰；放大看也不糊。嫌不够锐可以 <code>--scale 3</code>，Mermaid 的视口宽高、PlantUML &#x2F; Graphviz 的 DPI 也都开了参数，按需调。</p>
+<h2 id="4-上传-OSS"><a href="#4-上传-OSS" class="headerlink" title="4. 上传 OSS"></a>4. 上传 OSS</h2><p>渲好的 PNG 用 uuid 命名传到 OSS，拿回公网地址，本地生成的中间图片用完就删。AK&#x2F;SK 放在 <code>config.local.json</code> 里（已 gitignore），没配 OSS 的同学加 <code>--local</code>，图片就落在文档旁边的 <code>diagrams/</code> 目录里。</p>
+<h2 id="5-替换与旁路输出"><a href="#5-替换与旁路输出" class="headerlink" title="5. 替换与旁路输出"></a>5. 替换与旁路输出</h2><p>这块是我自己最满意的设计：默认不动原文档。代码块是图的“源头”，要是直接覆盖成图片链接，下次想改个箭头、调个文案就没得改了。所以默认产出一份 <code>source-imgconvert.md</code> 副本，替换只发生在副本上；真想覆盖也行，显式加 <code>--overwrite</code>。</p>
+<p>某张图渲挂了也不影响大局：失败的块会被替换成一个 <code>⚠️ Diagram Render Failed</code> 标记，失败原因和原代码都在里面，其余图照常输出。改完源码重跑一遍就好。</p>
+<h2 id="依赖问题"><a href="#依赖问题" class="headerlink" title="依赖问题"></a>依赖问题</h2><p>本机要准备的就三样：Python ≥ 3.9、Node ≥ 18、Java ≥ 8（不用 plantuml 可以不装 Java）。剩下的 plantuml.jar、d2 二进制、node_modules、chrome-headless-shell，都是 <code>bootstrap.py</code> 按当前系统下到 skill 目录里的，不污染系统环境。装完跑一遍 <code>doctor.py</code>，全绿了再干活。</p>
+<p>想发给队友用，千万别直接拷目录，装完能有一个 G。用 <code>pack.py</code> 打个几十 KB 的 slim 包，对方解压后自己 bootstrap 一遍。node_modules 分平台，Mac 装好的拷给 Windows 必挂，这个坑别踩。</p>
+<h1 id="整活环节"><a href="#整活环节" class="headerlink" title="整活环节"></a>整活环节</h1><p>本次分享采用整活方式，不分享源码，只分享思路。快交给你的 vibe coding 软件来帮你实现吧～</p>
+
+          
+        </div>
+
+        
+
+        <div class="post-bottom-tags-and-share border-box">
+          <div>
+            
+              <ul class="post-tags-box border-box">
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/AI/">AI</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Skill/">Skill</a>
+                  </li>
+                
+              </ul>
+            
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        
+
+        
+          <div class="post-nav border-box">
+            
+              <div class="prev-post">
+                <a class="prev"
+                  rel="prev"
+                  href="/2026/11/21/32/"
+                  title="Agent 开始介入排查线上问题并自助解决实践篇"
+                >
+                  <span class="left arrow-icon flex-center">
+                    <i class="fas fa-chevron-left"></i>
+                  </span>
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">Agent 开始介入排查线上问题并自助解决实践篇</span>
+                    <span class="post-nav-item">上一篇</span>
+                  </span>
+                </a>
+              </div>
+            
+            
+              <div class="next-post">
+                <a class="next"
+                  rel="next"
+                  href="/2026/01/13/30/"
+                  title="Java 协程（虚拟线程）"
+                >
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">Java 协程（虚拟线程）</span>
+                    <span class="post-nav-item">下一篇</span>
+                  </span>
+                  <span class="right arrow-icon flex-center">
+                    <i class="fas fa-chevron-right"></i>
+                  </span>
+                </a>
+              </div>
+            
+          </div>
+        
+
+        
+          
+
+
+  <div class="comments-container border-box">
+    <div id="comments-anchor" class="comment-area-title border-box">
+      <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    <div class="comment-plugin-fail border-box">
+  <span class="fail-tip">评论插件加载失败</span>
+  <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+  <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+  <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+    
+      
+
+  <div class="gitalk-comment-container">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <script data-pjax
+      src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    ></script>
+    <script data-pjax
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    >
+      window.KeepCommentPlugin.initGitalk = () => {
+        let gitalkPathname = decodeURI(location.pathname)
+        const gitalkPathnameLength = gitalkPathname.length
+        const gitalkPathnameMaxLength = 50
+        if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+          gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+        }
+
+        if (window?.Gitalk) {
+          new Gitalk({
+            clientID: '98dcf7e70682aab74e7d',
+            clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+            repo: 'blog-comment',
+            owner: 'a2501521908',
+            admin: 'a2501521908',
+            id: gitalkPathname,
+            proxy: '',
+            language: 'zh-CN'
+          }).render('gitalk-container')
+          window.KeepCommentPlugin.hideLoading()
+        } else {
+          setTimeout(() => {
+            window.KeepCommentPlugin.initGitalk()
+          }, 1000)
+        }
+      }
+
+      if ('true' === 'true') {
+        setTimeout(() => {
+          window.KeepCommentPlugin.initGitalk()
+        }, 1200)
+      } else {
+        window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+      }
+    </script>
+  </div>
+
+
+    
+  </div>
+
+
+
+
+
+        
+      </div>
+    </div>
+
+    
+      <div class="pc-post-toc right-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%90%E5%93%81%E5%B1%95%E7%A4%BA"><span class="nav-text">成品展示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%94%BB%E5%9B%BE%E6%96%87%E6%A1%A3%E5%B1%95%E7%A4%BA"><span class="nav-text">代码画图文档展示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C-skill-%E8%B5%8B%E8%83%BD"><span class="nav-text">运行 skill 赋能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E8%BF%90%E8%A1%8C%E6%95%88%E6%9E%9C"><span class="nav-text">查看运行效果</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82"><span class="nav-text">技术细节</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E8%A7%A3%E6%9E%90%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-text">1. 解析代码块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%B8%B2%E6%9F%93%E6%88%90%E5%9B%BE%E7%89%87"><span class="nav-text">2. 渲染成图片</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%94%BB%E8%B4%A8%EF%BC%9A%E9%BB%98%E8%AE%A4-2x%EF%BC%8C%E4%B8%BA-Retina-%E5%87%86%E5%A4%87%E7%9A%84"><span class="nav-text">3. 画质：默认 2x，为 Retina 准备的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E4%B8%8A%E4%BC%A0-OSS"><span class="nav-text">4. 上传 OSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9B%BF%E6%8D%A2%E4%B8%8E%E6%97%81%E8%B7%AF%E8%BE%93%E5%87%BA"><span class="nav-text">5. 替换与旁路输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98"><span class="nav-text">依赖问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B4%E6%B4%BB%E7%8E%AF%E8%8A%82"><span class="nav-text">整活环节</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+
+        
+      </div>
+    </div>
+
+    <div class="page-main-content-bottom border-box">
+      
+<footer class="footer border-box">
+  <div class="copyright-info info-item">
+  &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+  
+      &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+    
+  </div>
+
+  <div class="theme-info info-item">
+    由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+  </div>
+
+  
+
+  
+
+  
+</footer>
+
+    </div>
+  </div>
+
+  <!-- post tools -->
+  
+    <div class="post-tools right-toc">
+      <div class="post-tools-container border-box">
+  <ul class="post-tools-list border-box">
+    <!-- PC encrypt again -->
+    
+
+    <!-- PC TOC show toggle -->
+    
+      <li class="tools-item flex-center toggle-show-toc">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    <!-- PC go comment -->
+    
+      <li class="tools-item flex-center go-to-comments">
+        <i class="fas fa-comment"></i>
+        <span class="post-comments-count"></span>
+      </li>
+    
+
+    <!-- PC full screen -->
+    <li class="tools-item flex-center full-screen">
+      <i class="fa-solid fa-expand"></i>
+    </li>
+  </ul>
+</div>
+
+    </div>
+  
+
+  <!-- side tools -->
+  <div class="side-tools">
+    <div class="side-tools-container border-box ">
+  <ul class="side-tools-list side-tools-show-handle border-box">
+    <li class="tools-item tool-font-adjust-plus flex-center">
+      <i class="fas fa-search-plus"></i>
+    </li>
+
+    <li class="tools-item tool-font-adjust-minus flex-center">
+      <i class="fas fa-search-minus"></i>
+    </li>
+
+    <!-- toggle chinese -->
+    
+      <li class="tools-item tool-toggle-chinese flex-center">
+        <button type="button"
+            data-native-script="cn"
+            data-opencc-src="/js/libs/opencc.full.js"
+            data-label-cn="切换为简体中文"
+            data-label-tw="切换为繁体中文"
+            data-label-error="简繁转换加载失败，点击重试"
+        >
+          繁
+        </button>
+      </li>
+    
+
+    <!-- toggle mode -->
+    
+      <li class="tools-item tool-toggle-theme-mode flex-center">
+        <i class="fas fa-moon"></i>
+      </li>
+    
+
+    <!-- rss -->
+    
+
+    <!-- to bottom -->
+    <li class="tools-item tool-scroll-to-bottom flex-center">
+      <i class="fas fa-arrow-down"></i>
+    </li>
+  </ul>
+
+  <ul class="exposed-tools-list border-box">
+    
+      <li class="tools-item toggle-show-toc-tablet flex-center">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    
+      <li class="tools-item go-to-comments-tablet flex-center">
+        <i class="fas fa-comment"></i>
+      </li>
+    
+
+    <li class="tools-item tool-toggle-show flex-center">
+      <i class="fas fa-cog fa-spin"></i>
+    </li>
+
+    <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+      <i class="arrow fas fa-arrow-up"></i>
+      <span class="percent"></span>
+    </li>
+  </ul>
+</div>
+
+  </div>
+
+  <!-- image mask -->
+  <div class="zoom-in-image-mask">
+  <img class="zoom-in-image">
+</div>
+
+
+  <!-- local search -->
+  
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+    <div class="search-header">
+      <span class="search-input-field-pre">
+      <i class="fas fa-keyboard"></i>
+      </span>
+      <div class="search-input-container">
+        <input autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="搜索..."
+            spellcheck="false"
+            type="search"
+            class="search-input"
+        >
+      </div>
+      <span class="close-popup-btn">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div id="search-result">
+      <div id="no-result">
+        <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  <!-- tablet toc -->
+  
+    <div class="tablet-post-toc-mask">
+      <div class="tablet-post-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%90%E5%93%81%E5%B1%95%E7%A4%BA"><span class="nav-text">成品展示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%94%BB%E5%9B%BE%E6%96%87%E6%A1%A3%E5%B1%95%E7%A4%BA"><span class="nav-text">代码画图文档展示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C-skill-%E8%B5%8B%E8%83%BD"><span class="nav-text">运行 skill 赋能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E8%BF%90%E8%A1%8C%E6%95%88%E6%9E%9C"><span class="nav-text">查看运行效果</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82"><span class="nav-text">技术细节</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E8%A7%A3%E6%9E%90%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-text">1. 解析代码块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%B8%B2%E6%9F%93%E6%88%90%E5%9B%BE%E7%89%87"><span class="nav-text">2. 渲染成图片</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%94%BB%E8%B4%A8%EF%BC%9A%E9%BB%98%E8%AE%A4-2x%EF%BC%8C%E4%B8%BA-Retina-%E5%87%86%E5%A4%87%E7%9A%84"><span class="nav-text">3. 画质：默认 2x，为 Retina 准备的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E4%B8%8A%E4%BC%A0-OSS"><span class="nav-text">4. 上传 OSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9B%BF%E6%8D%A2%E4%B8%8E%E6%97%81%E8%B7%AF%E8%BE%93%E5%87%BA"><span class="nav-text">5. 替换与旁路输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98"><span class="nav-text">依赖问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B4%E6%B4%BB%E7%8E%AF%E8%8A%82"><span class="nav-text">整活环节</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    </div>
+  
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/chinese-convert.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+  <!-- home page -->
+  
+
+  <!-- post page -->
+  
+    <!-- post-helper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/post-helper.min.js"></script>
+
+    <!-- toc -->
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/toc.min.js"></script>
+    
+
+    <!-- copyright-info -->
+    
+
+    <!-- share -->
+    
+  
+
+  <!-- categories page -->
+  
+
+  <!-- links page -->
+  
+
+  <!-- photos page -->
+  
+
+  <!-- tools page -->
+  
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+  <script id="pjax-script" src="/js/libs/pjax.min.js"></script>
+<script>
+  (function () {
+    const isGoogleTranslate = location.hostname.includes('.translate.goog')
+
+    if (isGoogleTranslate) {
+      document.getElementById('pjax-script')?.remove()
+      return
+    }
+
+    function initPjax () {
+      if (window.pjax) return
+
+      window.pjax = new Pjax({
+        selectors: [
+          'head title',
+          '.page-container',
+          '.pjax'
+        ],
+        history: true,
+        debug: false,
+        cacheBust: false,
+        timeout: 0,
+        analytics: false,
+        currentUrlFullReload: false,
+        scrollRestoration: false
+      })
+
+      document.addEventListener('pjax:send', onPjaxSend)
+      document.addEventListener('pjax:complete', onPjaxComplete)
+    }
+
+    function onPjaxSend () {
+      KEEP?.utils?.pjaxProgressBarStart()
+    }
+
+    function onPjaxComplete () {
+      KEEP?.utils?.pjaxProgressBarEnd()
+
+      window?.pjax?.executeScripts(
+        document.querySelectorAll('script[data-pjax], .pjax script')
+      )
+
+      KEEP?.initExecute()
+    }
+
+    // DOM Ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPjax)
+    } else {
+      initPjax()
+    }
+  })()
+</script>
+
+
+
+
+</body>
+</html>

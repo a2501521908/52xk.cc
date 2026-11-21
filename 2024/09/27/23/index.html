@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="description" content="为什么要使用多阶段构建？传统的Docker Build 镜像构建过程中，所有的构建步骤都在同一个镜像层中完成，其中包含了大量的构建工具和中间文件。 比如使用go mod download、go build后，你的镜像可以轻轻松松的超过1G。在持续部署过程中，分发的成本和时间非常高，有的时候修复一个问题，早1秒部署都可以减少很大的损失，更别说日常了，1G的镜像分发费用也不是一笔小费用。 什么是多阶段">
+<meta property="og:type" content="article">
+<meta property="og:title" content="镜像瘦身利器，Docker的多阶段构建">
+<meta property="og:url" content="https://52xk.cc/2024/09/27/23/index.html">
+<meta property="og:site_name" content="小轲博客">
+<meta property="og:description" content="为什么要使用多阶段构建？传统的Docker Build 镜像构建过程中，所有的构建步骤都在同一个镜像层中完成，其中包含了大量的构建工具和中间文件。 比如使用go mod download、go build后，你的镜像可以轻轻松松的超过1G。在持续部署过程中，分发的成本和时间非常高，有的时候修复一个问题，早1秒部署都可以减少很大的损失，更别说日常了，1G的镜像分发费用也不是一笔小费用。 什么是多阶段">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://static.52xk.cc/2024/09/27/ObQHyZcmfj8Cv3a.png">
+<meta property="article:published_time" content="2024-09-27T07:51:12.000Z">
+<meta property="article:modified_time" content="2026-11-21T13:16:23.606Z">
+<meta property="article:author" content="小轲博客">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="容器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.52xk.cc/2024/09/27/ObQHyZcmfj8Cv3a.png">
+  
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+  
+  <meta name="author" content="小轲">
+  <link rel="canonical" href="https://52xk.cc/2024/09/27/23/">
+  <title>镜像瘦身利器，Docker的多阶段构建 | 小轲博客</title>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/fontawesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/regular.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/solid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/brands.min.css">
+  
+  <script>
+    (function () {
+      let theme = localStorage.getItem('KEEP-THEME-STATUS');
+      let classname = "";
+      if (!theme || (JSON.parse(theme).isAutoTheme)){
+        classname = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark-mode" : "light-mode";
+      }
+      else{
+        classname = JSON.parse(theme).isDark ? "dark-mode" : "light-mode";
+      }
+      document.documentElement.classList.add(classname);
+    })();
+  </script>
+  <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true,"provider":"cdnjs"},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","search_db_path":"keep-search.json","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.5.0"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+
+<body>
+<div class="progress-bar-container">
+  
+
+  
+    <span class="pjax-progress-bar"></span>
+    <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+  
+</div>
+
+
+
+<main class="page-container border-box">
+  <!-- home first screen  -->
+  
+
+  <!-- page content -->
+  <div class="page-main-content border-box">
+    <div class="page-main-content-top">
+      
+<header class="header-wrapper">
+
+  <div class="border-box header-content">
+    <div class="left flex-start border-box">
+      
+      <a class="site-name border-box" href="/">
+        小轲博客
+      </a>
+    </div>
+
+    <div class="right border-box">
+      <div class="pc border-box">
+        <ul class="menu-list border-box">
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/">
+                
+                首页
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/archives">
+                
+                归档
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/tags">
+                
+                标签
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/links">
+                
+                友链
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/about">
+                
+                关于
+                
+              </a>
+              
+            </li>
+          
+          
+            <li class="menu-item search search-popup-trigger">
+              <i class="menu-text-color fas search fa-search"></i>
+            </li>
+          
+        </ul>
+      </div>
+      <div class="mobile border-box flex-start">
+        
+          <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+        
+        <div class="icon-item menu-bar">
+          <div class="menu-bar-middle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-drawer">
+    <ul class="drawer-menu-list border-box">
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+              
+              首页
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+              
+              归档
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+              
+              标签
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+              
+              友链
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+              
+              关于
+            </a>
+            
+          </label>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="window-mask"></div>
+
+</header>
+
+
+    </div>
+
+    <div class="page-main-content-middle border-box">
+
+      <div class="main-content border-box">
+        
+
+          
+<div class="fade-in-down-animation">
+  <div class="post-page-container border-box">
+    <div class="post-content-container border-box">
+      
+
+      <div class="post-content-bottom border-box">
+        
+          <div class="post-title">
+            镜像瘦身利器，Docker的多阶段构建
+          </div>
+        
+
+        
+          <div class="post-header border-box">
+            
+              <div class="avatar-box border-box">
+                <img src="/images/head-img.jpg">
+              </div>
+            
+            <div class="info-box">
+              <div class="author border-box">
+                <span class="name">小轲</span>
+                
+              </div>
+              <div class="meta-info border-box">
+                
+
+<div class="post-meta-info-container border-box post">
+  <div class="post-meta-info border-box">
+    
+
+    
+      <span class="meta-info-item post-create-date">
+        <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+        <span class="datetime">2024-09-27 15:51:12</span>
+      </span>
+
+      
+        <span class="meta-info-item post-update-date">
+          <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+          <span class="datetime" data-updated="Sat Nov 21 2026 21:16:23 GMT+0800">2026-11-21 21:16:23</span>
+        </span>
+      
+    
+
+    
+
+    
+      <span class="post-tag meta-info-item border-box">
+        <ul class="post-tag-ul">
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Docker/">Docker</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%AE%B9%E5%99%A8/">容器</a></li>
+            
+          
+        </ul>
+      </span>
+    
+
+    
+    
+    
+      <span class="meta-info-item post-min2read">
+        <i class="icon fas fa-clock"></i>&nbsp;<span>2 分钟</span>
+      </span>
+    
+    
+  </div>
+
+  
+</div>
+
+              </div>
+            </div>
+          </div>
+        
+
+        <div class="post-content keep-markdown-body ">
+          
+
+          
+            <h1 id="为什么要使用多阶段构建？"><a href="#为什么要使用多阶段构建？" class="headerlink" title="为什么要使用多阶段构建？"></a>为什么要使用多阶段构建？</h1><p>传统的Docker Build 镜像构建过程中，所有的构建步骤都在同一个镜像层中完成，其中包含了大量的构建工具和中间文件。</p>
+<p>比如使用<code>go mod download</code>、<code>go build</code>后，你的镜像可以轻轻松松的超过1G。在持续部署过程中，分发的成本和时间非常高，有的时候修复一个问题，早1秒部署都可以减少很大的损失，更别说日常了，1G的镜像分发费用也不是一笔小费用。</p>
+<h1 id="什么是多阶段构建？"><a href="#什么是多阶段构建？" class="headerlink" title="什么是多阶段构建？"></a>什么是多阶段构建？</h1><p>多阶段构建是指在一个<code>Dockerfile</code>中使用多个<code>FROM</code>指令来创建不同的构建阶段。每个阶段都可以有自己的基础镜像，并且每个阶段可以相互独立地运行命令。</p>
+<p>通过这种方式，我们可以将构建过程分为几个部分，每个部分专注于完成特定的任务，如编译代码、复制依赖文件等。</p>
+<img    
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2024/09/27/ObQHyZcmfj8Cv3a.png"
+                         alt="Docker多阶段构建" style="zoom: 50%;" 
+                 >
+
+<p>类似于上图的逻辑，瘦身的体验相当不错，<strong>从1.3G直接缩到28M</strong>，效果非常显著。</p>
+<p>在上图中，做一个简单的解释</p>
+<ol>
+<li><p><strong>第一个阶段</strong>从基础 Go 镜像中拉取，并执行编译和下载等操作，这些资源在构建完成后实际上并不需要。我们将该阶段命名为 <code>builder</code>。</p>
+</li>
+<li><p><strong>第二个阶段</strong>引用第一阶段的 <code>builder</code>，从中复制构建物。在第二阶段中，只有基础的 Linux 环境和一个 Go 的二进制运行包。</p>
+</li>
+</ol>
+<p>使用两个阶段就可以轻松将Go的构建物实现解耦和精简，非常的方便。</p>
+<h1 id="怎么使用多阶段构建？"><a href="#怎么使用多阶段构建？" class="headerlink" title="怎么使用多阶段构建？"></a>怎么使用多阶段构建？</h1><p>下面是一个Go的dockerfile，供参考</p>
+<p>其实和我们正常的构建操作是差不多的，编写完成后正常执行<code>docker build .</code> 即可</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用已有的 Golang 镜像作为基础镜像</span></span><br><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.23</span>.<span class="number">0</span> AS builder</span><br><span class="line"><span class="comment"># 设定代理</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY=https://goproxy.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 复制 go.mod 和 go.sum 文件</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> go.mod go.sum ./</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> go mod download</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 复制整个项目</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> . .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译 Go 应用</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./src/main/app.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用较小的基础镜像</span></span><br><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装 ca-certificates 和 tzdata</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apk --no-cache add ca-certificates tzdata</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置时区为上海</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">cp</span> /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &amp;&amp; <span class="built_in">echo</span> <span class="string">&quot;Asia/Shanghai&quot;</span> &gt; /etc/timezone</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /root/</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 从 builder 镜像中复制编译后的二进制文件</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> --from=builder /app/main .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暴露应用运行的端口</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">8080</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行应用</span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> [<span class="string">&quot;./main&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>无论是可以直接编译机器码的Go、还是已经推出GraalVM的Java，还有其他可以编译机器码的语言都可以使用这种多阶段构建方式进行瘦身。</p>
+<p>其中好处有不仅可以提升部署的速度，更能减少分发的时间和带宽成本。</p>
+
+          
+        </div>
+
+        
+
+        <div class="post-bottom-tags-and-share border-box">
+          <div>
+            
+              <ul class="post-tags-box border-box">
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Docker/">Docker</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%AE%B9%E5%99%A8/">容器</a>
+                  </li>
+                
+              </ul>
+            
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        
+
+        
+          <div class="post-nav border-box">
+            
+              <div class="prev-post">
+                <a class="prev"
+                  rel="prev"
+                  href="/2024/11/10/24/"
+                  title="状态设计模式的实践"
+                >
+                  <span class="left arrow-icon flex-center">
+                    <i class="fas fa-chevron-left"></i>
+                  </span>
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">状态设计模式的实践</span>
+                    <span class="post-nav-item">上一篇</span>
+                  </span>
+                </a>
+              </div>
+            
+            
+              <div class="next-post">
+                <a class="next"
+                  rel="next"
+                  href="/2024/09/25/22/"
+                  title="关于博客被恶意镜像这件事"
+                >
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">关于博客被恶意镜像这件事</span>
+                    <span class="post-nav-item">下一篇</span>
+                  </span>
+                  <span class="right arrow-icon flex-center">
+                    <i class="fas fa-chevron-right"></i>
+                  </span>
+                </a>
+              </div>
+            
+          </div>
+        
+
+        
+          
+
+
+  <div class="comments-container border-box">
+    <div id="comments-anchor" class="comment-area-title border-box">
+      <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    <div class="comment-plugin-fail border-box">
+  <span class="fail-tip">评论插件加载失败</span>
+  <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+  <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+  <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+    
+      
+
+  <div class="gitalk-comment-container">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <script data-pjax
+      src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    ></script>
+    <script data-pjax
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    >
+      window.KeepCommentPlugin.initGitalk = () => {
+        let gitalkPathname = decodeURI(location.pathname)
+        const gitalkPathnameLength = gitalkPathname.length
+        const gitalkPathnameMaxLength = 50
+        if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+          gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+        }
+
+        if (window?.Gitalk) {
+          new Gitalk({
+            clientID: '98dcf7e70682aab74e7d',
+            clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+            repo: 'blog-comment',
+            owner: 'a2501521908',
+            admin: 'a2501521908',
+            id: gitalkPathname,
+            proxy: '',
+            language: 'zh-CN'
+          }).render('gitalk-container')
+          window.KeepCommentPlugin.hideLoading()
+        } else {
+          setTimeout(() => {
+            window.KeepCommentPlugin.initGitalk()
+          }, 1000)
+        }
+      }
+
+      if ('true' === 'true') {
+        setTimeout(() => {
+          window.KeepCommentPlugin.initGitalk()
+        }, 1200)
+      } else {
+        window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+      }
+    </script>
+  </div>
+
+
+    
+  </div>
+
+
+
+
+
+        
+      </div>
+    </div>
+
+    
+      <div class="pc-post-toc right-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">为什么要使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">什么是多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">怎么使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+
+        
+      </div>
+    </div>
+
+    <div class="page-main-content-bottom border-box">
+      
+<footer class="footer border-box">
+  <div class="copyright-info info-item">
+  &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+  
+      &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+    
+  </div>
+
+  <div class="theme-info info-item">
+    由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+  </div>
+
+  
+
+  
+
+  
+</footer>
+
+    </div>
+  </div>
+
+  <!-- post tools -->
+  
+    <div class="post-tools right-toc">
+      <div class="post-tools-container border-box">
+  <ul class="post-tools-list border-box">
+    <!-- PC encrypt again -->
+    
+
+    <!-- PC TOC show toggle -->
+    
+      <li class="tools-item flex-center toggle-show-toc">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    <!-- PC go comment -->
+    
+      <li class="tools-item flex-center go-to-comments">
+        <i class="fas fa-comment"></i>
+        <span class="post-comments-count"></span>
+      </li>
+    
+
+    <!-- PC full screen -->
+    <li class="tools-item flex-center full-screen">
+      <i class="fa-solid fa-expand"></i>
+    </li>
+  </ul>
+</div>
+
+    </div>
+  
+
+  <!-- side tools -->
+  <div class="side-tools">
+    <div class="side-tools-container border-box ">
+  <ul class="side-tools-list side-tools-show-handle border-box">
+    <li class="tools-item tool-font-adjust-plus flex-center">
+      <i class="fas fa-search-plus"></i>
+    </li>
+
+    <li class="tools-item tool-font-adjust-minus flex-center">
+      <i class="fas fa-search-minus"></i>
+    </li>
+
+    <!-- toggle chinese -->
+    
+      <li class="tools-item tool-toggle-chinese flex-center">
+        <button type="button"
+            data-native-script="cn"
+            data-opencc-src="/js/libs/opencc.full.js"
+            data-label-cn="切换为简体中文"
+            data-label-tw="切换为繁体中文"
+            data-label-error="简繁转换加载失败，点击重试"
+        >
+          繁
+        </button>
+      </li>
+    
+
+    <!-- toggle mode -->
+    
+      <li class="tools-item tool-toggle-theme-mode flex-center">
+        <i class="fas fa-moon"></i>
+      </li>
+    
+
+    <!-- rss -->
+    
+
+    <!-- to bottom -->
+    <li class="tools-item tool-scroll-to-bottom flex-center">
+      <i class="fas fa-arrow-down"></i>
+    </li>
+  </ul>
+
+  <ul class="exposed-tools-list border-box">
+    
+      <li class="tools-item toggle-show-toc-tablet flex-center">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    
+      <li class="tools-item go-to-comments-tablet flex-center">
+        <i class="fas fa-comment"></i>
+      </li>
+    
+
+    <li class="tools-item tool-toggle-show flex-center">
+      <i class="fas fa-cog fa-spin"></i>
+    </li>
+
+    <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+      <i class="arrow fas fa-arrow-up"></i>
+      <span class="percent"></span>
+    </li>
+  </ul>
+</div>
+
+  </div>
+
+  <!-- image mask -->
+  <div class="zoom-in-image-mask">
+  <img class="zoom-in-image">
+</div>
+
+
+  <!-- local search -->
+  
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+    <div class="search-header">
+      <span class="search-input-field-pre">
+      <i class="fas fa-keyboard"></i>
+      </span>
+      <div class="search-input-container">
+        <input autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="搜索..."
+            spellcheck="false"
+            type="search"
+            class="search-input"
+        >
+      </div>
+      <span class="close-popup-btn">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div id="search-result">
+      <div id="no-result">
+        <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  <!-- tablet toc -->
+  
+    <div class="tablet-post-toc-mask">
+      <div class="tablet-post-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">为什么要使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">什么是多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%EF%BC%9F"><span class="nav-text">怎么使用多阶段构建？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    </div>
+  
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/chinese-convert.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+  <!-- home page -->
+  
+
+  <!-- post page -->
+  
+    <!-- post-helper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/post-helper.min.js"></script>
+
+    <!-- toc -->
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/toc.min.js"></script>
+    
+
+    <!-- copyright-info -->
+    
+
+    <!-- share -->
+    
+  
+
+  <!-- categories page -->
+  
+
+  <!-- links page -->
+  
+
+  <!-- photos page -->
+  
+
+  <!-- tools page -->
+  
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+  <script id="pjax-script" src="/js/libs/pjax.min.js"></script>
+<script>
+  (function () {
+    const isGoogleTranslate = location.hostname.includes('.translate.goog')
+
+    if (isGoogleTranslate) {
+      document.getElementById('pjax-script')?.remove()
+      return
+    }
+
+    function initPjax () {
+      if (window.pjax) return
+
+      window.pjax = new Pjax({
+        selectors: [
+          'head title',
+          '.page-container',
+          '.pjax'
+        ],
+        history: true,
+        debug: false,
+        cacheBust: false,
+        timeout: 0,
+        analytics: false,
+        currentUrlFullReload: false,
+        scrollRestoration: false
+      })
+
+      document.addEventListener('pjax:send', onPjaxSend)
+      document.addEventListener('pjax:complete', onPjaxComplete)
+    }
+
+    function onPjaxSend () {
+      KEEP?.utils?.pjaxProgressBarStart()
+    }
+
+    function onPjaxComplete () {
+      KEEP?.utils?.pjaxProgressBarEnd()
+
+      window?.pjax?.executeScripts(
+        document.querySelectorAll('script[data-pjax], .pjax script')
+      )
+
+      KEEP?.initExecute()
+    }
+
+    // DOM Ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPjax)
+    } else {
+      initPjax()
+    }
+  })()
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="description" content="出现问题最近（2020-2022）博客出现了短暂的停更状态。 具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。 朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种强需求无法及时的得到支持。 解决思路 把hexo文件夹备份至自己的本地的文件 把hexo整个文件夹备份至git，并且手动ad">
+<meta property="og:type" content="article">
+<meta property="og:title" content="来聊(水)下最近hexo备份的思路">
+<meta property="og:url" content="https://52xk.cc/2022/11/11/11/index.html">
+<meta property="og:site_name" content="小轲博客">
+<meta property="og:description" content="出现问题最近（2020-2022）博客出现了短暂的停更状态。 具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。 朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种强需求无法及时的得到支持。 解决思路 把hexo文件夹备份至自己的本地的文件 把hexo整个文件夹备份至git，并且手动ad">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-11T14:41:21.000Z">
+<meta property="article:modified_time" content="2026-11-21T13:16:23.606Z">
+<meta property="article:author" content="小轲博客">
+<meta property="article:tag" content="OneDrive">
+<meta property="article:tag" content="hexo">
+<meta name="twitter:card" content="summary">
+  
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+  
+  <meta name="author" content="小轲">
+  <link rel="canonical" href="https://52xk.cc/2022/11/11/11/">
+  <title>来聊(水)下最近hexo备份的思路 | 小轲博客</title>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/fontawesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/regular.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/solid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/brands.min.css">
+  
+  <script>
+    (function () {
+      let theme = localStorage.getItem('KEEP-THEME-STATUS');
+      let classname = "";
+      if (!theme || (JSON.parse(theme).isAutoTheme)){
+        classname = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark-mode" : "light-mode";
+      }
+      else{
+        classname = JSON.parse(theme).isDark ? "dark-mode" : "light-mode";
+      }
+      document.documentElement.classList.add(classname);
+    })();
+  </script>
+  <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true,"provider":"cdnjs"},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","search_db_path":"keep-search.json","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.5.0"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+
+<body>
+<div class="progress-bar-container">
+  
+
+  
+    <span class="pjax-progress-bar"></span>
+    <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+  
+</div>
+
+
+
+<main class="page-container border-box">
+  <!-- home first screen  -->
+  
+
+  <!-- page content -->
+  <div class="page-main-content border-box">
+    <div class="page-main-content-top">
+      
+<header class="header-wrapper">
+
+  <div class="border-box header-content">
+    <div class="left flex-start border-box">
+      
+      <a class="site-name border-box" href="/">
+        小轲博客
+      </a>
+    </div>
+
+    <div class="right border-box">
+      <div class="pc border-box">
+        <ul class="menu-list border-box">
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/">
+                
+                首页
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/archives">
+                
+                归档
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/tags">
+                
+                标签
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/links">
+                
+                友链
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/about">
+                
+                关于
+                
+              </a>
+              
+            </li>
+          
+          
+            <li class="menu-item search search-popup-trigger">
+              <i class="menu-text-color fas search fa-search"></i>
+            </li>
+          
+        </ul>
+      </div>
+      <div class="mobile border-box flex-start">
+        
+          <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+        
+        <div class="icon-item menu-bar">
+          <div class="menu-bar-middle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-drawer">
+    <ul class="drawer-menu-list border-box">
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+              
+              首页
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+              
+              归档
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+              
+              标签
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+              
+              友链
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+              
+              关于
+            </a>
+            
+          </label>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="window-mask"></div>
+
+</header>
+
+
+    </div>
+
+    <div class="page-main-content-middle border-box">
+
+      <div class="main-content border-box">
+        
+
+          
+<div class="fade-in-down-animation">
+  <div class="post-page-container border-box">
+    <div class="post-content-container border-box">
+      
+
+      <div class="post-content-bottom border-box">
+        
+          <div class="post-title">
+            来聊(水)下最近hexo备份的思路
+          </div>
+        
+
+        
+          <div class="post-header border-box">
+            
+              <div class="avatar-box border-box">
+                <img src="/images/head-img.jpg">
+              </div>
+            
+            <div class="info-box">
+              <div class="author border-box">
+                <span class="name">小轲</span>
+                
+              </div>
+              <div class="meta-info border-box">
+                
+
+<div class="post-meta-info-container border-box post">
+  <div class="post-meta-info border-box">
+    
+
+    
+      <span class="meta-info-item post-create-date">
+        <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+        <span class="datetime">2022-11-11 22:41:21</span>
+      </span>
+
+      
+        <span class="meta-info-item post-update-date">
+          <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+          <span class="datetime" data-updated="Sat Nov 21 2026 21:16:23 GMT+0800">2026-11-21 21:16:23</span>
+        </span>
+      
+    
+
+    
+
+    
+      <span class="post-tag meta-info-item border-box">
+        <ul class="post-tag-ul">
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/hexo/">hexo</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/OneDrive/">OneDrive</a></li>
+            
+          
+        </ul>
+      </span>
+    
+
+    
+    
+    
+      <span class="meta-info-item post-min2read">
+        <i class="icon fas fa-clock"></i>&nbsp;<span>2 分钟</span>
+      </span>
+    
+    
+  </div>
+
+  
+</div>
+
+              </div>
+            </div>
+          </div>
+        
+
+        <div class="post-content keep-markdown-body ">
+          
+
+          
+            <h1 id="出现问题"><a href="#出现问题" class="headerlink" title="出现问题"></a>出现问题</h1><p>最近（2020-2022）博客出现了短暂的停更状态。</p>
+<p>具体原因是因为hexo的文章文件夹在编译过后并不会存储在GitHub的仓库里，而我也同样因为电脑硬盘损坏而失去了我的博客维护权限。</p>
+<p>朋友们也在这期间纷纷到访过博客，尤其是更换友联站点的url、更新文章中的错别字这种<strong>强需求</strong>无法及时的得到支持。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><ol>
+<li>把hexo文件夹备份至自己的本地的文件</li>
+<li>把hexo整个文件夹备份至git，并且手动add、commit等</li>
+<li>采用同步盘的思想，hexo文件夹放入同步盘文件夹中。搬设备到各个平台只需要登陆账户即可</li>
+</ol>
+<p>重点说一下同步盘的思想</p>
+<p>无论是定期备份、还是每次写完文章后都把自己的文件夹手动的add、commit至git仓库，似乎都不是那么的解放双手？写完忘同步，忘commit都会产生数据丢失的问题。</p>
+<p>然而采用同步盘既可以解决备份，还可以解决以下问题：</p>
+<ol>
+<li>多设备编辑文章，在iPhone、Android、Mac、Windows、Pad端都可以做到编辑markdown文件，实现写作自由。有网络的地方就有hexo，就有认真写博客的倔强青年！</li>
+<li>好的同步盘甚至具有协作的功能，这里幻想一下，博客也能跟小伙伴一起协作的快感。</li>
+</ol>
+<p>无论如何怎么看，似乎同步盘都可以解决更多的问题。</p>
+<h1 id="同步盘的选型"><a href="#同步盘的选型" class="headerlink" title="同步盘的选型"></a>同步盘的选型</h1><p>同步盘的产品众多，大厂小厂甚至网盘行业都会来抢这块蛋糕，那我们就从以下几个方面选型市面上产品</p>
+<ol>
+<li>跨平台性，针对多设备的兼容</li>
+<li>不限速</li>
+<li>bugfix的数量以及修复的速度</li>
+<li>易用性</li>
+</ol>
+<p>简单的来说，入围的产品有<strong>OneDrive、iCloud、DropBox、坚果云</strong>。</p>
+<h1 id="说搞就搞"><a href="#说搞就搞" class="headerlink" title="说搞就搞"></a>说搞就搞</h1><ol>
+<li>拷贝文件夹到oneDrive</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp hexo /Users/zhangshuaike/OneDrive/hexo/</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>等待同步就好，同步完成后在别的设备下载OneDrive，打开hexo文件夹管理即可</li>
+</ol>
+<h1 id="待解决的问题"><a href="#待解决的问题" class="headerlink" title="待解决的问题"></a>待解决的问题</h1><ul>
+<li>如果换了新的设备，怎么初始化npm相关包？好说，搞个<strong>init.sh</strong>即可</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;hexo 52xk.cc start&#x27;</span><br><span class="line">cd 52xk.cc</span><br><span class="line">npm install -g hexo-cli</span><br><span class="line">echo &#x27;hexo init success&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">npm install hexo-theme-keep</span></span><br><span class="line">echo &#x27;hexo init theme:keep,success&#x27;</span><br><span class="line">npm install hexo-generator-searchdb</span><br><span class="line">echo &#x27;search 插件安装成功&#x27;</span><br><span class="line">echo &#x27;deploy插件&#x27;</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">echo &#x27;start localhost:4000&#x27;</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>采用同步盘，非常方便稳定的就解决了hexo的数据丢失无法维护的问题。大家可以试一试</p>
+
+          
+        </div>
+
+        
+
+        <div class="post-bottom-tags-and-share border-box">
+          <div>
+            
+              <ul class="post-tags-box border-box">
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/hexo/">hexo</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/OneDrive/">OneDrive</a>
+                  </li>
+                
+              </ul>
+            
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        
+
+        
+          <div class="post-nav border-box">
+            
+              <div class="prev-post">
+                <a class="prev"
+                  rel="prev"
+                  href="/2022/11/14/12/"
+                  title="免费CDN jsDelivr使用"
+                >
+                  <span class="left arrow-icon flex-center">
+                    <i class="fas fa-chevron-left"></i>
+                  </span>
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">免费CDN jsDelivr使用</span>
+                    <span class="post-nav-item">上一篇</span>
+                  </span>
+                </a>
+              </div>
+            
+            
+              <div class="next-post">
+                <a class="next"
+                  rel="next"
+                  href="/2019/12/31/10/"
+                  title="2019给自己的年终总结"
+                >
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">2019给自己的年终总结</span>
+                    <span class="post-nav-item">下一篇</span>
+                  </span>
+                  <span class="right arrow-icon flex-center">
+                    <i class="fas fa-chevron-right"></i>
+                  </span>
+                </a>
+              </div>
+            
+          </div>
+        
+
+        
+          
+
+
+  <div class="comments-container border-box">
+    <div id="comments-anchor" class="comment-area-title border-box">
+      <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    <div class="comment-plugin-fail border-box">
+  <span class="fail-tip">评论插件加载失败</span>
+  <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+  <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+  <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+    
+      
+
+  <div class="gitalk-comment-container">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <script data-pjax
+      src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    ></script>
+    <script data-pjax
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    >
+      window.KeepCommentPlugin.initGitalk = () => {
+        let gitalkPathname = decodeURI(location.pathname)
+        const gitalkPathnameLength = gitalkPathname.length
+        const gitalkPathnameMaxLength = 50
+        if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+          gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+        }
+
+        if (window?.Gitalk) {
+          new Gitalk({
+            clientID: '98dcf7e70682aab74e7d',
+            clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+            repo: 'blog-comment',
+            owner: 'a2501521908',
+            admin: 'a2501521908',
+            id: gitalkPathname,
+            proxy: '',
+            language: 'zh-CN'
+          }).render('gitalk-container')
+          window.KeepCommentPlugin.hideLoading()
+        } else {
+          setTimeout(() => {
+            window.KeepCommentPlugin.initGitalk()
+          }, 1000)
+        }
+      }
+
+      if ('true' === 'true') {
+        setTimeout(() => {
+          window.KeepCommentPlugin.initGitalk()
+        }, 1200)
+      } else {
+        window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+      }
+    </script>
+  </div>
+
+
+    
+  </div>
+
+
+
+
+
+        
+      </div>
+    </div>
+
+    
+      <div class="pc-post-toc right-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98"><span class="nav-text">出现问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%80%9D%E8%B7%AF"><span class="nav-text">解决思路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E7%9B%98%E7%9A%84%E9%80%89%E5%9E%8B"><span class="nav-text">同步盘的选型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%B4%E6%90%9E%E5%B0%B1%E6%90%9E"><span class="nav-text">说搞就搞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BE%85%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">待解决的问题</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+
+        
+      </div>
+    </div>
+
+    <div class="page-main-content-bottom border-box">
+      
+<footer class="footer border-box">
+  <div class="copyright-info info-item">
+  &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+  
+      &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+    
+  </div>
+
+  <div class="theme-info info-item">
+    由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+  </div>
+
+  
+
+  
+
+  
+</footer>
+
+    </div>
+  </div>
+
+  <!-- post tools -->
+  
+    <div class="post-tools right-toc">
+      <div class="post-tools-container border-box">
+  <ul class="post-tools-list border-box">
+    <!-- PC encrypt again -->
+    
+
+    <!-- PC TOC show toggle -->
+    
+      <li class="tools-item flex-center toggle-show-toc">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    <!-- PC go comment -->
+    
+      <li class="tools-item flex-center go-to-comments">
+        <i class="fas fa-comment"></i>
+        <span class="post-comments-count"></span>
+      </li>
+    
+
+    <!-- PC full screen -->
+    <li class="tools-item flex-center full-screen">
+      <i class="fa-solid fa-expand"></i>
+    </li>
+  </ul>
+</div>
+
+    </div>
+  
+
+  <!-- side tools -->
+  <div class="side-tools">
+    <div class="side-tools-container border-box ">
+  <ul class="side-tools-list side-tools-show-handle border-box">
+    <li class="tools-item tool-font-adjust-plus flex-center">
+      <i class="fas fa-search-plus"></i>
+    </li>
+
+    <li class="tools-item tool-font-adjust-minus flex-center">
+      <i class="fas fa-search-minus"></i>
+    </li>
+
+    <!-- toggle chinese -->
+    
+      <li class="tools-item tool-toggle-chinese flex-center">
+        <button type="button"
+            data-native-script="cn"
+            data-opencc-src="/js/libs/opencc.full.js"
+            data-label-cn="切换为简体中文"
+            data-label-tw="切换为繁体中文"
+            data-label-error="简繁转换加载失败，点击重试"
+        >
+          繁
+        </button>
+      </li>
+    
+
+    <!-- toggle mode -->
+    
+      <li class="tools-item tool-toggle-theme-mode flex-center">
+        <i class="fas fa-moon"></i>
+      </li>
+    
+
+    <!-- rss -->
+    
+
+    <!-- to bottom -->
+    <li class="tools-item tool-scroll-to-bottom flex-center">
+      <i class="fas fa-arrow-down"></i>
+    </li>
+  </ul>
+
+  <ul class="exposed-tools-list border-box">
+    
+      <li class="tools-item toggle-show-toc-tablet flex-center">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    
+      <li class="tools-item go-to-comments-tablet flex-center">
+        <i class="fas fa-comment"></i>
+      </li>
+    
+
+    <li class="tools-item tool-toggle-show flex-center">
+      <i class="fas fa-cog fa-spin"></i>
+    </li>
+
+    <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+      <i class="arrow fas fa-arrow-up"></i>
+      <span class="percent"></span>
+    </li>
+  </ul>
+</div>
+
+  </div>
+
+  <!-- image mask -->
+  <div class="zoom-in-image-mask">
+  <img class="zoom-in-image">
+</div>
+
+
+  <!-- local search -->
+  
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+    <div class="search-header">
+      <span class="search-input-field-pre">
+      <i class="fas fa-keyboard"></i>
+      </span>
+      <div class="search-input-container">
+        <input autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="搜索..."
+            spellcheck="false"
+            type="search"
+            class="search-input"
+        >
+      </div>
+      <span class="close-popup-btn">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div id="search-result">
+      <div id="no-result">
+        <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  <!-- tablet toc -->
+  
+    <div class="tablet-post-toc-mask">
+      <div class="tablet-post-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98"><span class="nav-text">出现问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%80%9D%E8%B7%AF"><span class="nav-text">解决思路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E7%9B%98%E7%9A%84%E9%80%89%E5%9E%8B"><span class="nav-text">同步盘的选型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%B4%E6%90%9E%E5%B0%B1%E6%90%9E"><span class="nav-text">说搞就搞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BE%85%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">待解决的问题</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    </div>
+  
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/chinese-convert.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+  <!-- home page -->
+  
+
+  <!-- post page -->
+  
+    <!-- post-helper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/post-helper.min.js"></script>
+
+    <!-- toc -->
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/toc.min.js"></script>
+    
+
+    <!-- copyright-info -->
+    
+
+    <!-- share -->
+    
+  
+
+  <!-- categories page -->
+  
+
+  <!-- links page -->
+  
+
+  <!-- photos page -->
+  
+
+  <!-- tools page -->
+  
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+  <script id="pjax-script" src="/js/libs/pjax.min.js"></script>
+<script>
+  (function () {
+    const isGoogleTranslate = location.hostname.includes('.translate.goog')
+
+    if (isGoogleTranslate) {
+      document.getElementById('pjax-script')?.remove()
+      return
+    }
+
+    function initPjax () {
+      if (window.pjax) return
+
+      window.pjax = new Pjax({
+        selectors: [
+          'head title',
+          '.page-container',
+          '.pjax'
+        ],
+        history: true,
+        debug: false,
+        cacheBust: false,
+        timeout: 0,
+        analytics: false,
+        currentUrlFullReload: false,
+        scrollRestoration: false
+      })
+
+      document.addEventListener('pjax:send', onPjaxSend)
+      document.addEventListener('pjax:complete', onPjaxComplete)
+    }
+
+    function onPjaxSend () {
+      KEEP?.utils?.pjaxProgressBarStart()
+    }
+
+    function onPjaxComplete () {
+      KEEP?.utils?.pjaxProgressBarEnd()
+
+      window?.pjax?.executeScripts(
+        document.querySelectorAll('script[data-pjax], .pjax script')
+      )
+
+      KEEP?.initExecute()
+    }
+
+    // DOM Ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPjax)
+    } else {
+      initPjax()
+    }
+  })()
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="description" content="前言常规的线上问题进群后，一般就是几件事：看日志、查库、翻代码、查配置，最后把排查结果贴回话题。 这些事情本身不复杂，麻烦的是信息比较分散。日志在一个平台，数据库在另一个平台，配置又分成好几套，相关的聊天记录也都在飞书里。一个问题如果从头跟到尾还好，中途换个人接手，往往又得把前面的过程重新过一遍。 我有点受不了经常在群里回复「稍等，我看下日志」了 😅，于是弄了个机器人，叫研发小智，底层用的是 O">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Agent 开始介入排查线上问题并自助解决实践篇">
+<meta property="og:url" content="https://52xk.cc/2026/11/21/32/index.html">
+<meta property="og:site_name" content="小轲博客">
+<meta property="og:description" content="前言常规的线上问题进群后，一般就是几件事：看日志、查库、翻代码、查配置，最后把排查结果贴回话题。 这些事情本身不复杂，麻烦的是信息比较分散。日志在一个平台，数据库在另一个平台，配置又分成好几套，相关的聊天记录也都在飞书里。一个问题如果从头跟到尾还好，中途换个人接手，往往又得把前面的过程重新过一遍。 我有点受不了经常在群里回复「稍等，我看下日志」了 😅，于是弄了个机器人，叫研发小智，底层用的是 O">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://static.52xk.cc/2026/11/21/blog-diagrams-1121/52654c34a0cdf88be994ca74aa1568e58a4f9c7780136c2a3b52177cc46b6785.png">
+<meta property="og:image" content="https://static.52xk.cc/2026/11/21/blog-diagrams-1121/aaf66aea2eef27c39677f43a57456b6357a7afb92c61810bc08c864103064389.png">
+<meta property="article:published_time" content="2026-11-21T04:10:00.000Z">
+<meta property="article:modified_time" content="2026-11-21T13:34:31.279Z">
+<meta property="article:author" content="小轲博客">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="OpenClaw">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.52xk.cc/2026/11/21/blog-diagrams-1121/52654c34a0cdf88be994ca74aa1568e58a4f9c7780136c2a3b52177cc46b6785.png">
+  
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+  
+  <meta name="author" content="小轲">
+  <link rel="canonical" href="https://52xk.cc/2026/11/21/32/">
+  <title>Agent 开始介入排查线上问题并自助解决实践篇 | 小轲博客</title>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/fontawesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/regular.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/solid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/brands.min.css">
+  
+  <script>
+    (function () {
+      let theme = localStorage.getItem('KEEP-THEME-STATUS');
+      let classname = "";
+      if (!theme || (JSON.parse(theme).isAutoTheme)){
+        classname = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark-mode" : "light-mode";
+      }
+      else{
+        classname = JSON.parse(theme).isDark ? "dark-mode" : "light-mode";
+      }
+      document.documentElement.classList.add(classname);
+    })();
+  </script>
+  <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true,"provider":"cdnjs"},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","search_db_path":"keep-search.json","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.5.0"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+
+<body>
+<div class="progress-bar-container">
+  
+
+  
+    <span class="pjax-progress-bar"></span>
+    <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+  
+</div>
+
+
+
+<main class="page-container border-box">
+  <!-- home first screen  -->
+  
+
+  <!-- page content -->
+  <div class="page-main-content border-box">
+    <div class="page-main-content-top">
+      
+<header class="header-wrapper">
+
+  <div class="border-box header-content">
+    <div class="left flex-start border-box">
+      
+      <a class="site-name border-box" href="/">
+        小轲博客
+      </a>
+    </div>
+
+    <div class="right border-box">
+      <div class="pc border-box">
+        <ul class="menu-list border-box">
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/">
+                
+                首页
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/archives">
+                
+                归档
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/tags">
+                
+                标签
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/links">
+                
+                友链
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/about">
+                
+                关于
+                
+              </a>
+              
+            </li>
+          
+          
+            <li class="menu-item search search-popup-trigger">
+              <i class="menu-text-color fas search fa-search"></i>
+            </li>
+          
+        </ul>
+      </div>
+      <div class="mobile border-box flex-start">
+        
+          <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+        
+        <div class="icon-item menu-bar">
+          <div class="menu-bar-middle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-drawer">
+    <ul class="drawer-menu-list border-box">
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+              
+              首页
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+              
+              归档
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+              
+              标签
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+              
+              友链
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+              
+              关于
+            </a>
+            
+          </label>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="window-mask"></div>
+
+</header>
+
+
+    </div>
+
+    <div class="page-main-content-middle border-box">
+
+      <div class="main-content border-box">
+        
+
+          
+<div class="fade-in-down-animation">
+  <div class="post-page-container border-box">
+    <div class="post-content-container border-box">
+      
+
+      <div class="post-content-bottom border-box">
+        
+          <div class="post-title">
+            Agent 开始介入排查线上问题并自助解决实践篇
+          </div>
+        
+
+        
+          <div class="post-header border-box">
+            
+              <div class="avatar-box border-box">
+                <img src="/images/head-img.jpg">
+              </div>
+            
+            <div class="info-box">
+              <div class="author border-box">
+                <span class="name">小轲</span>
+                
+              </div>
+              <div class="meta-info border-box">
+                
+
+<div class="post-meta-info-container border-box post">
+  <div class="post-meta-info border-box">
+    
+
+    
+      <span class="meta-info-item post-create-date">
+        <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+        <span class="datetime">2026-11-21 12:10:00</span>
+      </span>
+
+      
+        <span class="meta-info-item post-update-date">
+          <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+          <span class="datetime" data-updated="Sat Nov 21 2026 21:34:31 GMT+0800">2026-11-21 21:34:31</span>
+        </span>
+      
+    
+
+    
+
+    
+      <span class="post-tag meta-info-item border-box">
+        <ul class="post-tag-ul">
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/AI/">AI</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/OpenClaw/">OpenClaw</a></li>
+            
+          
+        </ul>
+      </span>
+    
+
+    
+    
+    
+      <span class="meta-info-item post-min2read">
+        <i class="icon fas fa-clock"></i>&nbsp;<span>9 分钟</span>
+      </span>
+    
+    
+  </div>
+
+  
+</div>
+
+              </div>
+            </div>
+          </div>
+        
+
+        <div class="post-content keep-markdown-body ">
+          
+
+          
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>常规的线上问题进群后，一般就是几件事：看日志、查库、翻代码、查配置，最后把排查结果贴回话题。</p>
+<p>这些事情本身不复杂，麻烦的是信息比较分散。日志在一个平台，数据库在另一个平台，配置又分成好几套，相关的聊天记录也都在飞书里。一个问题如果从头跟到尾还好，中途换个人接手，往往又得把前面的过程重新过一遍。</p>
+<p>我有点受不了经常在群里回复「稍等，我看下日志」了 😅，于是弄了个机器人，叫研发小智，底层用的是 OpenClaw，直接接入飞书话题群。</p>
+<p>目前 研发小智 进了两个群：一个研发助手群，一个技术支持群。大家在各自的话题里提问，研发小智 就在对应的话题里查日志、查数据、分析问题，最后把结果也回复在原来的话题里。</p>
+<p>最开始其实很简单，只接了日志查询和数据库查询两个命令。用了一段时间后，发现光有这两个还不够，于是陆续把配置、代码、接口路由、群消息等能力也接了进来。</p>
+<p>下面记录一下目前这套东西的实现。</p>
+<h1 id="目前的能力和边界"><a href="#目前的能力和边界" class="headerlink" title="目前的能力和边界"></a>目前的能力和边界</h1><h2 id="能查哪些东西"><a href="#能查哪些东西" class="headerlink" title="能查哪些东西"></a>能查哪些东西</h2><p>现在接入的查询能力大概有这些：</p>
+<table>
+<thead>
+<tr>
+<th>查询内容</th>
+<th>使用方式</th>
+<th>权限和限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>日志</td>
+<td>日志查询 CLI</td>
+<td>两个区域；单次最多 100 条；返回前先打码</td>
+</tr>
+<tr>
+<td>线上数据库</td>
+<td>只读库查询 CLI</td>
+<td>只读通道；只允许 SELECT；必须带 LIMIT</td>
+</tr>
+<tr>
+<td>房间网络</td>
+<td>OLAP 查询 CLI</td>
+<td>查询会话网络表，只读</td>
+</tr>
+<tr>
+<td>ES</td>
+<td>ES 查询 CLI</td>
+<td>测试和生产共四套环境；客户端直接拦截 PUT &#x2F; DELETE &#x2F; POST</td>
+</tr>
+<tr>
+<td>配置</td>
+<td>配置查询 CLI</td>
+<td>分为热配置和配置文件两套；只允许 GET；password、token 等字段统一替换为 <code>[REDACTED]</code></td>
+</tr>
+<tr>
+<td>代码</td>
+<td>工作区代码镜像</td>
+<td>一百多个仓库，只拉默认分支；沙箱没有代码平台 token，只能查看，不能 fetch、push</td>
+</tr>
+<tr>
+<td>接口路由</td>
+<td>路由追踪 skill</td>
+<td>从前端 URL 一直追到 Nginx、Gateway 和具体服务；内置 prod、pre、stage 三套路由快照</td>
+</tr>
+<tr>
+<td>群消息</td>
+<td>群消息读取 CLI</td>
+<td>只能读取白名单群里最近活跃的话题；普通图片下载到工作区后，通过 <code>read</code> 查看</td>
+</tr>
+</tbody></table>
+<p>这里面配置查询稍微特殊一些。</p>
+<p>平时大家说配置有问题，实际可能指的是热配置、配置文件，也可能是数据库里的某个字段。这几种东西对应的是不同的查询入口，如果一开始就找错了地方，后面的分析就容易跑偏。</p>
+<p>所以我专门在 skill 里加了判断规则：先确定问题涉及哪一类配置，再选择对应的查询方式。</p>
+<p>日志查询也是类似的思路。研发小智 不需要人先告诉它应该搜什么关键字，而是先去代码里找相关的 <code>log.info</code>、<code>log.error</code>，看看业务执行过程中打印了哪些信息，再拿这些关键字去日志平台查。</p>
+<p>数据库也一样，先根据问题判断应该查哪个库，而不是随便找一个库执行 SQL。</p>
+<p>另外，日志和查询结果都有数量限制，单次最多返回 100 条。没必要把几千条日志全部塞进模型上下文，不仅浪费 token，也容易让真正有用的信息被淹没。</p>
+<p>整体调用关系如下：</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2026/11/21/blog-diagrams-1121/52654c34a0cdf88be994ca74aa1568e58a4f9c7780136c2a3b52177cc46b6785.png"
+                        alt="调用关系"
+                 ></p>
+<p>所有查询命令都在沙箱容器里执行，一个话题对应一个容器。涉及线上数据修改的工具则走独立通道，不和查询环境混在一起。</p>
+<p>这样做的原因很简单：查询能力可以尽可能开放，但修改线上数据的权限必须单独控制。</p>
+<h2 id="有些事情还是不能让它做"><a href="#有些事情还是不能让它做" class="headerlink" title="有些事情还是不能让它做"></a>有些事情还是不能让它做</h2><p>目前我的原则比较明确：查询可以放开，修改必须受控。</p>
+<p>具体分三种情况：</p>
+<ol>
+<li><strong>查询：</strong> 日志、SELECT、ES、配置、代码，都通过只读命令执行。</li>
+<li><strong>修改数据库：</strong> 研发小智 只负责生成 SQL 和后续复核，实际执行仍然走人工工单。</li>
+<li><strong>修改线上数据：</strong> 只能调用目录里已经登记过的修复工具，不能自己编写操作命令。</li>
+</ol>
+<p>另外，所有 skill 都是人工编写的，挂载到容器后也是只读的。</p>
+<p>研发小智 不能自己创建 skill，也不能因为处理过某个案例，就把案例自动变成新的工具。碰到现有工具解决不了的问题，只能继续交给人处理。</p>
+<p>这里我比较在意的是权限边界。模型可能会判断错误，也可能给出看起来合理但实际上不正确的结论。</p>
+<p>如果只是查错了，最多浪费一些时间；但如果给了它写权限，风险就大得多了。</p>
+<p>所以线上写权限不交给模型，是目前这套方案里比较明确的一条底线。</p>
+<h2 id="群里的交互"><a href="#群里的交互" class="headerlink" title="群里的交互"></a>群里的交互</h2><p>群里的交互分成两部分：执行过程和最终回答。</p>
+<p>执行过程是我自己写的一个插件，用来展示当前话题调用了哪些工具。</p>
+<p>这里没有直接修改飞书官方插件包，而是通过插件钩子把进度卡片接进去。之前考虑过 fork 官方包，但后续每次升级都要重新合并，维护成本比较高。</p>
+<p>每次工具调用，卡片就追加一条记录，例如：</p>
+<ul>
+<li>执行 日志查询 16:04:12</li>
+<li>执行 只读库查询 16:04:19</li>
+<li>执行失败 ES 查询 16:04:25：超时</li>
+</ul>
+<p>这里刻意不展示工具参数，因为参数里经常会带有敏感信息。</p>
+<p>还有几个实现细节：</p>
+<ul>
+<li>单次卡片刷新超过 4 秒，就放弃本次刷新，不影响实际工具执行。</li>
+<li>卡片最多保留 12 行，超出后删除最早的记录。</li>
+<li>工具执行失败也会记录，方便知道具体卡在哪一步。</li>
+</ul>
+<p>最终回答则使用飞书自己的流式卡片，不会把模型的思考过程直接展示出来。</p>
+<p>回答格式目前是固定的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">结论：是什么，或者不是什么</span><br><span class="line">证据：trace、时间窗、行数、commit</span><br><span class="line">推断：没有证据支持的内容，明确标记为推断</span><br><span class="line">下一步：还需要查什么，或者应该找谁</span><br><span class="line">建议：现有功能能不能解决，能就写入口，不能就明确说明</span><br></pre></td></tr></table></figure>
+
+<p>回答结束后，会自动 @ 提问的人。</p>
+<p>另外还做了一个小功能：在话题里说「加急」，就会切换到更快的模型；说「用默认模型」则切回来。这个设置只影响当前话题，不会影响其他人的会话。</p>
+<p>实现时还专门处理了否定表达，比如「别加急」「不要用默认模型」，避免只匹配关键词导致误切换。</p>
+<p>两个群的使用规则也不完全一样：</p>
+<ul>
+<li><strong>研发助手群：</strong> 可以直接对话，处理完成的话题会自动整理成案例。</li>
+<li><strong>技术支持群：</strong> 必须 @研发小智 才会响应，案例也需要有人明确说「总结」才会整理。</li>
+</ul>
+<p>技术支持群的限制会更严格一些。发布、部署、修改权限、提供可直接执行的线上命令，这些操作一律不做。如果有人试图获取 研发小智 使用的账号密码，也会直接拒绝，然后继续处理正常的问题。</p>
+<h2 id="案例怎么沉淀和复用"><a href="#案例怎么沉淀和复用" class="headerlink" title="案例怎么沉淀和复用"></a>案例怎么沉淀和复用</h2><p>如果每次遇到问题都从头开始查，那 研发小智 的价值其实会打不少折扣。</p>
+<p>所以我又给它加了案例沉淀和向量召回。</p>
+<p>在自动整理的群里，话题处理完成后会把排查过程整理成案例，保存在工作区的 <code>memory/cases/</code> 目录下。</p>
+<p>目前有两个整理时机：每个回合结束时整理一次，另外在 36 小时没有新消息时再整理一次。</p>
+<p>案例主要记录这些内容：</p>
+<ul>
+<li>根因</li>
+<li>处理办法</li>
+<li>已证实的信息</li>
+<li>尚未证实的信息</li>
+<li>对应的 SOP</li>
+</ul>
+<p>这里有个要求：没有证据的根因不能直接写成结论。暂时无法确认的内容，就放在「尚未证实」里，后续封存也不能把推测自动变成定论。</p>
+<p>下次遇到类似问题时，会先通过 embedding 检索历史案例，再把相关内容放进当前话题的上下文。</p>
+<p>召回有几个限制：</p>
+<ul>
+<li>最多召回 3 条。</li>
+<li>相似度低于 0.42 的不召回。</li>
+<li>总内容不超过 720 字。</li>
+<li>当前话题自己刚生成的案例不参与召回。</li>
+</ul>
+<p>最后这一点是为了避免当前话题把自己刚写的内容又检索回来。</p>
+<p>召回数量也没有设置得太大。历史案例只能作为排查线索，不能让模型因为之前遇到过类似问题，就直接套用上次的结论。</p>
+<p>另外，案例封存后，如果有人重新在话题里发消息，话题会重新进入进行中状态。</p>
+<p>需要强调的是，案例只是给模型提供参考，不会自动生成新的 skill，也不会因为积累了案例就获得额外权限。</p>
+<p>整体过程如下：</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2026/11/21/blog-diagrams-1121/aaf66aea2eef27c39677f43a57456b6357a7afb92c61810bc08c864103064389.png"
+                        alt="案例沉淀与召回"
+                 ></p>
+<h1 id="部署上的几个细节"><a href="#部署上的几个细节" class="headerlink" title="部署上的几个细节"></a>部署上的几个细节</h1><p>最后说一下部署。</p>
+<p>目前所有查询命令都在 Docker 容器里执行。容器里只放了 Python、git、Node 三样东西，以及一个只读工作区。</p>
+<p>Gateway 自身代码、宿主机密钥和 Docker 套接字都不会挂载进去。需要使用的密钥通过环境变量注入，不提交到 Git，也不允许出现在模型回复里。</p>
+<p>每个容器的内存上限是 1GB。即使某个话题把内存吃满，也只会影响当前容器，不会把其他话题一起拖死。</p>
+<p>容器回收策略是：</p>
+<ul>
+<li>空闲 3 小时自动回收。</li>
+<li>最长运行 7 天。</li>
+</ul>
+<p>回收的只是容器本身，代码镜像、历史案例和会话数据都保留在宿主机上。下次有新消息时，再重新创建容器即可。</p>
+<p>还有一个比较容易忽略的问题：飞书插件原本是按整个群串行处理消息的。</p>
+<p>也就是说，A 话题正在查日志，B 话题即使是完全独立的问题，也只能排队等着。</p>
+<p>为了解决这个问题，我给插件打了一个补丁，改成按话题派发任务。这样不同话题就可以同时执行查询了。</p>
+<p>不过这个补丁和插件版本绑定，升级后需要重新打一次。如果忘记处理，就会退回到整个群串行的状态。</p>
+<hr>
+<p>目前 研发小智 还在持续迭代，现阶段最主要的工作还是补充查询能力、完善各类问题的排查流程，以及收紧线上操作的权限边界。</p>
+<p>相比单纯接一个大模型 API，我觉得真正花时间的地方反而是这些周边工作：怎么让它知道去哪里查、怎么把不同系统的数据串起来、怎么避免查错，以及怎么保证它不会因为一次判断失误就直接影响线上业务。</p>
+
+          
+        </div>
+
+        
+
+        <div class="post-bottom-tags-and-share border-box">
+          <div>
+            
+              <ul class="post-tags-box border-box">
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/AI/">AI</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/OpenClaw/">OpenClaw</a>
+                  </li>
+                
+              </ul>
+            
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        
+
+        
+          <div class="post-nav border-box">
+            
+            
+              <div class="next-post">
+                <a class="next"
+                  rel="next"
+                  href="/2026/08/09/31/"
+                  title="Skill篇-代码生图渲染为图片"
+                >
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">Skill篇-代码生图渲染为图片</span>
+                    <span class="post-nav-item">下一篇</span>
+                  </span>
+                  <span class="right arrow-icon flex-center">
+                    <i class="fas fa-chevron-right"></i>
+                  </span>
+                </a>
+              </div>
+            
+          </div>
+        
+
+        
+          
+
+
+  <div class="comments-container border-box">
+    <div id="comments-anchor" class="comment-area-title border-box">
+      <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    <div class="comment-plugin-fail border-box">
+  <span class="fail-tip">评论插件加载失败</span>
+  <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+  <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+  <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+    
+      
+
+  <div class="gitalk-comment-container">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <script data-pjax
+      src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    ></script>
+    <script data-pjax
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    >
+      window.KeepCommentPlugin.initGitalk = () => {
+        let gitalkPathname = decodeURI(location.pathname)
+        const gitalkPathnameLength = gitalkPathname.length
+        const gitalkPathnameMaxLength = 50
+        if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+          gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+        }
+
+        if (window?.Gitalk) {
+          new Gitalk({
+            clientID: '98dcf7e70682aab74e7d',
+            clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+            repo: 'blog-comment',
+            owner: 'a2501521908',
+            admin: 'a2501521908',
+            id: gitalkPathname,
+            proxy: '',
+            language: 'zh-CN'
+          }).render('gitalk-container')
+          window.KeepCommentPlugin.hideLoading()
+        } else {
+          setTimeout(() => {
+            window.KeepCommentPlugin.initGitalk()
+          }, 1000)
+        }
+      }
+
+      if ('true' === 'true') {
+        setTimeout(() => {
+          window.KeepCommentPlugin.initGitalk()
+        }, 1200)
+      } else {
+        window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+      }
+    </script>
+  </div>
+
+
+    
+  </div>
+
+
+
+
+
+        
+      </div>
+    </div>
+
+    
+      <div class="pc-post-toc right-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%AE%E5%89%8D%E7%9A%84%E8%83%BD%E5%8A%9B%E5%92%8C%E8%BE%B9%E7%95%8C"><span class="nav-text">目前的能力和边界</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%BD%E6%9F%A5%E5%93%AA%E4%BA%9B%E4%B8%9C%E8%A5%BF"><span class="nav-text">能查哪些东西</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%89%E4%BA%9B%E4%BA%8B%E6%83%85%E8%BF%98%E6%98%AF%E4%B8%8D%E8%83%BD%E8%AE%A9%E5%AE%83%E5%81%9A"><span class="nav-text">有些事情还是不能让它做</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BE%A4%E9%87%8C%E7%9A%84%E4%BA%A4%E4%BA%92"><span class="nav-text">群里的交互</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E6%80%8E%E4%B9%88%E6%B2%89%E6%B7%80%E5%92%8C%E5%A4%8D%E7%94%A8"><span class="nav-text">案例怎么沉淀和复用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%9A%84%E5%87%A0%E4%B8%AA%E7%BB%86%E8%8A%82"><span class="nav-text">部署上的几个细节</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+
+        
+      </div>
+    </div>
+
+    <div class="page-main-content-bottom border-box">
+      
+<footer class="footer border-box">
+  <div class="copyright-info info-item">
+  &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+  
+      &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+    
+  </div>
+
+  <div class="theme-info info-item">
+    由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+  </div>
+
+  
+
+  
+
+  
+</footer>
+
+    </div>
+  </div>
+
+  <!-- post tools -->
+  
+    <div class="post-tools right-toc">
+      <div class="post-tools-container border-box">
+  <ul class="post-tools-list border-box">
+    <!-- PC encrypt again -->
+    
+
+    <!-- PC TOC show toggle -->
+    
+      <li class="tools-item flex-center toggle-show-toc">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    <!-- PC go comment -->
+    
+      <li class="tools-item flex-center go-to-comments">
+        <i class="fas fa-comment"></i>
+        <span class="post-comments-count"></span>
+      </li>
+    
+
+    <!-- PC full screen -->
+    <li class="tools-item flex-center full-screen">
+      <i class="fa-solid fa-expand"></i>
+    </li>
+  </ul>
+</div>
+
+    </div>
+  
+
+  <!-- side tools -->
+  <div class="side-tools">
+    <div class="side-tools-container border-box ">
+  <ul class="side-tools-list side-tools-show-handle border-box">
+    <li class="tools-item tool-font-adjust-plus flex-center">
+      <i class="fas fa-search-plus"></i>
+    </li>
+
+    <li class="tools-item tool-font-adjust-minus flex-center">
+      <i class="fas fa-search-minus"></i>
+    </li>
+
+    <!-- toggle chinese -->
+    
+      <li class="tools-item tool-toggle-chinese flex-center">
+        <button type="button"
+            data-native-script="cn"
+            data-opencc-src="/js/libs/opencc.full.js"
+            data-label-cn="切换为简体中文"
+            data-label-tw="切换为繁体中文"
+            data-label-error="简繁转换加载失败，点击重试"
+        >
+          繁
+        </button>
+      </li>
+    
+
+    <!-- toggle mode -->
+    
+      <li class="tools-item tool-toggle-theme-mode flex-center">
+        <i class="fas fa-moon"></i>
+      </li>
+    
+
+    <!-- rss -->
+    
+
+    <!-- to bottom -->
+    <li class="tools-item tool-scroll-to-bottom flex-center">
+      <i class="fas fa-arrow-down"></i>
+    </li>
+  </ul>
+
+  <ul class="exposed-tools-list border-box">
+    
+      <li class="tools-item toggle-show-toc-tablet flex-center">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    
+      <li class="tools-item go-to-comments-tablet flex-center">
+        <i class="fas fa-comment"></i>
+      </li>
+    
+
+    <li class="tools-item tool-toggle-show flex-center">
+      <i class="fas fa-cog fa-spin"></i>
+    </li>
+
+    <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+      <i class="arrow fas fa-arrow-up"></i>
+      <span class="percent"></span>
+    </li>
+  </ul>
+</div>
+
+  </div>
+
+  <!-- image mask -->
+  <div class="zoom-in-image-mask">
+  <img class="zoom-in-image">
+</div>
+
+
+  <!-- local search -->
+  
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+    <div class="search-header">
+      <span class="search-input-field-pre">
+      <i class="fas fa-keyboard"></i>
+      </span>
+      <div class="search-input-container">
+        <input autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="搜索..."
+            spellcheck="false"
+            type="search"
+            class="search-input"
+        >
+      </div>
+      <span class="close-popup-btn">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div id="search-result">
+      <div id="no-result">
+        <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  <!-- tablet toc -->
+  
+    <div class="tablet-post-toc-mask">
+      <div class="tablet-post-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%AE%E5%89%8D%E7%9A%84%E8%83%BD%E5%8A%9B%E5%92%8C%E8%BE%B9%E7%95%8C"><span class="nav-text">目前的能力和边界</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%BD%E6%9F%A5%E5%93%AA%E4%BA%9B%E4%B8%9C%E8%A5%BF"><span class="nav-text">能查哪些东西</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%89%E4%BA%9B%E4%BA%8B%E6%83%85%E8%BF%98%E6%98%AF%E4%B8%8D%E8%83%BD%E8%AE%A9%E5%AE%83%E5%81%9A"><span class="nav-text">有些事情还是不能让它做</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BE%A4%E9%87%8C%E7%9A%84%E4%BA%A4%E4%BA%92"><span class="nav-text">群里的交互</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E6%80%8E%E4%B9%88%E6%B2%89%E6%B7%80%E5%92%8C%E5%A4%8D%E7%94%A8"><span class="nav-text">案例怎么沉淀和复用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%9A%84%E5%87%A0%E4%B8%AA%E7%BB%86%E8%8A%82"><span class="nav-text">部署上的几个细节</span></a></li></ol>
+  </div>
+</div>
+
+      </div>
+    </div>
+  
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/chinese-convert.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+  <!-- home page -->
+  
+
+  <!-- post page -->
+  
+    <!-- post-helper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/post-helper.min.js"></script>
+
+    <!-- toc -->
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/toc.min.js"></script>
+    
+
+    <!-- copyright-info -->
+    
+
+    <!-- share -->
+    
+  
+
+  <!-- categories page -->
+  
+
+  <!-- links page -->
+  
+
+  <!-- photos page -->
+  
+
+  <!-- tools page -->
+  
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+  <script id="pjax-script" src="/js/libs/pjax.min.js"></script>
+<script>
+  (function () {
+    const isGoogleTranslate = location.hostname.includes('.translate.goog')
+
+    if (isGoogleTranslate) {
+      document.getElementById('pjax-script')?.remove()
+      return
+    }
+
+    function initPjax () {
+      if (window.pjax) return
+
+      window.pjax = new Pjax({
+        selectors: [
+          'head title',
+          '.page-container',
+          '.pjax'
+        ],
+        history: true,
+        debug: false,
+        cacheBust: false,
+        timeout: 0,
+        analytics: false,
+        currentUrlFullReload: false,
+        scrollRestoration: false
+      })
+
+      document.addEventListener('pjax:send', onPjaxSend)
+      document.addEventListener('pjax:complete', onPjaxComplete)
+    }
+
+    function onPjaxSend () {
+      KEEP?.utils?.pjaxProgressBarStart()
+    }
+
+    function onPjaxComplete () {
+      KEEP?.utils?.pjaxProgressBarEnd()
+
+      window?.pjax?.executeScripts(
+        document.querySelectorAll('script[data-pjax], .pjax script')
+      )
+
+      KEEP?.initExecute()
+    }
+
+    // DOM Ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPjax)
+    } else {
+      initPjax()
+    }
+  })()
+</script>
+
+
+
+
+</body>
+</html>

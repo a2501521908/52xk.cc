@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="description" content="什么是FastThreadLocal？FastThreadLocal是Netty中对JDK提供的ThreadLocal优化改造版本，从名称上来看，它应该比ThreadLocal更快了，以应对Netty处理并发量大、数据吞吐量大的场景。 FastThreadLocal 是 ThreadLocal 的一种特殊变体，只有在使用 FastThreadLocalThread 线程类访问时，才能获得更高的访问">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FastThreadLocal是不是真的快？">
+<meta property="og:url" content="https://52xk.cc/2025/04/13/27/index.html">
+<meta property="og:site_name" content="小轲博客">
+<meta property="og:description" content="什么是FastThreadLocal？FastThreadLocal是Netty中对JDK提供的ThreadLocal优化改造版本，从名称上来看，它应该比ThreadLocal更快了，以应对Netty处理并发量大、数据吞吐量大的场景。 FastThreadLocal 是 ThreadLocal 的一种特殊变体，只有在使用 FastThreadLocalThread 线程类访问时，才能获得更高的访问">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/Udif2XwnT3tGOYy.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/1iErUCbatm9spnz.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/aONgMFeLn6dzSqB.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/gYtoVGrkUR3faus.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/XgtjeEWyICQq9K5.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/Tr7BGPeIquAhpxU.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/cK9Ft8S6faM5CnO.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/yKxeq97PUGboFdE.png">
+<meta property="og:image" content="https://static.52xk.cc/2025/04/13/yoXjdiHrbTYhtVP.png">
+<meta property="article:published_time" content="2025-04-13T03:31:08.000Z">
+<meta property="article:modified_time" content="2026-11-21T13:16:23.602Z">
+<meta property="article:author" content="小轲博客">
+<meta property="article:tag" content="FastThreadLocal">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="ThreadLocal">
+<meta property="article:tag" content="多线程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.52xk.cc/2025/04/13/Udif2XwnT3tGOYy.png">
+  
+    <meta name="keywords" content="待莲花开尽后，便是清欢。小轲博客欢迎您的到来。站长QQ：2501521908">
+  
+  <meta name="author" content="小轲">
+  <link rel="canonical" href="https://52xk.cc/2025/04/13/27/">
+  <title>FastThreadLocal是不是真的快？ | 小轲博客</title>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    <link rel="shortcut icon" href="https://www.keshaowl.cn/favicon.ico">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/fontawesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/regular.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/solid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/font/css/brands.min.css">
+  
+  <script>
+    (function () {
+      let theme = localStorage.getItem('KEEP-THEME-STATUS');
+      let classname = "";
+      if (!theme || (JSON.parse(theme).isAutoTheme)){
+        classname = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark-mode" : "light-mode";
+      }
+      else{
+        classname = JSON.parse(theme).isDark ? "dark-mode" : "light-mode";
+      }
+      document.documentElement.classList.add(classname);
+    })();
+  </script>
+  <script class="keep-theme-configurations">
+    const KEEP = window.KEEP || {}
+    KEEP.hexo_config = {"hostname":"52xk.cc","root":"/","language":"zh-CN"}
+    KEEP.theme_config = {"base_info":{"title":"小轲博客","author":"小轲","url":"https://52xk.cc","logo_img":null,"favicon":"https://www.keshaowl.cn/favicon.ico","avatar":"/images/head-img.jpg"},"menu":{"Home":"/","Archives":"/archives","Tags":"/tags","Links":"/links","About":"/about"},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"所谓自由，不是随心所欲，而是自我主宰","scroll":{"progress_bar":{"enable":true},"percent":{"enable":true}}},"social_contact":{"enable":true,"links":{"github":"https://github.com/a2501521908","weixin":null,"qq":null,"weibo":null,"zhihu":null,"twitter":null,"facebook":null,"email":"zshuaike@outlook.com"}},"scroll":{"progress_bar":false,"percent":false,"hide_header":true},"home":{"announcement":null,"category":false,"tag":true,"post_datetime":"created"},"post":{"word_count":{"enable":true,"wordcount":true,"min2read":true},"author_label":{"enable":true,"auto":true,"custom_label_list":["Trainee","Engineer","Architect","CTO","BOSS"]}},"code_block":{"tools":{"enable":false,"style":"default"},"highlight_theme":"default"},"toc":{"enable":true,"number":false,"expand_all":true,"init_open":true},"website_count":{"busuanzi_count":{"enable":false,"site_uv":false,"site_pv":false,"page_pv":false}},"local_search":{"enable":true,"trigger":"auto","unescape":false,"preload":true},"comment":{"enable":true,"use":"gitalk","valine":{"appid":"OUpmlYUxojJKPUexl0jbqBen-gzGzoHsz","appkey":"bFVLKcqpcD4wxmOMvXpnATHG","placeholder":"😜 尽情吐槽吧~"},"gitalk":{"github_id":"a2501521908","repository":"blog-comment","client_id":"98dcf7e70682aab74e7d","client_secret":"f20e879a10afe8fd7f0f47d82780eb1d17d0804f"},"twikoo":{"env_id":null,"region":null}},"rss":{"enable":false},"lazyload":{"enable":true},"cdn":{"enable":true,"provider":"cdnjs"},"pjax":{"enable":true},"footer":{"since":2016,"icp":"京ICP备2021024856号-1"},"inject":{"enable":false,"css":[null],"js":[null]},"root":"","search_db_path":"keep-search.json","style":{"primary_color":"#0066CC","favicon":"https://www.keshaowl.cn/favicon.ico","article_img_align":"center","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false}},"home_article":{"category":{"enable":false,"limit":3},"tag":{"enable":false,"limit":5}},"code_copy":{"enable":true,"style":"default"},"copyright_info":{"enable":true},"language":"zh-CN","source_data":{},"version":"4.5.0"}
+    KEEP.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"}
+    KEEP.language_code_block = {"copy":"复制代码","copied":"已复制","fold":"折叠代码块","folded":"已折叠"}
+    KEEP.language_copy_copyright = {"copy":"复制版权信息","copied":"已复制","title":"原文标题","author":"原文作者","link":"原文链接"}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+
+<body>
+<div class="progress-bar-container">
+  
+
+  
+    <span class="pjax-progress-bar"></span>
+    <i class="pjax-progress-icon fas fa-circle-notch fa-spin"></i>
+  
+</div>
+
+
+
+<main class="page-container border-box">
+  <!-- home first screen  -->
+  
+
+  <!-- page content -->
+  <div class="page-main-content border-box">
+    <div class="page-main-content-top">
+      
+<header class="header-wrapper">
+
+  <div class="border-box header-content">
+    <div class="left flex-start border-box">
+      
+      <a class="site-name border-box" href="/">
+        小轲博客
+      </a>
+    </div>
+
+    <div class="right border-box">
+      <div class="pc border-box">
+        <ul class="menu-list border-box">
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/">
+                
+                首页
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/archives">
+                
+                归档
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/tags">
+                
+                标签
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/links">
+                
+                友链
+                
+              </a>
+              
+            </li>
+          
+            
+            <li class="menu-item flex-start border-box">
+              <a class="menu-text-color border-box" href="/about">
+                
+                关于
+                
+              </a>
+              
+            </li>
+          
+          
+            <li class="menu-item search search-popup-trigger">
+              <i class="menu-text-color fas search fa-search"></i>
+            </li>
+          
+        </ul>
+      </div>
+      <div class="mobile border-box flex-start">
+        
+          <div class="icon-item search search-popup-trigger"><i class="fas fa-search"></i></div>
+        
+        <div class="icon-item menu-bar">
+          <div class="menu-bar-middle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-drawer">
+    <ul class="drawer-menu-list border-box">
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/">
+              
+              首页
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/archives">
+              
+              归档
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/tags">
+              
+              标签
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/links">
+              
+              友链
+            </a>
+            
+          </label>
+          
+        </li>
+      
+        
+        <li class="drawer-menu-item border-box not-sub-menu">
+          <label class="drawer-menu-label border-box">
+            <a class="drawer-menu-text-color left-side flex-start border-box" href="/about">
+              
+              关于
+            </a>
+            
+          </label>
+          
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="window-mask"></div>
+
+</header>
+
+
+    </div>
+
+    <div class="page-main-content-middle border-box">
+
+      <div class="main-content border-box">
+        
+
+          
+<div class="fade-in-down-animation">
+  <div class="post-page-container border-box">
+    <div class="post-content-container border-box">
+      
+
+      <div class="post-content-bottom border-box">
+        
+          <div class="post-title">
+            FastThreadLocal是不是真的快？
+          </div>
+        
+
+        
+          <div class="post-header border-box">
+            
+              <div class="avatar-box border-box">
+                <img src="/images/head-img.jpg">
+              </div>
+            
+            <div class="info-box">
+              <div class="author border-box">
+                <span class="name">小轲</span>
+                
+              </div>
+              <div class="meta-info border-box">
+                
+
+<div class="post-meta-info-container border-box post">
+  <div class="post-meta-info border-box">
+    
+
+    
+      <span class="meta-info-item post-create-date">
+        <i class="icon fa-solid fa-calendar-plus"></i>&nbsp;
+        <span class="datetime">2025-04-13 11:31:08</span>
+      </span>
+
+      
+        <span class="meta-info-item post-update-date">
+          <i class="icon fa-solid fa-file-pen"></i>&nbsp;
+          <span class="datetime" data-updated="Sat Nov 21 2026 21:16:23 GMT+0800">2026-11-21 21:16:23</span>
+        </span>
+      
+    
+
+    
+
+    
+      <span class="post-tag meta-info-item border-box">
+        <ul class="post-tag-ul">
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/Java/">Java</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/ThreadLocal/">ThreadLocal</a></li>
+            
+          
+              <li class="tag-item"><span class="tag-separator"><i class="icon fas fa-hashtag"></i></span><a href="/tags/FastThreadLocal/">FastThreadLocal</a></li>
+            
+          
+        </ul>
+      </span>
+    
+
+    
+    
+    
+      <span class="meta-info-item post-min2read">
+        <i class="icon fas fa-clock"></i>&nbsp;<span>3 分钟</span>
+      </span>
+    
+    
+  </div>
+
+  
+</div>
+
+              </div>
+            </div>
+          </div>
+        
+
+        <div class="post-content keep-markdown-body ">
+          
+
+          
+            <h1 id="什么是FastThreadLocal？"><a href="#什么是FastThreadLocal？" class="headerlink" title="什么是FastThreadLocal？"></a>什么是FastThreadLocal？</h1><p><font style="color:rgb(59, 67, 81);">FastThreadLocal是Netty中对JDK提供的ThreadLocal优化改造版本，从名称上来看，它应该比ThreadLocal更快了，以应对Netty处理并发量大、数据吞吐量大的场景。</font></p>
+<p>FastThreadLocal 是 ThreadLocal 的一种特殊变体，只有在使用 FastThreadLocalThread 线程类访问时，才能获得更高的访问性能。  </p>
+<blockquote>
+<p> 体现了程序员的一种极致“Geek精神”，连多循环几次都不愿意，必须做到最快。  </p>
+</blockquote>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/Udif2XwnT3tGOYy.png"
+                        alt="1.png"
+                 ></p>
+<p><font style="color:rgb(25, 27, 31);">概括来讲，FastThreadLocal快的核心其实是一个index。有了这个index，在get和remove方法的时候，就直接通过下标获取。可以看到下图中的get方法，拿对象是直接通过index获取的。</font></p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a><font style="color:rgb(25, 27, 31);">源码分析</font></h1><p>源码分析从三个地方进行分析,new FastThreadLocal() 、fastThreadLocal.get()、fastThreadLocal.set(value)来进行分析，从增删改查来看它的实现。</p>
+<h2 id="new-分配当前对象的index索引"><a href="#new-分配当前对象的index索引" class="headerlink" title="new() -分配当前对象的index索引"></a>new() -分配当前对象的index索引</h2><h3 id="FastThreadLocal-函数"><a href="#FastThreadLocal-函数" class="headerlink" title="FastThreadLocal() 函数"></a>FastThreadLocal() 函数</h3><p>其实这一步，是为这个对象申请<code>InternalThreadLocalMap</code><font style="color:#080808;background-color:#ffffff;">索引的过程，相当于注册当前对象，得到一个唯一id</font></p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/1iErUCbatm9spnz.png"
+                        alt="2.png"
+                 ></p>
+<h3 id="nextVariableIndex-申请索引"><a href="#nextVariableIndex-申请索引" class="headerlink" title="nextVariableIndex() 申请索引"></a><font style="color:#080808;background-color:#ffffff;">nextVariableIndex() 申请索引</font></h3><p>单线程中都存在一个InternalThreadLocalMap实例，用来区分线程变量。这一步跟ThreadLocal很像。</p>
+<p>但是要保证绝对的线程安全，所以使用了CAS来进行比较并交换，保证了可靠性</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/aONgMFeLn6dzSqB.png"
+                        alt="3.png"
+                 ></p>
+<h2 id="get-从FastThreadLocal中获取值"><a href="#get-从FastThreadLocal中获取值" class="headerlink" title="get() - 从FastThreadLocal中获取值"></a><font style="color:rgb(25, 27, 31);">get() - 从FastThreadLocal中获取值</font></h2><p>get这一步看起来也比较简单，就是在new这个对象时获得这个索引，去用这个index查找数据</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/gYtoVGrkUR3faus.png"
+                        alt="4.png"
+                 ></p>
+<h3 id="InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap"><a href="#InternalThreadLocalMap-get-获得当前线程的InternalThreadLocalMap" class="headerlink" title="InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap"></a>InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</h3><p> 这一步存在一个关键限制：必须使用 Netty 封装的线程类，普通 Thread 无法使用 <code>FastThreadLocal </code> </p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/XgtjeEWyICQq9K5.png"
+                        alt="5.png"
+                 ></p>
+<h3 id="InternalThreadLocalMap-indexedVariable-通过下标索引读取内容"><a href="#InternalThreadLocalMap-indexedVariable-通过下标索引读取内容" class="headerlink" title="InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容"></a>InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</h3><p>这一步其实更明了，就是通过先前new对象出来的index，来get这个InternalThreadLocalMap中数组的值，O(1)的时间复杂度即可</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/Tr7BGPeIquAhpxU.png"
+                        alt="6.png"
+                 ></p>
+<h2 id="set-按照分配索引，放入该线程的数组中"><a href="#set-按照分配索引，放入该线程的数组中" class="headerlink" title="set() 按照分配索引，放入该线程的数组中"></a><font style="color:rgb(25, 27, 31);">set() 按照分配索引，放入该线程的数组中</font></h2><p>set 操作其实就是根据分配好的 index，将值存入当前线程的数组中。下面的remove（）逻辑其实是netty自己的清理逻辑，不需要我们处理</p>
+<h3 id="setKnownNotUnset-threadLocalMap-value-往数组中放入值"><a href="#setKnownNotUnset-threadLocalMap-value-往数组中放入值" class="headerlink" title="setKnownNotUnset(threadLocalMap, value) 往数组中放入值"></a><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/cK9Ft8S6faM5CnO.png"
+                        alt="7.png"
+                 >setKnownNotUnset(threadLocalMap, value) 往数组中放入值</h3><p>这一步其实就是拿当前被分配到的index，去调用当前线程内<code>InternalThreadLocalMap</code>的数组直接赋值。</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/yKxeq97PUGboFdE.png"
+                        alt="8.png"
+                 ></p>
+<h3 id="threadLocalMap-setIndexedVariable-index-value-真正执行的地方"><a href="#threadLocalMap-setIndexedVariable-index-value-真正执行的地方" class="headerlink" title="threadLocalMap.setIndexedVariable(index, value) 真正执行的地方"></a><font style="color:#080808;background-color:#ffffff;">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</font></h3><p>到这，进行一个可能会有old值替换过程，这一步是netty自己的业务逻辑，我们无需关注。</p>
+<p><img  
+                       lazyload
+                       alt="image"
+                       data-src="https://static.52xk.cc/2025/04/13/yoXjdiHrbTYhtVP.png"
+                        alt="9.png"
+                 ></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="为啥说是个噱头？"><a href="#为啥说是个噱头？" class="headerlink" title="为啥说是个噱头？"></a>为啥说是个噱头？</h2><ul>
+<li>✅ 在 Netty 这种 IO 框架里，它是真的快。</li>
+<li>❌ 自己搞不合适</li>
+<li>为什么？<ul>
+<li>线程是自己控制的（全用 <code>FastThreadLocalThread</code>）</li>
+<li>用到的变量多，访问频率高</li>
+<li>线程复用频繁，GC 敏感</li>
+</ul>
+</li>
+</ul>
+<h2 id="是否真的变快了"><a href="#是否真的变快了" class="headerlink" title="是否真的变快了?"></a>是否真的变快了?</h2><ul>
+<li>变快肯定是变快的，因为并不需要有ThreadLocalMap的线性探测，直接O(1)就可以取到数据</li>
+<li>实现方式总结一下就是<ul>
+<li>每个 <code>FastThreadLocal</code> 实例会分配一个全局唯一的 index（自增）</li>
+<li>每个线程维护一个 <code>InternalThreadLocalMap</code>，本质上是个 <code>Object[]</code></li>
+<li>每个变量都直接按 index 存到 <code>values[index]</code> 上</li>
+</ul>
+</li>
+<li>老的实现方式就是<ul>
+<li>每一个线程都有一个ThreadLocalMap</li>
+<li>在get、set时，这个Map就根据当前key来往map中放入值<ul>
+<li>当前key就是这个<code>ThreadLocal</code>对象，例<code>UserThreadLocal</code>、<code>TraceThreadLocal</code></li>
+</ul>
+</li>
+<li>如果遇到hash冲突了怎么办<ul>
+<li>会进行线性查找，这也就是netty不满意的地方，怕万一线程中有几十个ThreadLocal的情况下，会有hash撞槽的可能，带来额外的性能开销。（其实就是多循环几次）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>本质上，就是一个是数组，一个是map。一个遇到冲突会线性的从头找到尾，另一个天然隔绝了这种问题的存在。只是用起来比较费劲，需要是专门的<code>FastThreadLocalThread</code>对象</li>
+</ul>
+<h2 id="是否真的存在自动清理？"><a href="#是否真的存在自动清理？" class="headerlink" title="是否真的存在自动清理？"></a>是否真的存在自动清理？</h2><p>没有，在Netty框架内确实实现了自动清理，但是我们自己使用的话还是老样子要调用<code>remove()</code>函数</p>
+<h2 id="对照"><a href="#对照" class="headerlink" title="对照"></a>对照</h2><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>ThreadLocal</th>
+<th>FastThreadLocal</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存储结构</td>
+<td>ThreadLocalMap（哈希表）</td>
+<td>数组（按 index 存取）</td>
+</tr>
+<tr>
+<td>是否有冲突</td>
+<td>有，线性探测</td>
+<td>无，直接数组定位</td>
+</tr>
+<tr>
+<td>清理机制</td>
+<td>没有自动清理</td>
+<td>支持 removeAll()，但需手动调用</td>
+</tr>
+<tr>
+<td>性能（变量多时）</td>
+<td>探测成本高，容易卡</td>
+<td>始终 O(1)，访问极快</td>
+</tr>
+<tr>
+<td>使用门槛</td>
+<td>低，开箱即用</td>
+<td>高，需要特殊线程配合</td>
+</tr>
+</tbody></table>
+
+          
+        </div>
+
+        
+
+        <div class="post-bottom-tags-and-share border-box">
+          <div>
+            
+              <ul class="post-tags-box border-box">
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/Java/">Java</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/ThreadLocal/">ThreadLocal</a>
+                  </li>
+                
+                  <li class="tag-item border-box">
+                    <i class="icon fas fa-hashtag"></i>&nbsp;<a href="/tags/FastThreadLocal/">FastThreadLocal</a>
+                  </li>
+                
+              </ul>
+            
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        
+
+        
+          <div class="post-nav border-box">
+            
+              <div class="prev-post">
+                <a class="prev"
+                  rel="prev"
+                  href="/2025/07/15/28/"
+                  title="Nginx http_secure_link模块使用"
+                >
+                  <span class="left arrow-icon flex-center">
+                    <i class="fas fa-chevron-left"></i>
+                  </span>
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">Nginx http_secure_link模块使用</span>
+                    <span class="post-nav-item">上一篇</span>
+                  </span>
+                </a>
+              </div>
+            
+            
+              <div class="next-post">
+                <a class="next"
+                  rel="next"
+                  href="/2025/03/18/26/"
+                  title="Using filesort 还是Using index condition？"
+                >
+                  <span class="title flex-center">
+                    <span class="post-nav-title-item text-ellipsis">Using filesort 还是Using index condition？</span>
+                    <span class="post-nav-item">下一篇</span>
+                  </span>
+                  <span class="right arrow-icon flex-center">
+                    <i class="fas fa-chevron-right"></i>
+                  </span>
+                </a>
+              </div>
+            
+          </div>
+        
+
+        
+          
+
+
+  <div class="comments-container border-box">
+    <div id="comments-anchor" class="comment-area-title border-box">
+      <i class="fas fa-comments"></i>&nbsp;评论
+    </div>
+    <div class="comment-plugin-fail border-box">
+  <span class="fail-tip">评论插件加载失败</span>
+  <button class="reload keep-button">点击重新加载</button>
+</div>
+<div class="comment-plugin-loading flex-center border-box">
+  <i class="loading-icon fa-solid fa-spinner fa-spin"></i>
+  <span class="load-tip">正在加载评论插件</span>
+</div>
+<script data-pjax>
+  window.KeepCommentPlugin = {}
+  window.KeepCommentPlugin.hideLoading = () => {
+    const cplDom = document.querySelector('.comments-container .comment-plugin-loading')
+    cplDom.style.display = 'none'
+  }
+  window.KeepCommentPlugin.loadFailHandle = () => {
+    window.KeepCommentPlugin.hideLoading()
+    const cpfDom = document.querySelector('.comments-container .comment-plugin-fail')
+    cpfDom.style.display = 'flex'
+    cpfDom.querySelector('.reload').addEventListener('click', () => {
+      window.location.reload()
+    })
+  }
+</script>
+
+    
+      
+
+  <div class="gitalk-comment-container">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <script data-pjax
+      src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    ></script>
+    <script data-pjax
+      async
+      onerror="window.KeepCommentPlugin.loadFailHandle()"
+    >
+      window.KeepCommentPlugin.initGitalk = () => {
+        let gitalkPathname = decodeURI(location.pathname)
+        const gitalkPathnameLength = gitalkPathname.length
+        const gitalkPathnameMaxLength = 50
+        if (gitalkPathnameLength > gitalkPathnameMaxLength) {
+          gitalkPathname = gitalkPathname.substring(0, gitalkPathnameMaxLength - 3) + '...'
+        }
+
+        if (window?.Gitalk) {
+          new Gitalk({
+            clientID: '98dcf7e70682aab74e7d',
+            clientSecret: 'f20e879a10afe8fd7f0f47d82780eb1d17d0804f',
+            repo: 'blog-comment',
+            owner: 'a2501521908',
+            admin: 'a2501521908',
+            id: gitalkPathname,
+            proxy: '',
+            language: 'zh-CN'
+          }).render('gitalk-container')
+          window.KeepCommentPlugin.hideLoading()
+        } else {
+          setTimeout(() => {
+            window.KeepCommentPlugin.initGitalk()
+          }, 1000)
+        }
+      }
+
+      if ('true' === 'true') {
+        setTimeout(() => {
+          window.KeepCommentPlugin.initGitalk()
+        }, 1200)
+      } else {
+        window.addEventListener('DOMContentLoaded', window.KeepCommentPlugin.initGitalk)
+      }
+    </script>
+  </div>
+
+
+    
+  </div>
+
+
+
+
+
+        
+      </div>
+    </div>
+
+    
+      <div class="pc-post-toc right-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setKnownNotUnset-threadLocalMap-value-%E5%BE%80%E6%95%B0%E7%BB%84%E4%B8%AD%E6%94%BE%E5%85%A5%E5%80%BC"><span class="nav-text">setKnownNotUnset(threadLocalMap, value) 往数组中放入值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
+  </div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+
+        
+      </div>
+    </div>
+
+    <div class="page-main-content-bottom border-box">
+      
+<footer class="footer border-box">
+  <div class="copyright-info info-item">
+  &copy;&nbsp;<span>2016</span>&nbsp;-&nbsp;2026
+  
+      &nbsp;<i class="fas fa-heart icon-animate"></i>&nbsp;&nbsp;<a href="/">小轲</a>
+    
+  </div>
+
+  <div class="theme-info info-item">
+    由&nbsp;<a target="_blank" href="https://hexo.io">Hexo</a>&nbsp;驱动&nbsp;&&nbsp;主题&nbsp;<a class="keep-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep</a>
+  </div>
+
+  
+
+  
+
+  
+</footer>
+
+    </div>
+  </div>
+
+  <!-- post tools -->
+  
+    <div class="post-tools right-toc">
+      <div class="post-tools-container border-box">
+  <ul class="post-tools-list border-box">
+    <!-- PC encrypt again -->
+    
+
+    <!-- PC TOC show toggle -->
+    
+      <li class="tools-item flex-center toggle-show-toc">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    <!-- PC go comment -->
+    
+      <li class="tools-item flex-center go-to-comments">
+        <i class="fas fa-comment"></i>
+        <span class="post-comments-count"></span>
+      </li>
+    
+
+    <!-- PC full screen -->
+    <li class="tools-item flex-center full-screen">
+      <i class="fa-solid fa-expand"></i>
+    </li>
+  </ul>
+</div>
+
+    </div>
+  
+
+  <!-- side tools -->
+  <div class="side-tools">
+    <div class="side-tools-container border-box ">
+  <ul class="side-tools-list side-tools-show-handle border-box">
+    <li class="tools-item tool-font-adjust-plus flex-center">
+      <i class="fas fa-search-plus"></i>
+    </li>
+
+    <li class="tools-item tool-font-adjust-minus flex-center">
+      <i class="fas fa-search-minus"></i>
+    </li>
+
+    <!-- toggle chinese -->
+    
+      <li class="tools-item tool-toggle-chinese flex-center">
+        <button type="button"
+            data-native-script="cn"
+            data-opencc-src="/js/libs/opencc.full.js"
+            data-label-cn="切换为简体中文"
+            data-label-tw="切换为繁体中文"
+            data-label-error="简繁转换加载失败，点击重试"
+        >
+          繁
+        </button>
+      </li>
+    
+
+    <!-- toggle mode -->
+    
+      <li class="tools-item tool-toggle-theme-mode flex-center">
+        <i class="fas fa-moon"></i>
+      </li>
+    
+
+    <!-- rss -->
+    
+
+    <!-- to bottom -->
+    <li class="tools-item tool-scroll-to-bottom flex-center">
+      <i class="fas fa-arrow-down"></i>
+    </li>
+  </ul>
+
+  <ul class="exposed-tools-list border-box">
+    
+      <li class="tools-item toggle-show-toc-tablet flex-center">
+        <i class="fas fa-list"></i>
+      </li>
+    
+
+    
+      <li class="tools-item go-to-comments-tablet flex-center">
+        <i class="fas fa-comment"></i>
+      </li>
+    
+
+    <li class="tools-item tool-toggle-show flex-center">
+      <i class="fas fa-cog fa-spin"></i>
+    </li>
+
+    <li class="tools-item tool-scroll-to-top flex-center show-arrow">
+      <i class="arrow fas fa-arrow-up"></i>
+      <span class="percent"></span>
+    </li>
+  </ul>
+</div>
+
+  </div>
+
+  <!-- image mask -->
+  <div class="zoom-in-image-mask">
+  <img class="zoom-in-image">
+</div>
+
+
+  <!-- local search -->
+  
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+    <div class="search-header">
+      <span class="search-input-field-pre">
+      <i class="fas fa-keyboard"></i>
+      </span>
+      <div class="search-input-container">
+        <input autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="搜索..."
+            spellcheck="false"
+            type="search"
+            class="search-input"
+        >
+      </div>
+      <span class="close-popup-btn">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div id="search-result">
+      <div id="no-result">
+        <i class="fas fa-spinner fa-pulse fa-5x fa-fw"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  <!-- tablet toc -->
+  
+    <div class="tablet-post-toc-mask">
+      <div class="tablet-post-toc">
+        <div class="post-toc-wrap border-box">
+  <div class="post-toc border-box">
+    <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFFastThreadLocal%EF%BC%9F"><span class="nav-text">什么是FastThreadLocal？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#new-%E5%88%86%E9%85%8D%E5%BD%93%E5%89%8D%E5%AF%B9%E8%B1%A1%E7%9A%84index%E7%B4%A2%E5%BC%95"><span class="nav-text">new() -分配当前对象的index索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FastThreadLocal-%E5%87%BD%E6%95%B0"><span class="nav-text">FastThreadLocal() 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nextVariableIndex-%E7%94%B3%E8%AF%B7%E7%B4%A2%E5%BC%95"><span class="nav-text">nextVariableIndex() 申请索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-%E4%BB%8EFastThreadLocal%E4%B8%AD%E8%8E%B7%E5%8F%96%E5%80%BC"><span class="nav-text">get() - 从FastThreadLocal中获取值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-get-%E8%8E%B7%E5%BE%97%E5%BD%93%E5%89%8D%E7%BA%BF%E7%A8%8B%E7%9A%84InternalThreadLocalMap"><span class="nav-text">InternalThreadLocalMap#get() 获得当前线程的InternalThreadLocalMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InternalThreadLocalMap-indexedVariable-%E9%80%9A%E8%BF%87%E4%B8%8B%E6%A0%87%E7%B4%A2%E5%BC%95%E8%AF%BB%E5%8F%96%E5%86%85%E5%AE%B9"><span class="nav-text">InternalThreadLocalMap#indexedVariable() 通过下标索引读取内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-%E6%8C%89%E7%85%A7%E5%88%86%E9%85%8D%E7%B4%A2%E5%BC%95%EF%BC%8C%E6%94%BE%E5%85%A5%E8%AF%A5%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E7%BB%84%E4%B8%AD"><span class="nav-text">set() 按照分配索引，放入该线程的数组中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setKnownNotUnset-threadLocalMap-value-%E5%BE%80%E6%95%B0%E7%BB%84%E4%B8%AD%E6%94%BE%E5%85%A5%E5%80%BC"><span class="nav-text">setKnownNotUnset(threadLocalMap, value) 往数组中放入值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#threadLocalMap-setIndexedVariable-index-value-%E7%9C%9F%E6%AD%A3%E6%89%A7%E8%A1%8C%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="nav-text">threadLocalMap.setIndexedVariable(index, value) 真正执行的地方</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%95%A5%E8%AF%B4%E6%98%AF%E4%B8%AA%E5%99%B1%E5%A4%B4%EF%BC%9F"><span class="nav-text">为啥说是个噱头？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%8F%98%E5%BF%AB%E4%BA%86"><span class="nav-text">是否真的变快了?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%9C%9F%E7%9A%84%E5%AD%98%E5%9C%A8%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%EF%BC%9F"><span class="nav-text">是否真的存在自动清理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%85%A7"><span class="nav-text">对照</span></a></li></ol></li></ol>
+  </div>
+</div>
+
+      </div>
+    </div>
+  
+</main>
+
+
+
+
+
+<!-- common js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/header-shrink.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/back2top.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/toggle-theme.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/chinese-convert.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/code-block.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/main.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/libs/anime.min.js"></script>
+
+<!-- local search -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/local-search.min.js"></script>
+
+
+<!-- lazyload -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/lazyload.min.js"></script>
+
+
+<div class="pjax">
+  <!-- home page -->
+  
+
+  <!-- post page -->
+  
+    <!-- post-helper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/post-helper.min.js"></script>
+
+    <!-- toc -->
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-keep/4.5.0/js/post/toc.min.js"></script>
+    
+
+    <!-- copyright-info -->
+    
+
+    <!-- share -->
+    
+  
+
+  <!-- categories page -->
+  
+
+  <!-- links page -->
+  
+
+  <!-- photos page -->
+  
+
+  <!-- tools page -->
+  
+</div>
+
+<!-- mermaid -->
+
+
+<!-- pjax -->
+
+  <script id="pjax-script" src="/js/libs/pjax.min.js"></script>
+<script>
+  (function () {
+    const isGoogleTranslate = location.hostname.includes('.translate.goog')
+
+    if (isGoogleTranslate) {
+      document.getElementById('pjax-script')?.remove()
+      return
+    }
+
+    function initPjax () {
+      if (window.pjax) return
+
+      window.pjax = new Pjax({
+        selectors: [
+          'head title',
+          '.page-container',
+          '.pjax'
+        ],
+        history: true,
+        debug: false,
+        cacheBust: false,
+        timeout: 0,
+        analytics: false,
+        currentUrlFullReload: false,
+        scrollRestoration: false
+      })
+
+      document.addEventListener('pjax:send', onPjaxSend)
+      document.addEventListener('pjax:complete', onPjaxComplete)
+    }
+
+    function onPjaxSend () {
+      KEEP?.utils?.pjaxProgressBarStart()
+    }
+
+    function onPjaxComplete () {
+      KEEP?.utils?.pjaxProgressBarEnd()
+
+      window?.pjax?.executeScripts(
+        document.querySelectorAll('script[data-pjax], .pjax script')
+      )
+
+      KEEP?.initExecute()
+    }
+
+    // DOM Ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPjax)
+    } else {
+      initPjax()
+    }
+  })()
+</script>
+
+
+
+
+</body>
+</html>
